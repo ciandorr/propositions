@@ -37,6 +37,11 @@ latex propositions.ins
 
 Move `propositions.sty` to a directory in your TeX search path.
 
+## Contributing
+
+The source is available at <https://github.com/ciandorr/propositions>.
+Bug reports and contributions are welcome via the issue tracker and pull requests.
+
 ## License
 
 Copyright (C) 2026 Cian Dorr
