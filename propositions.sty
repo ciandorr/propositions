@@ -60,6 +60,7 @@
 \tl_new:N   \l__props_default_ptag_type_tl %% \ptag override; empty means use default type
 \prop_new:N \l__props_level_defaults_prop  %% nesting level -> default type name
 \bool_new:N \g__props_equations_bool         %% true if equations package option is set
+\bool_new:N \g__props_eqhooks_bool           %% true if equation format hooks should be installed
 \cs_new:Npn \__props_eqdispfmt:n #1 { (#1) } %% display format for equation tags
 \cs_new:Npn \__props_eqreffmt:n  #1 { (#1) } %% ref format for equation labels
 
@@ -688,6 +689,8 @@
 \AtBeginDocument
   {
     \bool_if:NT \g__props_equations_bool
+      { \bool_gset_true:N \g__props_eqhooks_bool }
+    \bool_if:NT \g__props_eqhooks_bool
       {
         %% Redefine the equation "prefix" macro so that \ref{eq:foo}
         %% produces \propapply{format}{number} instead of a bare number.
@@ -1046,13 +1049,20 @@
     default~ptag~type .tl_set:N    = \l__props_default_ptag_type_tl ,
     equation~format   .code:n      =
       {
+        \bool_gset_true:N \g__props_eqhooks_bool
         \cs_set:Npn \__props_eqdispfmt:n ##1 { #1 }
         \cs_set:Npn \__props_eqreffmt:n  ##1 { #1 }
       } ,
     equation~display~format .code:n =
-      { \cs_set:Npn \__props_eqdispfmt:n ##1 { #1 } } ,
+      {
+        \bool_gset_true:N \g__props_eqhooks_bool
+        \cs_set:Npn \__props_eqdispfmt:n ##1 { #1 }
+      } ,
     equation~ref~format     .code:n =
-      { \cs_set:Npn \__props_eqreffmt:n  ##1 { #1 } } ,
+      {
+        \bool_gset_true:N \g__props_eqhooks_bool
+        \cs_set:Npn \__props_eqreffmt:n  ##1 { #1 }
+      } ,
     equations         .bool_gset:N = \g__props_equations_bool ,
     equations         .default:n   = { true } ,
     equations         .groups:n    = { global-only } ,
