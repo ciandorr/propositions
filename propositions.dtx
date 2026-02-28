@@ -364,11 +364,11 @@
 %   |bullet| & |\bitem| & none & \textbullet & \textbullet & default \\
 %   |roman| & |\ritem| & |roman| & (i) & (i) & left \\
 %   |alph| & |\aitem| & |alph| & (a) & (a) & left \\
-%   |numbered| & none$^\dag$ & |numbered|$^\ddag$  & (1) & (1) & left \\
-%   |leveltwo| & none$^\dag$ & |leveltwo| & a. & (1a) & left \\
-%   |levelthree| & none$^\dag$ & |levelthree| & (i) & (1a.i) & left \\
-%   |levelfour| & none$^\dag$ & |levelfour| & \textbullet & \textbullet & default \\
-%   |levelfive| & none$^\dag$ &  |levelfive| & -- & -- & default
+%   |numbered| & none$^\dag$ & |numpropi|$^\ddag$  & (1) & (1) & left \\
+%   |leveltwo| & none$^\dag$ & |numpropii| & a. & (1a) & left \\
+%   |levelthree| & none$^\dag$ & |numpropiii| & (i) & (1a.i) & left \\
+%   |levelfour| & none$^\dag$ & |numpropiv| & \textbullet & \textbullet & default \\
+%   |levelfive| & none$^\dag$ &  |numpropv| & -- & -- & default
 % \end{tabular}
 % \end{center}
 %
@@ -376,7 +376,7 @@
 %   \item[*] The |short| type is auto-selected when |\pitem| or |\ptag| has an optional argument but no |type| key.
 %   \item[$\dag$] The |numbered|--|levelfive| types are auto-selected when |\pitem| or |\ptag| has no optional argument, depending on nesting level.
 %   \item[$\ddag$] The |equations| package option changes |numbered|'s counter to |equation|.
-%     The |leveltwo|--|levelfive| counters reset automatically when a |\pitem| at the next lower level is processed.
+%     The |numpropii|--|numpropv| counters reset automatically when a |\pitem| at the next lower level is processed.
 % \end{itemize}
 %
 % \section{Cross-referencing}\label{sect:xref}
@@ -575,7 +575,7 @@
 %       5 & \texttt{levelfive}
 %     \end{tabular}
 %   \end{center}
-%   The \texttt{leveltwo}--\texttt{levelfive} types use special counters \texttt{leveltwo}--\texttt{levelfive}, which reset automatically when \texttt{pitem} is used at lesser nesting levels.  Other types can also use these counters.  
+%   The \texttt{leveltwo}--\texttt{levelfive} types use special counters \texttt{numpropii}--\texttt{numpropv}, which reset automatically when \texttt{pitem} is used at lesser nesting levels.  Other types can also use these counters.
 % \end{docKey}
 %
 % \subsection{Formatting and referencing equation numbers}
@@ -1292,13 +1292,13 @@
     %% This is done in \pitem (not \begin{prop}) so that a plain \item
     %% can skip the reset, enabling intertext between sub-items.
     \int_compare:nNnT { \g__props_level_int } = { 1 }
-      { \setcounter { leveltwo } { 0 } }
+      { \setcounter { numpropii } { 0 } }
     \int_compare:nNnT { \g__props_level_int } = { 2 }
-      { \setcounter { levelthree } { 0 } }
+      { \setcounter { numpropiii } { 0 } }
     \int_compare:nNnT { \g__props_level_int } = { 3 }
-      { \setcounter { levelfour } { 0 } }
+      { \setcounter { numpropiv } { 0 } }
     \int_compare:nNnT { \g__props_level_int } = { 4 }
-      { \setcounter { levelfive } { 0 } }
+      { \setcounter { numpropv } { 0 } }
     \IfValueTF { #1 }
       { \__props_resolve_item:n { #1 } }
       { \__props_resolve_item:n { } }
@@ -1961,11 +1961,11 @@
       }
   }
   {
-    \newcounter { proposition }
+    \newcounter { numpropi }
     \SetItemType { numbered }
       {
         align       = left ,
-        counter     = proposition ,
+        counter     = numpropi ,
         format      = (#1) ,
       }
   }
@@ -1990,31 +1990,37 @@
     macro          = \aitem ,
   ]
 
-\DeclareNumberedType { leveltwo }
-  [
-    counter~format = \alph{leveltwo} ,
+\newcounter { numpropii }
+\cs_gset:Npn \thenumpropii { \alph { numpropii } }
+\SetItemType { leveltwo }
+  {
+    counter        = numpropii ,
     display~format = #1. ,
     ref~format     = \Parentref{#1} ,
-  ]
+  }
 
-\DeclareNumberedType { levelthree }
-  [
-    counter~format = \roman{levelthree} ,
+\newcounter { numpropiii }
+\cs_gset:Npn \thenumpropiii { \roman { numpropiii } }
+\SetItemType { levelthree }
+  {
+    counter        = numpropiii ,
     display~format = (#1) ,
     ref~format     = \Parentref{.#1} ,
-  ]
+  }
 
-\newcounter { levelfour }
+\newcounter { numpropiv }
 \SetItemType { levelfour }
   {
+    counter        = numpropiv ,
     align          = default ,
     name           = \textbullet ,
     display~format = #1 ,
   }
 
-\newcounter { levelfive }
+\newcounter { numpropv }
 \SetItemType { levelfive }
   {
+    counter        = numpropv ,
     align          = default ,
     name           = -- ,
     display~format = #1 ,

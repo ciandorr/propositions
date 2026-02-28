@@ -561,13 +561,13 @@
     %% This is done in \pitem (not \begin{prop}) so that a plain \item
     %% can skip the reset, enabling intertext between sub-items.
     \int_compare:nNnT { \g__props_level_int } = { 1 }
-      { \setcounter { leveltwo } { 0 } }
+      { \setcounter { numpropii } { 0 } }
     \int_compare:nNnT { \g__props_level_int } = { 2 }
-      { \setcounter { levelthree } { 0 } }
+      { \setcounter { numpropiii } { 0 } }
     \int_compare:nNnT { \g__props_level_int } = { 3 }
-      { \setcounter { levelfour } { 0 } }
+      { \setcounter { numpropiv } { 0 } }
     \int_compare:nNnT { \g__props_level_int } = { 4 }
-      { \setcounter { levelfive } { 0 } }
+      { \setcounter { numpropv } { 0 } }
     \IfValueTF { #1 }
       { \__props_resolve_item:n { #1 } }
       { \__props_resolve_item:n { } }
@@ -1152,11 +1152,11 @@
       }
   }
   {
-    \newcounter { proposition }
+    \newcounter { numpropi }
     \SetItemType { numbered }
       {
         align       = left ,
-        counter     = proposition ,
+        counter     = numpropi ,
         format      = (#1) ,
       }
   }
@@ -1178,31 +1178,37 @@
     macro          = \aitem ,
   ]
 
-\DeclareNumberedType { leveltwo }
-  [
-    counter~format = \alph{leveltwo} ,
+\newcounter { numpropii }
+\cs_gset:Npn \thenumpropii { \alph { numpropii } }
+\SetItemType { leveltwo }
+  {
+    counter        = numpropii ,
     display~format = #1. ,
     ref~format     = \Parentref{#1} ,
-  ]
+  }
 
-\DeclareNumberedType { levelthree }
-  [
-    counter~format = \roman{levelthree} ,
+\newcounter { numpropiii }
+\cs_gset:Npn \thenumpropiii { \roman { numpropiii } }
+\SetItemType { levelthree }
+  {
+    counter        = numpropiii ,
     display~format = (#1) ,
     ref~format     = \Parentref{.#1} ,
-  ]
+  }
 
-\newcounter { levelfour }
+\newcounter { numpropiv }
 \SetItemType { levelfour }
   {
+    counter        = numpropiv ,
     align          = default ,
     name           = \textbullet ,
     display~format = #1 ,
   }
 
-\newcounter { levelfive }
+\newcounter { numpropv }
 \SetItemType { levelfive }
   {
+    counter        = numpropv ,
     align          = default ,
     name           = -- ,
     display~format = #1 ,
