@@ -1,0 +1,50 @@
+%%
+%% Installer file for the propositions package
+%%
+%% Copyright (C) 2026 Cian Dorr
+%%
+%% This work may be distributed and/or modified under the
+%% conditions of the LaTeX Project Public License, either version 1.3c
+%% of this license or (at your option) any later version.
+%% The latest version of this license is in
+%%
+%%    https://www.latex-project.org/lppl.txt
+%%
+
+\input docstrip.tex
+\keepsilent
+\askforoverwritefalse
+
+\preamble
+
+Copyright (C) 2026 Cian Dorr
+
+This work may be distributed and/or modified under the
+conditions of the LaTeX Project Public License, either version 1.3c
+of this license or (at your option) any later version.
+The latest version of this license is in
+
+   https://www.latex-project.org/lppl.txt
+
+This work consists of the files propositions.dtx and propositions.ins
+and the derived file propositions.sty.
+
+\endpreamble
+
+\postamble
+\endpostamble
+
+\generate{\file{propositions.sty}{\from{propositions.dtx}{package}}}
+
+\obeyspaces
+\Msg{*****************************************************}
+\Msg{*                                                   *}
+\Msg{* To finish the installation, move                  *}
+\Msg{* propositions.sty to a directory searched by TeX.  *}
+\Msg{*                                                   *}
+\Msg{* To produce the documentation, run                 *}
+\Msg{*     pdflatex propositions.dtx                     *}
+\Msg{*                                                   *}
+\Msg{*****************************************************}
+
+\endbatchfile

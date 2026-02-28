@@ -1,0 +1,2016 @@
+% \iffalse meta-comment
+%
+%% File: propositions.dtx
+%%
+%% Copyright (C) 2026 Cian Dorr
+%%
+%% This work may be distributed and/or modified under the
+%% conditions of the LaTeX Project Public License, either version 1.3c
+%% of this license or (at your option) any later version.
+%% The latest version of this license is in
+%%
+%%    https://www.latex-project.org/lppl.txt
+%%
+%% This work consists of the files propositions.dtx and propositions.ins
+%% and the derived file propositions.sty.
+%%
+% \fi
+%
+% \iffalse
+%<*driver>
+\documentclass[leqno]{ltxdoc}
+\usepackage[T1]{fontenc}
+\usepackage{amsmath}
+\usepackage[most]{tcolorbox}
+\tcbuselibrary{documentation}
+\usepackage[equations, tightspacing, leftmargin=1em, labelindent=0em]{propositions}
+\usepackage{cleveref}
+\usepackage{fancyvrb}
+\VerbatimFootnotes
+
+\hypersetup{colorlinks,linkcolor=blue!60!black,urlcolor=blue!60!black}
+
+%% Side-by-side example environment (fancyvrb-based, works inside \DocInput).
+\newenvironment{example}
+  {\VerbatimEnvironment
+   \begin{VerbatimOut}{\jobname-ex.tex}}
+  {\end{VerbatimOut}%
+   \par\medskip\noindent
+   \begin{minipage}[t]{0.52\linewidth}%
+     \small\VerbatimInput[gobble=2,frame=leftline,
+       framerule=0.4pt,framesep=1.5em]{\jobname-ex.tex}%
+   \end{minipage}\hfill
+   \begin{minipage}[t]{0.44\linewidth}%
+     \input{\jobname-ex.tex}%
+   \end{minipage}%
+   \par\medskip}
+
+\tcbset{
+  docexample/.style={
+    colframe=blue!50!black,
+    colback=blue!3!white,
+    before skip=\medskipamount,
+    after skip=\medskipamount,
+    fontlower=\small,
+  },
+}
+
+
+\EnableCrossrefs
+\CodelineIndex
+\OnlyDescription
+\begin{document}
+  \DocInput{\jobname.dtx}
+\end{document}
+%</driver>
+% \fi
+%
+% \GetFileInfo{propositions.sty}
+%
+% \title{The \textsf{propositions} package\thanks{This document describes
+%   version~\fileversion, dated~\filedate.}}
+% \author{Cian Dorr (with help from Claude Code)\\ \texttt{ciandorr@gmail.com}}
+% \date{\filedate}
+%
+% \maketitle
+%
+% \begin{abstract}
+% \noindent The \textsf{propositions} package provides a key-value driven system
+% for labelling propositions, theses, and premises in academic papers.
+% Items may be given names like `(P)' or
+% `Physicalism', or auto-numbered using different counters; all carry robust
+% cross-references with configurable formatting.
+% The package integrates with \textsf{amsmath}, \textsf{hyperref},
+% and \textsf{cleveref}.
+% \end{abstract}
+%
+% \tableofcontents
+%
+% \section{Introduction}
+%
+% In some academic disciplines (such as philosophy), it is common to have displayed propositions (examples, theses, premises,\ldots) with various kinds of labels.  A thesis might be referred to as `(P)' or `Physicalism'; the premises of an argument might be numbered as `P1', `P2', `P3', \ldots; or examples might be numbered consecutively over the course of a whole article.
+%   Standard \LaTeX{} environments like |enumerate| can
+% handle some of these cases, but cross-referencing is awkward:
+% |\ref| produces a bare number or letter, and the author must manually
+% add parentheses or other formatting at every point of reference.  The standard |description| environment does not allow cross-referencing at all.
+%
+% The \textsf{propositions} package solves this by attaching formatting
+% information to each label.  A short item like |\pitem[P]| is displayed
+% as ``(P)'' and |\ref| automatically produces ``(P)'' as well---complete
+% with parentheses, hyperlinks, and \textsf{cleveref} support.  The full
+% key-value interface supports named items, numbered items, custom
+% counters, glosses, shorthands, and per-item format overrides.
+%
+% The |\ptag| command (which requires \textsf{amsmath}) extends this to
+% displayed math environments: an equation can be tagged with a
+% proposition label instead of (or using) its equation number.
+% 
+% \section{History}
+% I wrote the ancestor to this package in the 90s
+% while finishing my Ph.D. thesis, but never documented it 
+% or shared it with the world.  This new 
+% version is a thorough re-implementation in \LaTeX3,
+% written in 2026 with extensive help from Claude Code.  I 
+% hope others will find it as useful as I have. 
+% 
+% \section{Basic usage}
+% Load the package with |\usepackage{propositions}| or |\usepackage|\oarg{options}|{propositions}| (see \autoref{sect:global} below for valid package options).
+%
+% The |prop| environment generates a list of propositions, each introduced by a |\pitem|.  |\pitem| with an optional argument gives a |description|-like label:
+% \begin{example}
+% \begin{prop}
+%   \pitem[Physicalism] Everything is
+%   physical. \label{phys}
+%   \pitem[Idealism] Everything is
+%   mental. \label{ideal}
+% \end{prop}
+% \end{example}
+% Unlike the standard |description| environment, one can refer back to these propositions using the standard |\ref| command:
+% \begin{example}
+% \ref{phys} is more plausible
+% than \ref{ideal}.
+% \end{example}
+% With no optional argument, |\pitem| will by default generate numbered items similar to |enumerate|, but with numbering that persists across the document:
+% \begin{example}
+% \begin{prop}
+%   \pitem Every atom is physical.
+%   \label{atoms}
+% \end{prop}
+% \ref{phys} follows from the
+% conjunction of \ref{atoms} and
+% \begin{prop}
+%   \pitem Everything is an atom.
+%   \label{atomism}
+% \end{prop}
+% \end{example}
+% As with |enumerate|, the
+% counter and formatting depend on the
+% nesting level:
+% \begin{example}
+% \begin{prop}
+%   \pitem \label{dual}
+%   \begin{prop}
+%     \pitem Some things are physical.
+%     \label{some}
+%     \pitem Some things are not
+%     physical. \label{notall}
+%   \end{prop}
+% \end{prop}
+% Without \ref{some}, \ref{dual}
+% would be consistent with \ref{ideal}.
+% \end{example}
+%
+% \section{Advanced usage}
+% The format of the proposition labels, and of
+% subsequent references, are both configurable using a key=value syntax (see \autoref{sect:keys} for the possible keys):
+% \begin{example}
+% \begin{prop}
+%   \pitem[No Overlap,
+%     align=flush,
+%     display format=\textbf{#1},
+%     ref format=\textit{#1}]
+%     Nothing mental is
+%     physical. \label{incomp}
+% \end{prop}
+% Is \ref{dual} consistent
+% with \ref{phys}?
+% \end{example}
+% Preset \emph{item types} can be declared and used instead of configuring the |\pitem|s one at a time:
+% \begin{example}
+% \begin{prop}
+%   \pitem[Nihilism,
+%     type=long]
+%     There is nothing.
+%     \label{nihilism}
+% \end{prop}
+% Does \ref{nihilism} imply
+% \ref{phys}, \ref{dual}, or
+% both?  Discuss.
+% \end{example}
+% Shortcut commands---e.g., |\litem[|\meta{keys}|]| for |\pitem[type=long, |\meta{keys}|]|---can also be defined.  The package loads with a range of predefined types.
+%
+% When the package is loaded with |\usepackage[equations]{propositions}|, first-level |\pitem|s use the same counter
+% as equations.  (This looks better with the |leqno|
+% option to |\documentclass|.)
+% \begin{example}
+% \begin{equation}
+%   \exists x (\text{Mental}(x)
+%   \wedge \text{Physical}(x))
+% \end{equation}
+% \begin{prop}
+%   \pitem
+%   There is overlap between
+%   the mental and the physical.
+% \end{prop}
+% \end{example}
+% The |\ptag| command (requires \textsf{amsmath})
+% is an analogue of |\pitem| that works inside
+% displayed math environments.
+% \begin{example}
+% \begin{equation}
+%   \ptag[Monism] \label{mon}
+%   \exists x \forall y(y = x)
+% \end{equation}
+% Is \ref{mon} compatible with
+% \ref{dual}?
+% \end{example}
+%
+% \section{The \texttt{prop} environment and \cs{pitem}}
+% \label{sect:keys}
+%
+% \begin{docEnvironment}{prop}{\oarg{keys}}
+%   Creates a displayed list of propositions.  It is a standard \LaTeX{} list, so by default its formatting will depend on the standard length parameters like \cs{itemsep} and \cs{topsep}, although these can be overridden by setting package keys.
+%
+%   Within \texttt{prop}, \cs{pitem} (see below) creates labelled items.  The ordinary \cs{item} command is still available for unlabelled items.
+%
+%   The optional \meta{keys} argument accepts the same keys as \refCom{propoptions} (\autoref{sect:global}), with effects local to this environment.
+% \end{docEnvironment}
+%
+% \begin{docEnvironment}{inlineprop}{\oarg{keys}}
+%   Like \texttt{prop}, but does not create a list.  Allows \cs{pitem} to be used outside list environments, e.g.\ for generating numbers at the beginning of paragraphs.  Steps the \texttt{prop} counter and increments the nesting level.  Accepts the same optional \meta{keys} as \texttt{prop}.
+% \end{docEnvironment}
+%
+% \begin{docCommand}{pitem}{\oarg{keys}}
+%   Inside the \texttt{prop} and \texttt{inlineprop} environments, introduces a labelled proposition.  The optional argument is a comma-separated list of \meta{key}=\meta{value} pairs.
+%
+%   When used without an optional argument (or without setting \texttt{name}, \texttt{counter}, or \texttt{type}), it behaves as \cs{pitem}\texttt{[type=}\meta{type}\texttt{]}, where \meta{type} depends on the nesting depth.  The defaults are \texttt{numbered}, \texttt{leveltwo}, \texttt{levelthree}, \texttt{levelfour}, \texttt{levelfive}; these can be changed with the \texttt{level}~\meta{n} keys (\autoref{sect:global}).
+% \end{docCommand}
+%
+% The following keys can be used in the optional argument of |\pitem|:
+%
+% \begin{docKey}{name}{=\meta{text}}{no default}
+%   The proposition's name.  A bare string (without \texttt{=}) in the key list is equivalent to \texttt{name=}\meta{text}.
+% \end{docKey}
+%
+% \begin{docKey}{type}{=\meta{type}}{no default}
+%   An item type, equivalent to a preset collection of keys.  Types can be declared using \refCom{SetItemType} or \refCom{DeclareNumberedType}, and several come predefined (\autoref{sect:types}).
+% \end{docKey}
+%
+% \begin{docKey}{counter}{=\meta{name}}{no default}
+%   Counter to use.  The counter is automatically stepped, and the item's \texttt{name} is set to \cs{the}\meta{name}, though this can be overridden by explicitly setting \texttt{name}.
+% \end{docKey}
+%
+% \begin{docKey}{align}{=\meta{type}}{no default}
+%   How the label should be positioned.  Possible values: \texttt{default} (offset controlled by \cs{labelwidth} and \cs{labelsep}), \texttt{right} (right-aligned, like \texttt{enumerate}), \texttt{left} (aligned with left margin of surrounding text), \texttt{flush} (aligned with left margin of item text), \texttt{nextline} (label on its own line), \texttt{left-nextline}, and \texttt{flush-nextline}.
+%   Has no effect inside \texttt{inlineprop} or \cs{ptag}.
+% \end{docKey}
+%
+% \begin{docKey}{format}{=\meta{template}}{no default}
+%   Formatting applied to the \texttt{name}: use \texttt{\#1} for the argument, e.g.\ \texttt{format=\string\textbf\{(\#1)\}}.  Shorthand for setting both \texttt{display format} and \texttt{ref format}.
+% \end{docKey}
+%
+% \begin{docKey}{display format}{=\meta{template}}{no default}
+%   Format for displaying the name in the proposition's label.  Does not affect cross-references.
+% \end{docKey}
+%
+% \begin{docKey}{ref format}{=\meta{template}}{no default}
+%   Format for subsequent cross-references to this proposition.  Does not affect the display.
+% \end{docKey}
+%
+% \begin{docKey}{shorthand}{=\meta{text}}{no default}
+%   An abbreviation displayed after the name.  If present, the shorthand becomes the reference text: \cs{ref} produces the shorthand (formatted with \texttt{ref format}) rather than the full name.
+% \end{docKey}
+%
+% \begin{docKey}{shorthand format}{=\meta{template}}{initially \texttt{\string~[\#1]}}
+%   Format for displaying the shorthand in the label.
+% \end{docKey}
+%
+% \begin{docKey}{gloss}{=\meta{text}}{no default}
+%   A parenthetical gloss displayed after the name.  Does not affect cross-references.
+% \end{docKey}
+%
+% \begin{docKey}{gloss format}{=\meta{template}}{initially \texttt{\string~(\#1)}}
+%   Format for displaying the gloss in the label.
+% \end{docKey}
+%
+% \begin{docKey}{ref}{=\meta{text}}{no default}
+%   Explicitly set the reference text, overriding what would be derived from \texttt{name}, \texttt{counter}, or \texttt{shorthand}.
+% \end{docKey}
+%
+% \begin{docKey}{label}{=\meta{label}}{no default}
+%   Equivalent to a trailing \cs{label}\marg{label}.
+% \end{docKey}
+%
+% \begin{docKey}{crefname}{=\meta{type}}{no default}
+%   When \textsf{cleveref} is loaded, assigns an arbitrary reference type to this proposition.  For example, \texttt{crefname=lemma} causes \cs{cref} to use the names defined by \cs{crefname}\texttt{\{lemma\}\{...\}\{...\}} instead of the default \texttt{proposition} type.  The \meta{type} must be known to \textsf{cleveref}; new types can be declared with \cs{crefname}.
+% \end{docKey}
+%
+% \begin{docCommand}{ptag}{\oarg{keys}}
+%   Available only when \textsf{amsmath} is loaded.  Works inside displayed math environments like \texttt{equation} and \texttt{align}.  Accepts the same keys as \refCom{pitem}, except that \texttt{align} has no effect (positioning is controlled by the tag placement system).
+% \end{docCommand}
+%
+% \section{Item types}\label{sect:types}
+%
+% \begin{docCommand}{SetItemType}{\marg{name}\marg{keys}}
+%   Defines or modifies an item type for use with the \texttt{type} key.  All \refCom{pitem} keys are accepted, plus the following:
+% \end{docCommand}
+%
+% \begin{docKey}{macro}{=\meta{command}}{no default}
+%   A new user macro, equivalent to \cs{pitem}\texttt{[type=}\meta{name}\texttt{]}.  Any further keys given to the macro are passed to \cs{pitem}.
+% \end{docKey}
+%
+% If the type \meta{name} already exists, |\SetItemType| modifies or adds keys.  For example, |\SetItemType{short}{align=flush}| changes the alignment of the built-in |short| type while preserving its other settings.
+%
+% \begin{example}
+% \SetItemType{angle}{
+%   align = left,
+%   display format = 
+%     \textbf{$\langle$#1$\rangle$},
+%   ref format     = 
+%     $\langle$#1$\rangle$,
+%   macro = \angitem
+% }
+% \begin{prop}
+%   \angitem[Angle thesis]
+%   Everything is angular.
+% \end{prop}
+% No further discussion of 
+% \Lastref{} is needed.
+% \end{example}
+%
+% \begin{docCommand}{DeclareNumberedType}{\marg{name}\oarg{keys}}
+%   Creates a new \LaTeX{} counter named \meta{name} and a matching item type with \texttt{counter=}\meta{name}.  All \refCom{SetItemType} keys are accepted, plus:
+% \end{docCommand}
+%
+% \begin{docKey}{parent}{=\meta{counter}}{no default}
+%   A parent counter; the new counter resets when the parent steps (same mechanism as \cs{numberwithin}).  A dedicated \texttt{prop} counter (stepped by each \texttt{prop} and \texttt{inlineprop}) is available for non-persistent numbering.
+% \end{docKey}
+%
+% \begin{docKey}{counter format}{=\meta{format}}{default \meta{name}\texttt{\string\arabic\{\meta{name}\}}}
+%   The representation of the new counter (\cs{the}\meta{name}).
+% \end{docKey}
+%
+% \begin{example}
+% \DeclareNumberedType{P}
+% \begin{prop}
+%   \pitem[counter=P] First premise.
+%   \label{p1}
+%   \pitem[counter=P] Second premise.
+%   \label{p2}
+% \end{prop}
+% From \ref{p1} and \ref{p2}\ldots
+% \end{example}
+%
+% \subsection{Built-in types}
+%
+% The following item types are predefined.  \refCom{SetItemType} can modify their behaviour.
+%
+% \begin{center}
+% \begin{tabular}{llllll}
+%   \textbf{Type} & \textbf{Shortcut} & \textbf{Counter} & \textbf{Display} &
+%   \textbf{Ref} & \textbf{Align} \\\hline
+%   |short| & none* & none & \textbf{Name} & \textbf{Name} & left \\
+%   |long| & |\litem| & none & \textbf{Name} & Name & flush \\
+%   |bullet| & |\bitem| & none & \textbullet & \textbullet & default \\
+%   |roman| & |\ritem| & |roman| & (i) & (i) & left \\
+%   |alph| & |\aitem| & |alph| & (a) & (a) & left \\
+%   |numbered| & none$^\dag$ & |numbered|$^\ddag$  & (1) & (1) & left \\
+%   |leveltwo| & none$^\dag$ & |leveltwo| & a. & (1a) & left \\
+%   |levelthree| & none$^\dag$ & |levelthree| & (i) & (1a.i) & left \\
+%   |levelfour| & none$^\dag$ & |levelfour| & \textbullet & \textbullet & default \\
+%   |levelfive| & none$^\dag$ &  |levelfive| & -- & -- & default
+% \end{tabular}
+% \end{center}
+%
+% \begin{itemize}
+%   \item[*] The |short| type is auto-selected when |\pitem| or |\ptag| has an optional argument but no |type| key.
+%   \item[$\dag$] The |numbered|--|levelfive| types are auto-selected when |\pitem| or |\ptag| has no optional argument, depending on nesting level.
+%   \item[$\ddag$] The |equations| package option changes |numbered|'s counter to |equation|.
+%     The |leveltwo|--|levelfive| counters reset automatically when a |\pitem| at the next lower level is processed.
+% \end{itemize}
+%
+% \section{Cross-referencing}\label{sect:xref}
+%
+% Labels placed after |\pitem| items work with the standard
+% |\label|/|\ref| mechanism.  The key difference from ordinary
+% \LaTeX{} references is that |\ref| produces \emph{formatted}
+% output: for example, |\textbf| might be applied to the name, or the number might be wrapped in parentheses.  The formatting is controlled by the |format| key (or separately by |display format| and |ref format|).
+%
+%
+% \begin{docCommands}{
+%   { doc name = nref,  doc parameter = \marg{label} },
+%   { doc name = {nref*}, doc parameter = \marg{label} },
+% }
+%   ``Naked ref.''  Outputs the bare reference content with all formatting stripped.  If \cs{ref}\texttt{\{premise\}} produces~`(P1)', then \cs{nref}\texttt{\{premise\}} produces~`P1'.  The starred form suppresses the hyperlink.
+% \end{docCommands}
+%
+% |\nref| is often useful in the argument of |\pitem|, when the 
+% the name of one proposition should depend on that of another:
+% \begin{example}
+% \SetItemType{short}{format=(#1)}
+% \begin{prop}
+%   \pitem[Phys]
+%   Everything is physical.
+%   \label{premise}
+%   \pitem[\nref{premise}*]
+%   Almost everything is physical.
+%   \label{newpremise}
+%   \pitem[\ref{premise}*]
+%   The version \ref{newpremise}, which
+%   uses |\nref|, looks better 
+%   than the one with |\ref|, unless 
+%   for some reason one wants two 
+%   lots of parentheses.
+% \end{prop}
+% \end{example}
+% 
+% \emph{Warning:} documents where the name of one item includes
+% a reference to that of another, and there are further 
+% references to that item, will require multiple
+% \LaTeX\ runs to resolve all references.  To save time, 
+% it is better to avoid long chains of dependencies of this sort.
+% 
+% \begin{docCommands}{
+%   { doc name = oref,  doc parameter = \oarg{prefix}\oarg{suffix}\marg{label} },
+%   { doc name = {oref*}, doc parameter = \oarg{prefix}\oarg{suffix}\marg{label} },
+% }
+%   ``Ref with options.''  Extends \cs{ref} by injecting a prefix and/or suffix \emph{inside} the formatting.  With one optional argument, \meta{suffix} is appended; with two, \meta{prefix} is prepended and \meta{suffix} appended.  For instance, if \cs{ref}\texttt{\{premise\}} produces~`(P1)', then \cs{oref}\texttt{[*]\{premise\}} produces~`(P1*)' and \cs{oref}\texttt{[cf.\string~][*]\{premise\}} produces~`(cf.\string~P1*)'.  The starred form suppresses the hyperlink.
+% \end{docCommands}
+% 
+% |\oref| can also be useful in the name of |\pitem|s, if 
+% one wants the display format for the modified item
+% to depend on that originally used
+% \begin{example}
+% \begin{prop}
+%   \label{premise}
+%   \pitem[name=\oref[*]{premise}, 
+%      format=#1]
+%   This will use boldface and 
+%   parentheses because the original
+%   referenced item did.
+% \end{prop}
+% \end{example}
+% 
+% Another handy use for |\oref| is in combination with |\nref| to refer to ranges:
+% \begin{example}
+% The first two numbered examples in
+% this document were 
+% were \oref[--\nref{atomism}]{atoms}.
+% \end{example}
+%
+% 
+% \begin{docCommand}{Lastref}{\oarg{prefix}\marg{suffix}}
+%   Formatted reference to the most recently processed \cs{pitem} or \cs{ptag}, even without a \cs{label}.  Useful for back-references in running text.  With one argument, \meta{suffix} is appended; with two, \meta{prefix} is also prepended.  Use \cs{Lastref}\texttt{\{\}} for a plain reference.
+% \end{docCommand}
+%
+% \begin{docCommand}{nLastref}{}
+%   Like \refCom{Lastref}\texttt{\{\}} but returns the bare content without formatting.  Takes no arguments; simply output any desired suffix directly afterwards.
+% \end{docCommand}
+%
+% \begin{docCommand}{Parentref}{\oarg{prefix}\marg{suffix}}
+%   Inside a nested \texttt{prop} (or \texttt{inlineprop}), produces a formatted reference to the most recent item of the enclosing level.  Same argument convention as \refCom{Lastref}.
+% \end{docCommand}
+%
+% \begin{docCommand}{nParentref}{}
+%   Like \refCom{Parentref}\texttt{\{\}} but returns the bare content without formatting.  Takes no arguments; simply output any desired suffix directly afterwards.
+% \end{docCommand}
+%
+% \refCom{Parentref} and \refCom{nParentref} are useful for making subitems whose names derive from their parent's:
+% \begin{example}
+% \DeclareNumberedType{inner}[
+%   counter format=\alph{inner},
+%   display format=#1.]
+% \begin{prop}
+%   \pitem[OI] Outer item.
+%   \label{outer2}
+%   \begin{prop}
+%     \pitem[type=inner,
+%       format=\Parentref{.#1}]
+%     \label{dsub1}
+%     Ref: \ref{dsub1},
+%     naked: \nref{dsub1}.
+%     \pitem[type=inner,
+%       display format=#1.,
+%       ref format=\Parentref{.#1}]
+%     \label{dsub2}
+%     Ref: \ref{dsub2},
+%     naked: \nref{dsub2}.
+%   \end{prop}
+% \end{prop}
+% \end{example}
+%
+% The built-in |leveltwo| and |levelthree| types have
+% |ref format=\Parentref{#1}| and |ref format=\Parentref{.#1}|,
+% respectively, so that if the parent references
+% as~`(\textbf{P1})', a |leveltwo| sub-item references
+% as~`(\textbf{P1a})' and |\nref| returns just~`a'.
+%
+% \subsection{How it works: \cs{propapply}}
+%
+% \begin{docCommand}{propapply}{\marg{template}\marg{content}}
+%   Internally, each reference is stored in the \texttt{.aux} file as \cs{propapply}\marg{template}\marg{content}.  The \meta{template} contains formatting with the placeholder \refCom{propfmtarg} where content appears.  At reference time, \cs{propapply} evaluates the template with \cs{propfmtarg} bound to \meta{content}.  The \refCom{oref} and \refCom{nref} commands work by locally redefining \cs{propapply}.
+%
+%   In normal use, you need not interact with \cs{propapply} directly.
+% \end{docCommand}
+%
+% \begin{docCommand}{propfmtarg}{}
+%   Placeholder used inside templates; expands to the content argument of the enclosing \refCom{propapply}.
+% \end{docCommand}
+%
+% \section{Package options}\label{sect:global}
+%
+% \begin{docCommand}{propoptions}{\marg{keys}}
+%   Sets package-level keys.  These can also be set:
+%   \begin{itemize}
+%     \item In the optional argument of \texttt{prop} and \texttt{inlineprop} (local to that environment).
+%     \item In the preamble with \cs{usepackage}\texttt{[}\meta{options}\texttt{]\{propositions\}} (global).
+%   \end{itemize}
+% \end{docCommand}
+% 
+%   \emph{Exception 1:} keys containing \texttt{\#} (such as \texttt{equation format}) cannot be set in the optional argument of \cs{usepackage}, due to how \LaTeX{} handles \texttt{\#} in option values.
+%
+%   \emph{Exception 2:} \texttt{equations} is a global key; it cannot be used in the optional argument of \texttt{prop} or \texttt{inlineprop}.
+% 
+% \subsection{List dimensions}
+%
+% \begin{docKeys}[
+%     doc parameter = {=\meta{length / length list}},
+%   ]
+%   {
+%     { doc name = topsep },
+%     { doc name = partopsep },
+%     { doc name = itemsep },
+%     { doc name = parsep },
+%     { doc name = leftmargin },
+%     { doc name = rightmargin },
+%     { doc name = labelwidth },
+%     { doc name = labelsep },
+%     { doc name = itemindent },
+%     { doc name = listparindent },
+%   }
+%   Override the standard \LaTeX{} list dimensions.  Accept the same values as \cs{setlength}, including rubber lengths (e.g.\ \texttt{itemsep=4pt plus 2pt}).  Each key may also take a comma-separated list of per-level values: e.g.\ \texttt{leftmargin=\{2.5em, 0em\}}.  The first value applies at level~1, the second at level~2, etc.  Gaps in the list (e.g.\ \texttt{leftmargin=\{, 0em\}}) cause the class default to be used for that level.
+% \end{docKeys}
+%
+% \begin{docKey}{labelindent}{=\meta{length / length list}}{no default}
+%   Positions label left edges at \meta{length} from the enclosing margin, adjusting \cs{labelsep} or \cs{itemindent} as needed.  Positive values move rightward, negative leftward.
+% \end{docKey}
+%
+% \begin{docKey}{tightspacing}{}{no value}
+%   Sets all vertical spacing to the compact defaults that the standard document classes use for level-three lists (\texttt{topsep} and \texttt{itemsep} to \texttt{2pt} with stretch/shrink, \texttt{parsep} to \texttt{0pt}, \texttt{partopsep} to \texttt{1pt}).  Individual dimension keys set afterward override.
+% \end{docKey}
+%
+% \begin{docKey}{nosep}{}{no value}
+%   Sets \cs{topsep}, \cs{itemsep}, and \cs{parsep} all to zero.
+% \end{docKey}
+%
+% \subsection{Default types}
+%
+% \begin{docKey}{default type}{=\meta{type}}{initially \texttt{short}}
+%   The type used when \cs{pitem} or \cs{ptag} is given a name or counter but no explicit \texttt{type}.
+% \end{docKey}
+%
+% \begin{docKey}{default ptag type}{=\meta{type}}{initially empty}
+%   If set, overrides \texttt{default type} for \cs{ptag} only.
+% \end{docKey}
+%
+% \begin{docKey}{level n}{=\meta{type}}{see below}
+%   Default item type at nesting level \textit{n} (1--5) when \cs{pitem} has no optional argument.
+%   \begin{center}
+%     \begin{tabular}{cl}
+%       \textbf{Level} & \textbf{Default type} \\
+%       1 & \texttt{numbered}\\
+%       2 & \texttt{leveltwo}  \\
+%       3 & \texttt{levelthree} \\
+%       4 & \texttt{levelfour} \\
+%       5 & \texttt{levelfive}
+%     \end{tabular}
+%   \end{center}
+%   The \texttt{leveltwo}--\texttt{levelfive} types use special counters \texttt{leveltwo}--\texttt{levelfive}, which reset automatically when \texttt{pitem} is used at lesser nesting levels.  Other types can also use these counters.  
+% \end{docKey}
+%
+% \subsection{Formatting and referencing equation numbers}
+%
+% \begin{docKey}{equations}{}{no value, \textbf{global only}}
+%   Shares the \texttt{equation} counter between \cs{pitem}\texttt{[type=numbered]} and standard displayed equations.  Also redefines the format for equation labels and references to match \cs{pitem}\texttt{[type=numbered]}, so that \cs{oref} and \cs{nref} work with equation labels.
+% \end{docKey}
+%
+% \begin{docKey}{equation format}{=\meta{template}}{initially \texttt{(\#1)}}
+%   Shorthand: sets both \texttt{equation display format} and \texttt{equation ref format}.
+% \end{docKey}
+%
+% \begin{docKey}{equation display format}{=\meta{template}}{initially \texttt{(\#1)}}
+%   Controls how equation tags appear in the PDF (via \cs{tagform@}).  Use \texttt{\#1} for the number.  Does not affect \cs{ref} output.  Locally scoped.
+% \end{docKey}
+%
+% \begin{docKey}{equation ref format}{=\meta{template}}{initially \texttt{(\#1)}}
+%   Controls how \cs{ref} (and \cs{oref}, \cs{nref}) render equation labels.  Use \texttt{\#1} for the number.  Does not affect the displayed tag.  Locally scoped.
+% \end{docKey}
+%
+% \section{Compatibility}
+%
+% The \textsf{propositions} package is designed to work with \textsf{hyperref}, \textsf{cleveref}, and \textsf{amsmath}.
+% \textsf{amsmath} is required for |\ptag| and the |equations| option.  With \textsf{cleveref} loaded, all |\pitem|s are assigned to a default |proposition| reference type; the |crefname| key can override this.
+%
+% Recommended load order:
+% \begin{Verbatim}[gobble=2]
+% \usepackage{hyperref}
+% \usepackage{amsmath}   % if using \ptag
+% \usepackage{propositions}
+% \usepackage{cleveref}  % if used
+% \end{Verbatim}
+%
+% \section{Known issues}
+%
+% When using |\ptag| with a named counter (e.g.\ |\ptag[counter=P]|)
+% inside an \textsf{amsmath} equation environment, \textsf{hyperref}
+% may emit warnings of the form:
+% \begin{Verbatim}[gobble=2]
+% pdfTeX warning: destination with the same
+% identifier (name{equation.N}) has been already
+% used, duplicate ignored
+% \end{Verbatim}
+% These warnings are harmless and do not affect the correctness
+% of cross-references.
+%
+% \StopEventually{}
+%
+% \section{Implementation}
+%
+%    \begin{macrocode}
+%<*package>
+%<doc>%% propositions.sty --- A flexible system for labelling and cross-referencing displayed propositions.
+\ProvidesExplPackage {propositions} {2026/02/13} {0.2}
+  {Proposition labeling with key-value interface}
+
+\RequirePackage { calc }
+
+%<doc>%% ====================================================================
+%<doc>%% Internal variables
+%<doc>%% ====================================================================
+
+%<doc>%% --- Nesting level ---
+\int_new:N  \g__props_level_int
+
+%<doc>%% --- Per-item state (set during \pitem / \ptag processing) ---
+%<doc>%% These are cleared at the start of \__props_resolve_item:n and then
+%<doc>%% populated by key parsing and type loading.  Emptiness of a tl
+%<doc>%% indicates the key was not set (no separate boolean tracking needed).
+\tl_new:N   \l__props_name_tl
+\tl_new:N   \l__props_type_tl
+\tl_new:N   \l__props_counter_tl
+\tl_new:N   \l__props_alignment_tl
+\tl_new:N   \l__props_ref_tl
+\tl_new:N   \l__props_label_tl
+\tl_new:N   \l__props_shorthand_tl
+\tl_new:N   \l__props_gloss_tl
+
+%<doc>%% Format functions (one-argument macros set by keys / type loading).
+%<doc>%% These always have a definition (defaulting to identity or a standard format),
+%<doc>%% so unlike the tl variables above, their "was set" status cannot be inferred
+%<doc>%% from their value.
+\cs_new:Npn \l__props_displayfmt:n     #1 { #1 }
+\cs_new:Npn \l__props_reffmt:n      #1 { #1 }
+\cs_new:Npn \l__props_shorthandfmt:n #1 { ~ [#1] }
+\cs_new:Npn \l__props_glossfmt:n    #1 { ~ (#1) }
+
+%<doc>%% --- Environment mode ---
+%<doc>%% True inside a prop environment, false inside inlineprop.
+%<doc>%% Controls whether \pitem outputs a display label or inline text.
+\bool_new:N \g__props_display_mode_bool
+
+%<doc>%% --- Global settings ---
+\tl_new:N   \l__props_default_type_tl      %% default type (for \pitem, and \ptag fallback)
+\tl_new:N   \l__props_default_ptag_type_tl %% \ptag override; empty means use default type
+\prop_new:N \l__props_level_defaults_prop  %% nesting level -> default type name
+\bool_new:N \g__props_equations_bool         %% true if equations package option is set
+\cs_new:Npn \__props_eqdispfmt:n #1 { (#1) } %% display format for equation tags
+\cs_new:Npn \__props_eqreffmt:n  #1 { (#1) } %% ref format for equation labels
+
+%<doc>%% --- Working variables ---
+\tl_new:N   \l__props_display_text_tl    %% what appears in the document
+\tl_new:N   \l__props_ref_text_tl        %% what goes into \@currentlabel
+\tl_new:N   \l__props_item_output_tl     %% formatted display (displayfmt + shorthand + gloss)
+\bool_new:N \l__props_ptag_bool          %% true during \ptag processing
+
+%<doc>%% --- Parent-ref stacks and last-item storage ---
+%<doc>%% Two global seq stacks hold the template/content of the parent item.
+%<doc>%% Pushed on \begin{prop}/\begin{inlineprop}, popped on \end.
+%<doc>%% Two global tl variables hold the most recent item's template/content,
+%<doc>%% used by \Lastref/\nLastref for linguex-style back-references.
+\seq_new:N \g__props_parent_tpl_seq
+\seq_new:N \g__props_parent_cnt_seq
+\tl_new:N  \g__props_last_tpl_tl
+\tl_new:N  \g__props_last_cnt_tl
+
+%<doc>%% --- Anchor counter for hyperref ---
+\newcounter { propanchor }
+%<doc>%% Make hyperref destinations deterministic (not dependent on Hy@linkcounter,
+%<doc>%% which amsmath does not save/restore between measuring and output passes).
+%<doc>%% Note: hyperref prepends "propanchor." automatically in \H@refstepcounter,
+%<doc>%% so \theHpropanchor only needs the unique suffix.
+\def \theHpropanchor { \the\value{propanchor} }
+
+%<doc>%% --- Prop environment counter ---
+%<doc>%% Stepped by each \begin{prop} / \begin{inlineprop}.  Not displayed;
+%<doc>%% exists solely so that \numberwithin{equation}{prop} can reset the
+%<doc>%% equation counter per prop block if desired.
+\newcounter { prop }
+
+%<doc>%% ====================================================================
+%<doc>%% \propapply — format/content separation for cross-references
+%<doc>%% ====================================================================
+%<doc>%%
+%<doc>%% \propfmtarg is a protected placeholder.  In the aux file, format
+%<doc>%% templates contain \propfmtarg where the content should go.
+%<doc>%% \propapply{<template>}{<content>} evaluates the template with
+%<doc>%% \propfmtarg set (via \protected@edef) to the content.  The
+%<doc>%% \protected@edef expands expandable macros (including \propfmtarg
+%<doc>%% tokens from an outer \propapply scope) while preserving robust
+%<doc>%% commands like \textbullet.  This enables correct resolution of
+%<doc>%% nested \Parentref references.  \oref and \nref work by locally
+%<doc>%% redefining \propapply to inject prefixes/suffixes or strip
+%<doc>%% formatting.
+%<doc>%%
+%<doc>%% When hyperref is loaded, \propapply locally disables hyperref's
+%<doc>%% link commands to suppress nested hyperlinks.  This matters because
+%<doc>%% ref texts stored in the aux file may contain \ref, \oref, etc.;
+%<doc>%% when \ref{item} renders the stored \propapply{template}{content},
+%<doc>%% the entire output is already inside a hyperlink created by \ref,
+%<doc>%% so any link-generating commands inside must be suppressed.
+%<doc>%% (We avoid \NoHyper/\endNoHyper because they use \global
+%<doc>%% assignments that break when \propapply is nested.)
+
+\cs_new_protected:Npn \propfmtarg { }
+
+\cs_new_protected:Npn \propapply #1#2
+  {
+    \group_begin:
+    \protected@edef \propfmtarg { #2 }
+    #1
+    \group_end:
+  }
+
+%<doc>%% ====================================================================
+%<doc>%% \Parentref / \nParentref / \Lastref / \nLastref
+%<doc>%% ====================================================================
+%<doc>%%
+%<doc>%% \Parentref reads the top of the parent stacks, wrapping the result
+%<doc>%% in \propapply so the parent's template is preserved.  When \nref
+%<doc>%% strips the outermost \propapply, the parent contribution vanishes,
+%<doc>%% leaving only the child content — as expected.
+%<doc>%%
+%<doc>%% \nParentref returns just the parent's content (bare, no template),
+%<doc>%% suitable for use in \the<counter> definitions where the parent
+%<doc>%% prefix should be part of the counter *name* and survive \nref.
+%<doc>%%
+%<doc>%% \Lastref / \nLastref are analogous but read from the last-item
+%<doc>%% globals instead of the parent stacks, enabling linguex-style
+%<doc>%% back-references without \label.
+%<doc>%%
+%<doc>%% All four commands are expandable, so they resolve correctly
+%<doc>%% inside \protected@edef (e.g. when building aux-file content).
+%<doc>%%
+%<doc>%% Argument convention:
+%<doc>%%   \Parentref{suffix}           — appends suffix to parent content
+%<doc>%%   \Parentref[prefix]{suffix}   — wraps parent content with both
+%<doc>%%   \Parentref{}                 — plain parent ref (empty suffix)
+%<doc>%%
+%<doc>%% Note: the last argument must be mandatory for expandable commands
+%<doc>%% (xparse requirement), so the suffix is mandatory rather than optional.
+
+\NewExpandableDocumentCommand \Parentref { o m }
+  {
+    \IfValueTF { #1 }
+      {
+        \propapply
+          { \seq_item:Nn \g__props_parent_tpl_seq { 1 } }
+          { #1 \seq_item:Nn \g__props_parent_cnt_seq { 1 } #2 }
+      }
+      {
+        \propapply
+          { \seq_item:Nn \g__props_parent_tpl_seq { 1 } }
+          { \seq_item:Nn \g__props_parent_cnt_seq { 1 } #2 }
+      }
+  }
+
+\NewExpandableDocumentCommand \nParentref { }
+  { \seq_item:Nn \g__props_parent_cnt_seq { 1 } }
+
+\NewExpandableDocumentCommand \Lastref { o m }
+  {
+    \IfValueTF { #1 }
+      {
+        \propapply
+          { \g__props_last_tpl_tl }
+          { #1 \g__props_last_cnt_tl #2 }
+      }
+      {
+        \propapply
+          { \g__props_last_tpl_tl }
+          { \g__props_last_cnt_tl #2 }
+      }
+  }
+
+\NewExpandableDocumentCommand \nLastref { }
+  { \g__props_last_cnt_tl }
+
+%<doc>%% ====================================================================
+%<doc>%% Variant generation
+%<doc>%% ====================================================================
+
+\cs_generate_variant:Nn \tl_gset_eq:NN { cN }
+\cs_generate_variant:Nn \cs_gset_eq:NN { cN }
+\cs_generate_variant:Nn \cs_set_eq:NN  { Nc }
+\cs_generate_variant:Nn \seq_gpush:Nn  { NV }
+
+%<doc>%% ====================================================================
+%<doc>%% Type preset storage
+%<doc>%% ====================================================================
+%<doc>%% For each declared type <T>, we store:
+%<doc>%%   \g__props_type_<T>_alignment_tl    (token list)
+%<doc>%%   \g__props_type_<T>_counter_tl      (token list)
+%<doc>%%   \g__props_type_<T>_displayfmt:n       (one-arg macro)
+%<doc>%%   \g__props_type_<T>_reffmt:n        (one-arg macro)
+%<doc>%% etc.
+
+\cs_new_protected:Nn \__props_type_ensure:n
+  {
+    \tl_if_exist:cF { g__props_type_ #1 _alignment_tl }
+      {
+        \tl_new:c { g__props_type_ #1 _alignment_tl }
+        \tl_new:c { g__props_type_ #1 _counter_tl }
+        \cs_gset:cpn { g__props_type_ #1 _displayfmt:n }     ##1 { ##1 }
+        \cs_gset:cpn { g__props_type_ #1 _reffmt:n }      ##1 { ##1 }
+        \cs_gset:cpn { g__props_type_ #1 _shorthandfmt:n }  ##1 { ~ [##1] }
+        \cs_gset:cpn { g__props_type_ #1 _glossfmt:n }     ##1 { ~ (##1) }
+        \tl_new:c { g__props_type_ #1 _name_tl }
+        \tl_new:c { g__props_type_ #1 _ref_tl }
+        \tl_new:c { g__props_type_ #1 _shorthand_tl }
+        \tl_new:c { g__props_type_ #1 _gloss_tl }
+      }
+  }
+
+%<doc>%% Load a type's preset into the local variables.
+\cs_new_protected:Nn \__props_type_load:
+  {
+    \tl_if_exist:cTF { g__props_type_ \l__props_type_tl _alignment_tl }
+      {
+        \tl_set_eq:Nc \l__props_alignment_tl
+          { g__props_type_ \l__props_type_tl _alignment_tl }
+        \tl_set_eq:Nc \l__props_counter_tl
+          { g__props_type_ \l__props_type_tl _counter_tl }
+        \cs_set_eq:Nc \l__props_displayfmt:n
+          { g__props_type_ \l__props_type_tl _displayfmt:n }
+        \cs_set_eq:Nc \l__props_reffmt:n
+          { g__props_type_ \l__props_type_tl _reffmt:n }
+        \cs_set_eq:Nc \l__props_shorthandfmt:n
+          { g__props_type_ \l__props_type_tl _shorthandfmt:n }
+        \cs_set_eq:Nc \l__props_glossfmt:n
+          { g__props_type_ \l__props_type_tl _glossfmt:n }
+        \tl_set_eq:Nc \l__props_name_tl
+          { g__props_type_ \l__props_type_tl _name_tl }
+        \tl_set_eq:Nc \l__props_ref_tl
+          { g__props_type_ \l__props_type_tl _ref_tl }
+        \tl_set_eq:Nc \l__props_shorthand_tl
+          { g__props_type_ \l__props_type_tl _shorthand_tl }
+        \tl_set_eq:Nc \l__props_gloss_tl
+          { g__props_type_ \l__props_type_tl _gloss_tl }
+        \tl_set_eq:Nc \l__props_crefname_tl
+          { g__props_type_ \l__props_type_tl _crefname_tl }
+      }
+      {
+        \msg_error:nnx { props } { unknown-type } { \l__props_type_tl }
+      }
+  }
+
+\msg_new:nnn { props } { unknown-type }
+  { Unknown~ item~ type~ '#1'. }
+\msg_new:nnn { props } { unknown-counter }
+  { Counter~ '#1'~ not~ defined.~
+    Use~ \token_to_str:N \DeclareNumberedType \{ #1 \} ~ in~ preamble. }
+\msg_new:nnn { props } { pitem-outside-env }
+  { \token_to_str:N \pitem \ can~ only~ be~ used~
+    inside~ prop~ or~ inlineprop~ environments. }
+\msg_new:nnn { props } { pitem-in-math }
+  { \token_to_str:N \pitem \ cannot~ be~ used~ in~ math~ mode.~
+    Use~ \token_to_str:N \ptag \ instead. }
+\msg_new:nnn { props } { global-only-keys }
+  { Key(s)~ '#1'~ ignored~ in~ prop~ optional~ argument~
+    (use~ \token_to_str:N \propoptions \ instead). }
+
+%<doc>%% ====================================================================
+%<doc>%% l3keys: keys for \SetItemType
+%<doc>%% ====================================================================
+
+\tl_new:N   \l__props_decl_macro_tl
+
+\keys_define:nn { props / declare-type }
+  {
+    name            .tl_set:N  = \l__props_name_tl ,
+    align           .tl_set:N  = \l__props_alignment_tl ,
+    counter         .tl_set:N  = \l__props_counter_tl ,
+    ref             .tl_set:N  = \l__props_ref_tl ,
+    display~format  .cs_set:Np = \l__props_displayfmt:n #1 ,
+    ref~format      .cs_set:Np = \l__props_reffmt:n #1 ,
+    format          .code:n    =
+      {
+        \cs_set:Npn \l__props_displayfmt:n ##1 { #1 }
+        \cs_set:Npn \l__props_reffmt:n ##1 { #1 }
+      } ,
+    ref~append      .code:n    =
+      { \cs_set:Npn \l__props_reffmt:n ##1 { \Parentref{#1} } } ,
+    shorthand       .tl_set:N  = \l__props_shorthand_tl ,
+    shorthand~format .cs_set:Np = \l__props_shorthandfmt:n #1 ,
+    gloss           .tl_set:N  = \l__props_gloss_tl ,
+    gloss~format    .cs_set:Np = \l__props_glossfmt:n #1 ,
+    crefname        .tl_set:N  = \l__props_crefname_tl ,
+    macro           .tl_set:N  = \l__props_decl_macro_tl ,
+  }
+
+%<doc>%% ====================================================================
+%<doc>%% Helper: define a macro command for a type
+%<doc>%% ====================================================================
+
+\cs_new_protected:Nn \__props_define_macro:Nn
+  {
+    %% #1 = control sequence (e.g. \litem), #2 = type name
+    \DeclareDocumentCommand #1 { o }
+      {
+        \IfValueTF { ##1 }
+          {
+            %% If the argument has no =, treat it as a bare name
+            %% so catcodes (e.g. $math$) are preserved.
+            \tl_if_in:nnTF { ##1 } { = }
+              { \pitem [ type=#2, ##1 ] }
+              { \pitem [ type=#2, name={##1} ] }
+          }
+          { \pitem [ type=#2 ] }
+      }
+  }
+
+%<doc>%% ====================================================================
+%<doc>%% Helper: store type preset from local state
+%<doc>%% ====================================================================
+
+\cs_new_protected:Nn \__props_store_type:n
+  {
+    \__props_type_ensure:n { #1 }
+    \tl_gset_eq:cN { g__props_type_ #1 _alignment_tl }    \l__props_alignment_tl
+    \tl_gset_eq:cN { g__props_type_ #1 _counter_tl }      \l__props_counter_tl
+    \cs_gset_eq:cN { g__props_type_ #1 _displayfmt:n }       \l__props_displayfmt:n
+    \cs_gset_eq:cN { g__props_type_ #1 _reffmt:n }        \l__props_reffmt:n
+    \cs_gset_eq:cN { g__props_type_ #1 _shorthandfmt:n }   \l__props_shorthandfmt:n
+    \cs_gset_eq:cN { g__props_type_ #1 _glossfmt:n }      \l__props_glossfmt:n
+    \tl_gset_eq:cN { g__props_type_ #1 _name_tl }         \l__props_name_tl
+    \tl_gset_eq:cN { g__props_type_ #1 _ref_tl }          \l__props_ref_tl
+    \tl_gset_eq:cN { g__props_type_ #1 _shorthand_tl }   \l__props_shorthand_tl
+    \tl_gset_eq:cN { g__props_type_ #1 _gloss_tl }       \l__props_gloss_tl
+    \tl_gset_eq:cN { g__props_type_ #1 _crefname_tl }   \l__props_crefname_tl
+  }
+
+%<doc>%% ====================================================================
+%<doc>%% Helper: reset local state to defaults for type declaration
+%<doc>%% ====================================================================
+
+%<doc>%% Reset local state to defaults for a type declaration.
+%<doc>%% counter_tl = "none" is the sentinel for text (non-numbered) items.
+%<doc>%% In the per-item reset (\__props_resolve_item:n), counter_tl is cleared
+%<doc>%% instead, because there it represents "user didn't specify a counter";
+%<doc>%% the actual value is loaded from the type preset in Phase 2.
+\cs_new_protected:Nn \__props_decl_reset:
+  {
+    \tl_set:Nn  \l__props_alignment_tl { default }
+    \tl_set:Nn  \l__props_counter_tl   { none }
+    \cs_set:Npn \l__props_displayfmt:n ##1     { ##1 }
+    \cs_set:Npn \l__props_reffmt:n  ##1     { ##1 }
+    \cs_set:Npn \l__props_shorthandfmt:n ##1 { ~ [##1] }
+    \cs_set:Npn \l__props_glossfmt:n ##1    { ~ (##1) }
+    \tl_clear:N \l__props_name_tl
+    \tl_clear:N \l__props_ref_tl
+    \tl_clear:N \l__props_shorthand_tl
+    \tl_clear:N \l__props_gloss_tl
+    \tl_clear:N \l__props_crefname_tl
+    \tl_clear:N \l__props_decl_macro_tl
+  }
+
+%<doc>%% ====================================================================
+%<doc>%% \SetItemType{<name>}{<key=value>}
+%<doc>%% ====================================================================
+
+\NewDocumentCommand \SetItemType { m m }
+  {
+    \__props_decl_reset:
+    %% If type already exists, load its preset as the starting point
+    %% so that unspecified keys keep their existing values.
+    \tl_if_exist:cT { g__props_type_ #1 _alignment_tl }
+      {
+        \tl_set:Nn \l__props_type_tl { #1 }
+        \__props_type_load:
+      }
+    \keys_set:nn { props / declare-type } { #2 }
+    \__props_store_type:n { #1 }
+    \tl_if_empty:NF \l__props_decl_macro_tl
+      { \exp_args:NV \__props_define_macro:Nn \l__props_decl_macro_tl { #1 } }
+  }
+
+%<doc>%% ====================================================================
+%<doc>%% l3keys: keys for \DeclareNumberedType
+%<doc>%% ====================================================================
+
+\tl_new:N \l__props_numdecl_parent_tl
+\tl_new:N \l__props_numdecl_counter_format_tl
+%<doc>%% Tracks whether counter format was explicitly given.
+%<doc>%% Needed because the default \the<counter> definition differs.
+\bool_new:N \l__props_numdecl_has_counter_format_bool
+
+\keys_define:nn { props / declare-numbered }
+  {
+    %% Counter-specific keys
+    parent          .tl_set:N  = \l__props_numdecl_parent_tl ,
+    counter~format  .code:n    =
+      {
+        \tl_set:Nn \l__props_numdecl_counter_format_tl { #1 }
+        \bool_set_true:N \l__props_numdecl_has_counter_format_bool
+      } ,
+    %% Shared keys (same targets as declare-type)
+    name            .tl_set:N  = \l__props_name_tl ,
+    align           .tl_set:N  = \l__props_alignment_tl ,
+    ref             .tl_set:N  = \l__props_ref_tl ,
+    display~format  .cs_set:Np = \l__props_displayfmt:n #1 ,
+    ref~format      .cs_set:Np = \l__props_reffmt:n #1 ,
+    format          .code:n    =
+      {
+        \cs_set:Npn \l__props_displayfmt:n ##1 { #1 }
+        \cs_set:Npn \l__props_reffmt:n ##1 { #1 }
+      } ,
+    ref~append      .code:n    =
+      { \cs_set:Npn \l__props_reffmt:n ##1 { \Parentref{#1} } } ,
+    shorthand       .tl_set:N  = \l__props_shorthand_tl ,
+    shorthand~format .cs_set:Np = \l__props_shorthandfmt:n #1 ,
+    gloss           .tl_set:N  = \l__props_gloss_tl ,
+    gloss~format    .cs_set:Np = \l__props_glossfmt:n #1 ,
+    macro           .tl_set:N  = \l__props_decl_macro_tl ,
+  }
+
+%<doc>%% ====================================================================
+%<doc>%% \DeclareNumberedType{<name>}  or  \DeclareNumberedType{<name>}[<keys>]
+%<doc>%% ====================================================================
+
+\NewDocumentCommand \DeclareNumberedType { m O{} }
+  {
+    %% Reset shared state
+    \__props_decl_reset:
+    %% Override defaults for numbered types
+    \cs_set:Npn \l__props_displayfmt:n ##1 { (##1) }
+    \cs_set:Npn \l__props_reffmt:n ##1 { (##1) }
+    %% Reset counter-specific state
+    \tl_clear:N \l__props_numdecl_parent_tl
+    \bool_set_false:N \l__props_numdecl_has_counter_format_bool
+    %% Process keys
+    \keys_set:nn { props / declare-numbered } { #2 }
+    %% Create counter
+    \newcounter { #1 }
+    %% Set parent
+    \tl_if_empty:NF \l__props_numdecl_parent_tl
+      { \exp_args:NnV \@addtoreset { #1 } \l__props_numdecl_parent_tl }
+    %% Define \the<counter>
+    \bool_if:NTF \l__props_numdecl_has_counter_format_bool
+      { \cs_gset:cpx { the#1 } { \exp_not:V \l__props_numdecl_counter_format_tl } }
+      { \cs_gset:cpn { the#1 } { #1 \arabic{#1} } }
+    %% Register as item type (force counter to type name)
+    \tl_set:Nn \l__props_counter_tl { #1 }
+    \__props_store_type:n { #1 }
+    %% Define macro command if specified
+    \tl_if_empty:NF \l__props_decl_macro_tl
+      { \exp_args:NV \__props_define_macro:Nn \l__props_decl_macro_tl { #1 } }
+  }
+
+%<doc>%% ====================================================================
+%<doc>%% l3keys: keys for \pitem
+%<doc>%% ====================================================================
+
+\keys_define:nn { props / pitem }
+  {
+    name        .tl_set:N = \l__props_name_tl ,
+    type        .tl_set:N = \l__props_type_tl ,
+    counter     .code:n =
+      {
+        \tl_set:Nn \l__props_counter_tl { #1 }
+        \tl_set:Nn \l__props_name_tl { \use:c { the #1 } }
+      } ,
+    align       .tl_set:N = \l__props_alignment_tl ,
+    ref         .code:n =
+      {
+        \tl_set:Nn \l__props_ref_tl { #1 }
+      } ,
+    display~format  .cs_set:Np = \l__props_displayfmt:n #1 ,
+    ref~format      .cs_set:Np = \l__props_reffmt:n  #1 ,
+    format          .code:n =
+      {
+        \cs_set:Npn \l__props_displayfmt:n ##1 { #1 }
+        \cs_set:Npn \l__props_reffmt:n ##1 { #1 }
+      } ,
+    ref~append      .code:n =
+      { \cs_set:Npn \l__props_reffmt:n ##1 { \Parentref{#1} } } ,
+    shorthand       .code:n =
+      {
+        \tl_set:Nn \l__props_shorthand_tl { #1 }
+      } ,
+    shorthand~format .cs_set:Np = \l__props_shorthandfmt:n #1 ,
+    gloss           .code:n =
+      {
+        \tl_set:Nn \l__props_gloss_tl { #1 }
+      } ,
+    gloss~format    .cs_set:Np = \l__props_glossfmt:n #1 ,
+    crefname        .tl_set:N = \l__props_crefname_tl ,
+    label           .tl_set:N = \l__props_label_tl ,
+    unknown     .code:n =
+      {
+        %% The key NAME is the proposition name (e.g., \pitem[P] -> key "P")
+        \tl_set:NV \l__props_name_tl \l_keys_key_str
+      } ,
+  }
+
+%<doc>%% ====================================================================
+%<doc>%% Shared item resolution (used by both \pitem and \ptag)
+%<doc>%% ====================================================================
+
+\cs_new_protected:Nn \__props_resolve_item:n
+  {
+    %% --- Reset per-item state ---
+    \tl_clear:N   \l__props_name_tl
+    \tl_clear:N   \l__props_type_tl
+    \tl_clear:N   \l__props_counter_tl
+    \tl_clear:N   \l__props_ref_tl
+    \tl_clear:N   \l__props_label_tl
+    \tl_clear:N   \l__props_shorthand_tl
+    \tl_clear:N   \l__props_gloss_tl
+    \tl_clear:N   \l__props_crefname_tl
+    \cs_set:Npn \l__props_shorthandfmt:n ##1 { ~ [##1] }
+    \cs_set:Npn \l__props_glossfmt:n    ##1 { ~ (##1) }
+
+    %% --- Phase 1: parse user keys ---
+    %% If the argument has no = sign, treat it as a bare name so that
+    %% catcodes (e.g. $math$) are preserved via the name key's value path
+    %% rather than being stringified by the l3keys unknown-key handler.
+    \tl_if_empty:nF { #1 }
+      {
+        \tl_if_in:nnTF { #1 } { = }
+          { \keys_set:nn { props / pitem } { #1 } }
+          { \keys_set:nn { props / pitem } { name = {#1} } }
+      }
+
+    %% --- Resolve type ---
+    %% If the user didn't specify type=, infer it:
+    %%   - name or counter given -> use the default type (typically "short")
+    %%   - nothing given -> use the level default (e.g. "numbered" at level 1)
+    \tl_if_empty:NT \l__props_type_tl
+      {
+        \bool_lazy_or:nnTF
+          { ! \tl_if_empty_p:N \l__props_name_tl }
+          { ! \tl_if_empty_p:N \l__props_counter_tl }
+          {
+            %% Name or counter given -> default type.
+            %% In ptag mode, use ptag override if set, else fall back.
+            \bool_lazy_and:nnTF
+              { \l__props_ptag_bool }
+              { ! \tl_if_empty_p:N \l__props_default_ptag_type_tl }
+              { \tl_set_eq:NN \l__props_type_tl \l__props_default_ptag_type_tl }
+              { \tl_set_eq:NN \l__props_type_tl \l__props_default_type_tl }
+          }
+          {
+            %% Nothing specified -> level default
+            %% Expand \int_use:N before \prop_get (n-type doesn't expand)
+            \tl_set:Nx \l_tmpa_tl { \int_use:N \g__props_level_int }
+            \exp_args:NNV \prop_get:NnNTF
+              \l__props_level_defaults_prop \l_tmpa_tl \l_tmpb_tl
+              { \tl_set_eq:NN \l__props_type_tl \l_tmpb_tl }
+              { \tl_set:Nn \l__props_type_tl { numbered } }
+          }
+      }
+
+    %% --- Phase 2: load type preset (sets counter, formats, etc.) ---
+    \__props_type_load:
+
+    %% --- Phase 3: re-apply user keys on top of preset ---
+    %% This lets explicit keys like counter= or ref format= override
+    %% the values inherited from the type.
+    \tl_if_empty:nF { #1 }
+      {
+        \tl_if_in:nnTF { #1 } { = }
+          { \keys_set:nn { props / pitem } { #1 } }
+          { \keys_set:nn { props / pitem } { name = {#1} } }
+      }
+
+    %% --- Determine display text ---
+    %% counter_tl is now the type's counter (or the user's override).
+    %% "none" means this is a text item (no counter); anything else is
+    %% the name of a LaTeX counter to step and display.
+    \tl_if_eq:NnTF \l__props_counter_tl { none }
+      {
+        %% Text item: display text = name
+        \tl_set_eq:NN \l__props_display_text_tl \l__props_name_tl
+      }
+      {
+        %% Numbered item: step counter, display text = \the<counter>
+        \cs_if_exist:cTF { c@ \l__props_counter_tl }
+          {
+            %% In ptag mode inside an equation (not align/gather), the
+            %% environment already stepped the equation counter via
+            %% \incr@eqnum.  We skip our step to avoid a gap.
+            %% In align/gather, no per-row step happens, so we step.
+            %% For non-equation counters (e.g. P), always step.
+            \bool_if:NTF \l__props_ptag_bool
+              {
+                %% ptag mode: skip step for equation counter in equation env
+                %% (the env already stepped it); step in align/gather or for
+                %% non-equation counters.
+                \tl_if_eq:NnTF \l__props_counter_tl { equation }
+                  {
+                    \ifinalign@
+                      \stepcounter { \l__props_counter_tl }
+                    \else \ifingather@
+                      \stepcounter { \l__props_counter_tl }
+                    \fi \fi
+                  }
+                  { \stepcounter { \l__props_counter_tl } }
+              }
+              { \stepcounter { \l__props_counter_tl } }
+            %% If no explicit name, default to \the<counter>
+            \tl_if_empty:NT \l__props_name_tl
+              {
+                \protected@edef \l__props_name_tl
+                  { \use:c { the \l__props_counter_tl } }
+              }
+            \protected@edef \l__props_display_text_tl
+              { \l__props_name_tl }
+          }
+          {
+            \msg_error:nnx { props } { unknown-counter }
+              { \l__props_counter_tl }
+            \tl_set:Nn \l__props_display_text_tl { ??? }
+          }
+      }
+
+    %% --- Determine ref text ---
+    %% Priority: explicit ref > shorthand > display text
+    \tl_if_empty:NTF \l__props_ref_tl
+      {
+        \tl_if_empty:NTF \l__props_shorthand_tl
+          { \tl_set_eq:NN \l__props_ref_text_tl \l__props_display_text_tl }
+          { \tl_set_eq:NN \l__props_ref_text_tl \l__props_shorthand_tl }
+      }
+      { \tl_set_eq:NN \l__props_ref_text_tl \l__props_ref_tl }
+
+    %% --- Apply display format to display text ---
+    \protected@edef \l__props_item_output_tl
+      { \l__props_displayfmt:n { \l__props_display_text_tl } }
+
+    %% --- Append shorthand to display if present ---
+    \tl_if_empty:NF \l__props_shorthand_tl
+      {
+        \protected@edef \l_tmpa_tl
+          { \l__props_shorthandfmt:n { \l__props_shorthand_tl } }
+        \tl_put_right:NV \l__props_item_output_tl \l_tmpa_tl
+      }
+
+    %% --- Append gloss to display if present ---
+    \tl_if_empty:NF \l__props_gloss_tl
+      {
+        \protected@edef \l_tmpa_tl
+          { \l__props_glossfmt:n { \l__props_gloss_tl } }
+        \tl_put_right:NV \l__props_item_output_tl \l_tmpa_tl
+      }
+  }
+
+%<doc>%% ====================================================================
+%<doc>%% Ref-append helpers (shared by \pitem and \ptag)
+%<doc>%% ====================================================================
+
+%<doc>%% ====================================================================
+%<doc>%% \pitem — the main item command
+%<doc>%% ====================================================================
+
+\NewDocumentCommand \pitem { o }
+  {
+    \int_compare:nNnF { \g__props_level_int } > { 0 }
+      { \msg_error:nn { props } { pitem-outside-env } }
+    \mode_if_math:T
+      { \msg_error:nn { props } { pitem-in-math } }
+    %% Reset the sub-level counter one level below the current level.
+    %% This is done in \pitem (not \begin{prop}) so that a plain \item
+    %% can skip the reset, enabling intertext between sub-items.
+    \int_compare:nNnT { \g__props_level_int } = { 1 }
+      { \setcounter { leveltwo } { 0 } }
+    \int_compare:nNnT { \g__props_level_int } = { 2 }
+      { \setcounter { levelthree } { 0 } }
+    \int_compare:nNnT { \g__props_level_int } = { 3 }
+      { \setcounter { levelfour } { 0 } }
+    \int_compare:nNnT { \g__props_level_int } = { 4 }
+      { \setcounter { levelfive } { 0 } }
+    \IfValueTF { #1 }
+      { \__props_resolve_item:n { #1 } }
+      { \__props_resolve_item:n { } }
+    \__props_set_ref:
+    \__props_output_item:
+    \tl_if_empty:NF \l__props_label_tl
+      { \exp_args:NV \label \l__props_label_tl }
+  }
+
+%<doc>%% ====================================================================
+%<doc>%% Cross-referencing: set \@currentlabel
+%<doc>%% ====================================================================
+
+%<doc>%% Build propapply-formatted ref text into \l__props_ref_result_tl.
+\tl_new:N \l__props_ref_result_tl
+
+\cs_new_protected:Nn \__props_build_ref_text:
+  {
+    %% Build a \propapply{template}{content} token list for the aux file.
+    %% Also save the template and content globally for \Lastref and the
+    %% parent stacks (pushed when entering a nested prop environment).
+    \protected@xdef \g__props_last_tpl_tl
+      { \l__props_reffmt:n { \propfmtarg } }
+    \protected@xdef \g__props_last_cnt_tl
+      { \l__props_ref_text_tl }
+    \protected@edef \l__props_ref_result_tl
+      {
+        \propapply
+          { \exp_not:V \g__props_last_tpl_tl }
+          { \exp_not:V \g__props_last_cnt_tl }
+      }
+  }
+
+%<doc>%% Override the cleveref type recorded by \cs{refstepcounter}.
+%<doc>%% Parses \cs{cref@currentlabel} = |[type]..rest..| and replaces the type.
+\cs_new_protected:Npn \__props_override_cref_type:n #1
+  {
+    \exp_after:wN \__props_replace_cref_type:w
+      \cref@currentlabel \q_stop { #1 }
+  }
+\cs_new_protected:Npn \__props_replace_cref_type:w [ #1 ] #2 \q_stop #3
+  { \def \cref@currentlabel { [ #3 ] #2 } }
+
+\cs_new_protected:Nn \__props_set_ref:
+  {
+    \__props_build_ref_text:
+    \cs_set:Npx \thepropanchor { \exp_not:V \l__props_ref_result_tl }
+    \refstepcounter { propanchor }
+    %% If cleveref is loaded and crefname is set, override the type
+    %% so that any subsequent \label picks up the new type.
+    \bool_lazy_and:nnT
+      { \g__props_cleveref_bool }
+      { ! \tl_if_empty_p:N \l__props_crefname_tl }
+      { \exp_args:NV \__props_override_cref_type:n \l__props_crefname_tl }
+  }
+
+%<doc>%% ====================================================================
+%<doc>%% Save original \ref (for \oref / \nref circularity protection)
+%<doc>%% ====================================================================
+
+%<doc>%% Must happen at begin-document so that hyperref's redefinition of
+%<doc>%% \ref is already in place.  \oref and \nref call this saved copy
+%<doc>%% instead of \ref, so \let\ref\oref works without circularity.
+\AtBeginDocument
+  { \cs_set_eq:NN \__props_orig_ref:w \ref }
+
+%<doc>%% ====================================================================
+%<doc>%% Hyperref PDF string support
+%<doc>%% ====================================================================
+
+\AtBeginDocument
+  {
+    \@ifpackageloaded { hyperref }
+      {
+        %% Upgrade \propapply to suppress nested hyperlinks.
+        %% We disable hyperref link commands locally (within \group_begin:
+        %% / \group_end:) rather than using \NoHyper / \endNoHyper, because
+        %% those operate via \global assignments and break when \propapply
+        %% is nested (the inner \NoHyper overwrites the saved live-link).
+        \cs_set_protected:Npn \propapply #1#2
+          {
+            \group_begin:
+            \protected@edef \propfmtarg { #2 }
+            \def \hyper@link@ [##1]##2##3##4{##4\Hy@xspace@end}
+            \def \hyper@@anchor ##1##2{##2\Hy@xspace@end}
+            \def \hyper@link ##1##2##3{##3\Hy@xspace@end}
+            \let \hyper@anchor \@gobble
+            \let \hyper@anchorstart \@gobble
+            \def \hyper@anchorend {\Hy@xspace@end}
+            \let \hyper@linkstart \@gobbletwo
+            \def \hyper@linkend {\Hy@xspace@end}
+            \def \hyper@linkurl ##1##2{##1\Hy@xspace@end}
+            \def \hyper@linkfile ##1##2##3{##1\Hy@xspace@end}
+            \let \Hy@backout \@gobble
+            #1
+            \group_end:
+          }
+        %% Make \autoref work for propanchor labels (outputs the
+        %% formatted ref text with no extra prefix).
+        \def \propanchorautorefname { }
+        \pdfstringdefDisableCommands
+          {
+            \def \propapply #1#2{ #2 }
+            \def \propfmtarg { }
+            \def \oref #1{ \ref{#1} }
+            \def \nref #1{ \ref{#1} }
+            \def \Parentref #1{ }
+            \def \nParentref { }
+            \def \Lastref #1{ }
+            \def \nLastref { }
+          }
+      }
+      { }
+  }
+
+%<doc>%% ====================================================================
+%<doc>%% Cleveref integration
+%<doc>%% ====================================================================
+
+\bool_new:N \g__props_cleveref_bool
+
+\AtBeginDocument
+  {
+    \@ifpackageloaded { cleveref }
+      {
+        \bool_gset_true:N \g__props_cleveref_bool
+        %% Map the propanchor counter type to "proposition"
+        \crefalias { propanchor } { proposition }
+        %% Empty name: \cref just outputs the formatted ref text
+        \crefname  { proposition } {} {}
+        \Crefname  { proposition } {} {}
+      }
+      { }
+  }
+
+%<doc>%% ====================================================================
+%<doc>%% Equation formatting integration
+%<doc>%% ====================================================================
+
+\AtBeginDocument
+  {
+    \bool_if:NT \g__props_equations_bool
+      {
+        %% Redefine the equation "prefix" macro so that \ref{eq:foo}
+        %% produces \propapply{format}{number} instead of a bare number.
+        %% This makes equation refs work with \oref and \nref.
+        \cs_set:cpn { p@equation } #1
+          { \propapply { \__props_eqreffmt:n { \propfmtarg } } { #1 } }
+        %% Redefine \tagform@ so that displayed equation tags use
+        %% the display format.  \tag* (used by \ptag) bypasses this.
+        \cs_set:Npn \tagform@ #1
+          { \maketag@@@
+              { \__props_eqdispfmt:n
+                  { \ignorespaces #1 \unskip \@@italiccorr } } }
+      }
+  }
+
+%<doc>%% ====================================================================
+%<doc>%% \ptag — proposition tag for displayed math environments
+%<doc>%% ====================================================================
+
+%<doc>%% Wrapper to call \tag* — needed because \exp_args:NV can't expand
+%<doc>%% into a command with * directly.
+\cs_new_protected:Nn \__props_tag_star:n { \tag* { #1 } }
+
+%<doc>%% Deferred ref-setting for ptags.  Amsmath typesets equations in two
+%<doc>%% passes (measuring + output); we must only set the ref on the output
+%<doc>%% pass (\ifmeasuring@ is false) to avoid double-stepping propanchor.
+%<doc>%% \#1 = ref text, \#2 = crefname (may be empty).
+\cs_new_protected:Nn \__props_ptag_finish_ref:nn
+  {
+    \ifmeasuring@ \else
+    \cs_set:Npx \thepropanchor { \exp_not:n { #1 } }
+    \refstepcounter { propanchor }
+    \tl_if_empty:nF { #2 }
+      {
+        \bool_if:NT \g__props_cleveref_bool
+          { \__props_override_cref_type:n { #2 } }
+      }
+    \fi
+  }
+
+\NewDocumentCommand \ptag { o }
+  {
+    %% Enter ptag mode so \__props_resolve_item:n can adjust counter stepping
+    \bool_set_true:N \l__props_ptag_bool
+
+    %% Process keys (same resolution as \pitem)
+    \IfValueTF { #1 }
+      { \__props_resolve_item:n { #1 } }
+      { \__props_resolve_item:n { } }
+
+    \bool_set_false:N \l__props_ptag_bool
+
+    %% Build propapply-formatted ref text
+    \__props_build_ref_text:
+
+    %% \tag* internally calls \nonumber, which decrements the equation
+    %% counter.  When the ptag itself stepped that counter, we must
+    %% neutralize \incr@eqnum to prevent the decrement.  For ptags using
+    %% other counters (e.g. P), the equation counter should be unaffected.
+    \tl_if_eq:NnT \l__props_counter_tl { equation }
+      { \cs_set_eq:NN \incr@eqnum \scan_stop: }
+
+    %% Use \tag* for amsmath integration
+    \exp_args:NV \__props_tag_star:n \l__props_item_output_tl
+
+    %% Append our ref-setting code to \df@tag.  Amsmath collects all
+    %% \tag actions into \df@tag and executes them on the output pass.
+    %% We piggyback on this mechanism so our \refstepcounter runs at
+    %% the right time (after measuring, not during).
+    \cs_gset:Npx \df@tag
+      {
+        \exp_not:o { \df@tag }
+        \exp_not:N \__props_ptag_finish_ref:nn
+          { \exp_not:V \l__props_ref_result_tl }
+          { \exp_not:V \l__props_crefname_tl }
+      }
+
+    %% Handle label key via amsmath's deferred label mechanism
+    \tl_if_empty:NF \l__props_label_tl
+      { \exp_args:NV \label \l__props_label_tl }
+  }
+
+%<doc>%% ====================================================================
+%<doc>%% Item output
+%<doc>%% ====================================================================
+
+\cs_new_protected:Nn \__props_output_item:
+  {
+    \bool_if:NTF \g__props_display_mode_bool
+      { \__props_output_item_display: }
+      { \__props_output_item_inline: }
+  }
+
+%<doc>%% Display mode: use \item[...] with alignment control.
+%<doc>%%   "flush"   — label starts at the left text margin (pushes text right)
+%<doc>%%   "left"    — label is left-aligned in the label box (natural position)
+%<doc>%%   "right"   — label is right-aligned in the label box (like enumerate)
+%<doc>%%   "default" — standard LaTeX left-aligned label
+\cs_new_protected:Nn \__props_output_item_display:
+  {
+    \str_if_eq:VnTF \l__props_alignment_tl { flush }
+      {
+        %% Push label past the label area so it sits at the text margin
+        \item [ \hspace{\labelwidth} \hspace{\labelsep}
+                \l__props_item_output_tl \hspace{\labelsep} ]
+      }
+      {
+        \str_if_eq:VnTF \l__props_alignment_tl { left }
+          {
+            %% Negative space to left-align in the label box
+            \item [ \hspace{\dimexpr \labelwidth + \labelsep
+                      - \leftmargin - \itemindent \relax}
+                    \l__props_item_output_tl ]
+          }
+          {
+            \str_if_eq:VnTF \l__props_alignment_tl { left-nextline }
+              {
+                %% Label on own line(s), starting at the left edge
+                %% of the label area.  Issue a blank \item and typeset
+                %% the label as ordinary paragraph text with negative
+                %% \leftskip; then cancel the inter-paragraph space.
+                \item []
+                { \leftskip = \dimexpr -\labelwidth - \labelsep \relax
+                  \l__props_item_output_tl \par }
+                \vspace { -\parsep } \noindent \ignorespaces
+              }
+              {
+            \str_if_eq:VnTF \l__props_alignment_tl { nextline }
+              {
+                %% Label on own line(s), starting at the default label
+                %% position (same as alignment=default).
+                \item []
+                { \leftskip = \dimexpr \itemindent
+                    - \labelwidth - \labelsep \relax
+                  \l__props_item_output_tl \par }
+                \vspace { -\parsep } \noindent \ignorespaces
+              }
+              {
+            \str_if_eq:VnTF \l__props_alignment_tl { flush-nextline }
+              {
+                %% Label on own line(s), starting at the text margin.
+                %% Blank \item, label as ordinary paragraph text,
+                %% then cancel the inter-paragraph space.
+                \item []
+                \l__props_item_output_tl \par
+                \vspace { -\parsep } \noindent \ignorespaces
+              }
+              {
+            \str_if_eq:VnTF \l__props_alignment_tl { right }
+              {
+                %% Right-align in label box (like standard enumerate)
+                \cs_set:Nn \__props_display_label:n { \hss \mbox{##1} }
+                \item [ \l__props_item_output_tl ]
+                \cs_set:Nn \__props_display_label:n { \mbox{##1} \hfill }
+              }
+              { \item [ \l__props_item_output_tl ] }
+              }
+              }
+              }
+          }
+      }
+  }
+
+%<doc>%% Inline mode: just output text
+\cs_new_protected:Nn \__props_output_item_inline:
+  { \l__props_item_output_tl }
+
+%<doc>%% ====================================================================
+%<doc>%% The prop environment
+%<doc>%% ====================================================================
+
+%<doc>%% --- List dimension overrides (empty = use LaTeX default) ---
+%<doc>%% These use local assignment so \propoptions in a group is scoped.
+\tl_new:N \l__props_topsep_tl
+\tl_new:N \l__props_partopsep_tl
+\tl_new:N \l__props_itemsep_tl
+\tl_new:N \l__props_parsep_tl
+\tl_new:N \l__props_leftmargin_tl
+\tl_new:N \l__props_labelwidth_tl
+\tl_new:N \l__props_rightmargin_tl
+\tl_new:N \l__props_labelsep_tl
+\tl_new:N \l__props_itemindent_tl
+\tl_new:N \l__props_listparindent_tl
+\tl_new:N \l__props_labelindent_tl
+
+%<doc>%% \makelabel for prop lists: left-aligns the label and prevents line breaks.
+\cs_new:Nn \__props_display_label:n { \mbox{#1} \hfill }
+
+%<doc>%% Helper: apply a dimension override that may be a single value or a
+%<doc>%% comma-separated per-level list.  \#1 = tl variable, \#2 = dimension.
+%<doc>%% Empty tl $\Rightarrow$ inherit class default.
+%<doc>%% Single value $\Rightarrow$ apply to all levels.
+%<doc>%% Comma-list $\Rightarrow$ pick the item for the current prop level;
+%<doc>%% if the level exceeds the list length, inherit class default.
+%<doc>%% Uses \cs{seq\_set\_split:NnV} (not clist) so that blank entries
+%<doc>%% are preserved: e.g.\ \texttt{leftmargin=\{, 0em\}} means
+%<doc>%% ``class default at level~1, 0em at level~2.''
+\seq_new:N \l__props_dim_split_seq
+\cs_generate_variant:Nn \seq_set_split:Nnn { NnV }
+\cs_new:Nn \__props_apply_dim:Nn
+  {
+    \tl_if_empty:NF #1
+      {
+        \seq_set_split:NnV \l__props_dim_split_seq { , } #1
+        \int_compare:nNnTF
+          { \seq_count:N \l__props_dim_split_seq } > { 1 }
+          {
+            \tl_set:Nx \l_tmpa_tl
+              { \seq_item:Nn \l__props_dim_split_seq
+                  { \g__props_level_int } }
+            \tl_if_empty:NF \l_tmpa_tl
+              { \setlength { #2 } { \l_tmpa_tl } }
+          }
+          { \setlength { #2 } { #1 } }
+      }
+  }
+
+\NewDocumentEnvironment { prop } { O{} }
+  {
+    \stepcounter { prop }
+    \int_gincr:N \g__props_level_int
+    %% Push last item's template/content onto parent stacks
+    \seq_gpush:NV \g__props_parent_tpl_seq \g__props_last_tpl_tl
+    \seq_gpush:NV \g__props_parent_cnt_seq \g__props_last_cnt_tl
+    \bool_gset_true:N \g__props_display_mode_bool
+    %% Apply per-environment overrides; reject global-only keys.
+    \keys_set_filter:nnnN { props / global } { global-only }
+      { #1 } \l_tmpa_tl
+    \tl_if_empty:NF \l_tmpa_tl
+      {
+        \msg_warning:nnx { props } { global-only-keys }
+          { \l_tmpa_tl }
+      }
+    \begin{list} {}
+      {
+        \cs_set:Npn \makelabel ##1 { \__props_display_label:n {##1} }
+        %% Apply dimension overrides.  Each value may be a single length
+        %% (applied at all levels) or a comma-list of per-level lengths.
+        %% Empty = inherit the document class default.
+        \__props_apply_dim:Nn \l__props_topsep_tl        \topsep
+        \__props_apply_dim:Nn \l__props_partopsep_tl      \partopsep
+        \__props_apply_dim:Nn \l__props_itemsep_tl        \itemsep
+        \__props_apply_dim:Nn \l__props_parsep_tl         \parsep
+        \__props_apply_dim:Nn \l__props_leftmargin_tl     \leftmargin
+        \__props_apply_dim:Nn \l__props_rightmargin_tl    \rightmargin
+        \__props_apply_dim:Nn \l__props_labelsep_tl       \labelsep
+        \__props_apply_dim:Nn \l__props_itemindent_tl     \itemindent
+        \__props_apply_dim:Nn \l__props_listparindent_tl  \listparindent
+        \__props_apply_dim:Nn \l__props_labelwidth_tl     \labelwidth
+        %% labelindent: if set, position the label's left edge at
+        %% <labelindent> from the enclosing margin by adjusting
+        %% labelsep or itemindent (labelwidth is left alone).
+        %% Case 1 (label fits): keep itemindent, widen labelsep.
+        %% Case 2 (label overflows): keep labelsep, increase itemindent.
+        \tl_if_empty:NF \l__props_labelindent_tl
+          {
+            \seq_set_split:NnV \l__props_dim_split_seq
+              { , } \l__props_labelindent_tl
+            \int_compare:nNnTF
+              { \seq_count:N \l__props_dim_split_seq } > { 1 }
+              {
+                \tl_set:Nx \l_tmpa_tl
+                  { \seq_item:Nn \l__props_dim_split_seq
+                      { \g__props_level_int } }
+              }
+              { \tl_set_eq:NN \l_tmpa_tl \l__props_labelindent_tl }
+            \tl_if_empty:NF \l_tmpa_tl
+              {
+                \dim_compare:nTF
+                  { \labelwidth + \l_tmpa_tl <= \leftmargin + \itemindent }
+                  { %% Case 1: label fits — absorb slack into labelsep
+                    \setlength { \labelsep }
+                      { \dimexpr \leftmargin + \itemindent
+                          - \labelwidth - \l_tmpa_tl \relax }
+                  }
+                  { %% Case 2: label overflows — push first line right
+                    \setlength { \itemindent }
+                      { \dimexpr \labelwidth + \labelsep
+                          - \leftmargin + \l_tmpa_tl \relax }
+                  }
+              }
+          }
+      }
+  }
+  {
+    \end{list}
+    %% Pop parent stacks.  At level >= 2, restore the popped values
+    %% into \g__props_last_* so that re-entering a prop for intertext
+    %% sees the correct parent (not a stale sub-item).
+    \seq_gpop:NN \g__props_parent_tpl_seq \l_tmpa_tl
+    \seq_gpop:NN \g__props_parent_cnt_seq \l_tmpb_tl
+    %% At level >= 2, restore the popped parent values into
+    %% \g__props_last_* so that re-entering a prop for intertext
+    %% sees the correct parent (not a stale sub-item).
+    \int_compare:nNnT { \g__props_level_int } > { 1 }
+      {
+        \tl_gset_eq:NN \g__props_last_tpl_tl \l_tmpa_tl
+        \tl_gset_eq:NN \g__props_last_cnt_tl \l_tmpb_tl
+      }
+    \int_gdecr:N \g__props_level_int
+    %% Restore display_mode: true if we're still inside an outer prop,
+    %% false if we've exited to top level (or into an inlineprop).
+    \int_compare:nNnTF { \g__props_level_int } > { 0 }
+      { \bool_gset_true:N \g__props_display_mode_bool }
+      { \bool_gset_false:N \g__props_display_mode_bool }
+  }
+
+%<doc>%% ====================================================================
+%<doc>%% The inlineprop environment
+%<doc>%% ====================================================================
+
+\NewDocumentEnvironment { inlineprop } { O{} }
+  {
+    \stepcounter { prop }
+    \int_gincr:N \g__props_level_int
+    %% Push last item's template/content onto parent stacks
+    \seq_gpush:NV \g__props_parent_tpl_seq \g__props_last_tpl_tl
+    \seq_gpush:NV \g__props_parent_cnt_seq \g__props_last_cnt_tl
+    %% Apply per-environment overrides; reject global-only keys.
+    \keys_set_filter:nnnN { props / global } { global-only }
+      { #1 } \l_tmpa_tl
+    \tl_if_empty:NF \l_tmpa_tl
+      {
+        \msg_warning:nnx { props } { global-only-keys }
+          { \l_tmpa_tl }
+      }
+  }
+  {
+    %% Pop parent stacks (same restore logic as prop environment)
+    \seq_gpop:NN \g__props_parent_tpl_seq \l_tmpa_tl
+    \seq_gpop:NN \g__props_parent_cnt_seq \l_tmpb_tl
+    \int_compare:nNnT { \g__props_level_int } > { 1 }
+      {
+        \tl_gset_eq:NN \g__props_last_tpl_tl \l_tmpa_tl
+        \tl_gset_eq:NN \g__props_last_cnt_tl \l_tmpb_tl
+      }
+    \int_gdecr:N \g__props_level_int
+  }
+
+%<doc>%% ====================================================================
+%<doc>%% \oref — ref with optional prefix/suffix
+%<doc>%% ====================================================================
+
+%<doc>%% Helper: locally redefine \propapply to inject prefix (#1) and
+%<doc>%% suffix (#2) into the content slot.  Uses \cs_set_protected:Npx to
+%<doc>%% freeze the prefix/suffix values at definition time.
+\cs_new_protected:Nn \__props_oref_setup:nn
+  {
+    \tl_set:Nn \l_tmpa_tl { #1 }
+    \tl_set:Nn \l_tmpb_tl { #2 }
+    %% Save the current (standard) \propapply so we can restore it
+    %% inside the redefined version.  This ensures prefix/suffix only
+    %% apply at the outermost \propapply; any nested \propapply from
+    %% \Parentref etc. uses the standard definition.
+    \cs_set_eq:NN \__props_std_propapply:ww \propapply
+    \cs_set_protected:Npx \propapply ##1##2
+      {
+        \exp_not:N \group_begin:
+        \exp_not:N \cs_set_eq:NN \exp_not:N \propapply
+          \exp_not:N \__props_std_propapply:ww
+        \exp_not:N \protected@edef \exp_not:N \propfmtarg
+          { \exp_not:V \l_tmpa_tl ##2 \exp_not:V \l_tmpb_tl }
+        ##1
+        \exp_not:N \group_end:
+      }
+  }
+
+\NewDocumentCommand \oref { s o o m }
+  {
+    \group_begin:
+    \IfValueTF { #3 }
+      { \__props_oref_setup:nn { #2 } { #3 } }
+      {
+        \IfValueT { #2 }
+          { \__props_oref_setup:nn { } { #2 } }
+      }
+    \IfBooleanTF { #1 }
+      { \__props_orig_ref:w * { #4 } }
+      { \__props_orig_ref:w   { #4 } }
+    \group_end:
+  }
+
+%<doc>%% ====================================================================
+%<doc>%% \nref — naked ref (strips formatting)
+%<doc>%% ====================================================================
+
+\NewDocumentCommand \nref { s m }
+  {
+    \group_begin:
+    \cs_set:Npn \propapply ##1##2 { ##2 }
+    \IfBooleanTF { #1 }
+      { \__props_orig_ref:w * { #2 } }
+      { \__props_orig_ref:w   { #2 } }
+    \group_end:
+  }
+
+%<doc>%% ====================================================================
+%<doc>%% \propoptions — global configuration
+%<doc>%% ====================================================================
+
+\keys_define:nn { props / global }
+  {
+    default~type      .tl_set:N    = \l__props_default_type_tl ,
+    default~ptag~type .tl_set:N    = \l__props_default_ptag_type_tl ,
+    equation~format   .code:n      =
+      {
+        \cs_set:Npn \__props_eqdispfmt:n ##1 { #1 }
+        \cs_set:Npn \__props_eqreffmt:n  ##1 { #1 }
+      } ,
+    equation~display~format .code:n =
+      { \cs_set:Npn \__props_eqdispfmt:n ##1 { #1 } } ,
+    equation~ref~format     .code:n =
+      { \cs_set:Npn \__props_eqreffmt:n  ##1 { #1 } } ,
+    equations         .bool_gset:N = \g__props_equations_bool ,
+    equations         .default:n   = { true } ,
+    equations         .groups:n    = { global-only } ,
+    tightspacing      .code:n      =
+      {
+        \tl_set:Nn \l__props_topsep_tl     { 2\p@ \@plus\p@ \@minus\p@ }
+        \tl_set:Nn \l__props_itemsep_tl    { 2\p@ \@plus\p@ \@minus\p@ }
+        \tl_set:Nn \l__props_parsep_tl     { \z@ }
+        \tl_set:Nn \l__props_partopsep_tl  { \p@ \@plus\z@ \@minus\p@ }
+      } ,
+    nosep             .code:n      =
+      {
+        \tl_set:Nn \l__props_topsep_tl  { 0pt }
+        \tl_set:Nn \l__props_itemsep_tl { 0pt }
+        \tl_set:Nn \l__props_parsep_tl  { 0pt }
+      } ,
+    level~1           .code:n      =
+      { \prop_put:Nnn \l__props_level_defaults_prop { 1 } { #1 } } ,
+    level~2           .code:n      =
+      { \prop_put:Nnn \l__props_level_defaults_prop { 2 } { #1 } } ,
+    level~3           .code:n      =
+      { \prop_put:Nnn \l__props_level_defaults_prop { 3 } { #1 } } ,
+    level~4           .code:n      =
+      { \prop_put:Nnn \l__props_level_defaults_prop { 4 } { #1 } } ,
+    level~5           .code:n      =
+      { \prop_put:Nnn \l__props_level_defaults_prop { 5 } { #1 } } ,
+    %% List dimensions
+    topsep            .tl_set:N    = \l__props_topsep_tl ,
+    partopsep         .tl_set:N    = \l__props_partopsep_tl ,
+    itemsep           .tl_set:N    = \l__props_itemsep_tl ,
+    parsep            .tl_set:N    = \l__props_parsep_tl ,
+    leftmargin        .tl_set:N    = \l__props_leftmargin_tl ,
+    rightmargin       .tl_set:N    = \l__props_rightmargin_tl ,
+    labelwidth        .tl_set:N    = \l__props_labelwidth_tl ,
+    labelsep          .tl_set:N    = \l__props_labelsep_tl ,
+    itemindent        .tl_set:N    = \l__props_itemindent_tl ,
+    listparindent     .tl_set:N    = \l__props_listparindent_tl ,
+    labelindent       .tl_set:N    = \l__props_labelindent_tl ,
+  }
+
+\NewDocumentCommand \propoptions { m }
+  { \keys_set:nn { props / global } { #1 } }
+
+%<doc>%% ====================================================================
+%<doc>%% Default global settings (set before options so user options override)
+%<doc>%% ====================================================================
+
+\tl_set:Nn \l__props_default_type_tl { short }
+\prop_put:Nnn \l__props_level_defaults_prop { 1 } { numbered }
+\prop_put:Nnn \l__props_level_defaults_prop { 2 } { leveltwo }
+\prop_put:Nnn \l__props_level_defaults_prop { 3 } { levelthree }
+\prop_put:Nnn \l__props_level_defaults_prop { 4 } { levelfour }
+\prop_put:Nnn \l__props_level_defaults_prop { 5 } { levelfive }
+
+%<doc>%% ====================================================================
+%<doc>%% Package options (processed via l3keys)
+%<doc>%% ====================================================================
+
+\ProcessKeyOptions [ props / global ]
+
+%<doc>%% ====================================================================
+%<doc>%% Default type declarations
+%<doc>%% ====================================================================
+
+\SetItemType { short }
+  {
+    counter     = none ,
+    format      = \textbf{#1} ,
+  }
+
+\SetItemType { long }
+  {
+    align          = flush ,
+    counter        = none ,
+    display~format = \textbf{#1} ,
+    ref~format     = #1 ,
+    macro          = \litem ,
+  }
+
+\SetItemType { bullet }
+  {
+    align          = default ,
+    name           = \textbullet ,
+    display~format = #1 ,
+    macro          = \bitem ,
+  }
+
+\bool_if:NTF \g__props_equations_bool
+  {
+    \SetItemType { numbered }
+      {
+        align          = left ,
+        counter        = equation ,
+        display~format = \__props_eqdispfmt:n{#1} ,
+        ref~format     = \__props_eqreffmt:n{#1} ,
+      }
+  }
+  {
+    \newcounter { proposition }
+    \SetItemType { numbered }
+      {
+        align       = left ,
+        counter     = proposition ,
+        format      = (#1) ,
+      }
+  }
+
+%<doc>%% ====================================================================
+%<doc>%% Default numbered types
+%<doc>%% ====================================================================
+
+\DeclareNumberedType { roman }
+  [
+    parent         = section ,
+    counter~format = \roman{roman} ,
+    format         = (#1) ,
+    macro          = \ritem ,
+  ]
+
+\DeclareNumberedType { alph }
+  [
+    parent         = section ,
+    counter~format = \alph{alph} ,
+    format         = (#1) ,
+    macro          = \aitem ,
+  ]
+
+\DeclareNumberedType { leveltwo }
+  [
+    counter~format = \alph{leveltwo} ,
+    display~format = #1. ,
+    ref~format     = \Parentref{#1} ,
+  ]
+
+\DeclareNumberedType { levelthree }
+  [
+    counter~format = \roman{levelthree} ,
+    display~format = (#1) ,
+    ref~format     = \Parentref{.#1} ,
+  ]
+
+\newcounter { levelfour }
+\SetItemType { levelfour }
+  {
+    align          = default ,
+    name           = \textbullet ,
+    display~format = #1 ,
+  }
+
+\newcounter { levelfive }
+\SetItemType { levelfive }
+  {
+    align          = default ,
+    name           = -- ,
+    display~format = #1 ,
+  }
+
+%    \end{macrocode}
+%</package>
+%
+% \Finale

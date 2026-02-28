@@ -1,0 +1,464 @@
+\documentclass[leqno]{article}
+\usepackage{hyperref}
+\usepackage{amsmath}
+\usepackage[equations]{propositions}
+\usepackage{cleveref}
+
+\newtheorem{theorem}{Theorem}
+
+\DeclareNumberedType{P}
+
+\begin{document}
+
+\section{Basic tests}
+
+\subsection{Short items}
+
+\begin{prop}
+  \pitem[P] This is proposition P. \label{propP}
+  \pitem[Q] This is proposition Q. \label{propQ}
+\end{prop}
+
+Reference test: \ref{propP} and \ref{propQ}.
+
+Cleveref test: \cref{propP} and \cref{propQ}.
+
+\subsection{Long items}
+
+\begin{prop}
+  \pitem[type=long, Physicalism] Everything is physical. \label{phys}
+  \pitem[type=long, Dualism] Mind and body are distinct. \label{dual}
+\end{prop}
+
+Reference test: \ref{phys} and \ref{dual}.
+
+\subsection{Numbered items}
+
+\begin{prop}
+  \pitem If $p$ then $q$. \label{num1}
+  \pitem $p$. \label{num2}
+  \pitem Therefore $q$. \label{num3}
+\end{prop}
+
+References: \ref{num1}, \ref{num2}, \ref{num3}.
+
+\subsection{Shortcut commands}
+
+\begin{prop}
+  \pitem[A] Short item A. \label{shortA}
+  \litem[Some Thesis] A long item. \label{longthesis}
+  \pitem A numbered item. \label{numshort}
+\end{prop}
+
+References: \ref{shortA}, \ref{longthesis}, \ref{numshort}.
+
+\begin{prop}
+  \bitem A bullet item. \label{bull1}
+\end{prop}
+
+Reference: \ref{bull1}.
+
+\section{Nesting levels}
+
+\begin{prop}
+  \pitem First numbered item. \label{nest1}
+  \pitem Second numbered item. \label{nest2}
+  \begin{prop}
+    \pitem Level two sub-item. \label{nest2a}
+    \pitem Another level two. \label{nest2b}
+    \begin{prop}
+      \pitem Level three deep. \label{nest2ai}
+      \pitem Another level three. \label{nest2aii}
+    \end{prop}
+  \end{prop}
+  \pitem Third numbered item. \label{nest3}
+\end{prop}
+
+References across levels: \ref{nest1}, \ref{nest2a}, \ref{nest2ai}.
+
+\section{Named counters}
+
+\begin{prop}
+  \pitem[counter=P] First P-numbered. \label{P1}
+  \pitem[counter=P] Second P-numbered. \label{P2}
+\end{prop}
+
+References: \ref{P1}, \ref{P2}.
+
+\section{Oref and nref test}
+
+\begin{prop}
+  \pitem[P3] The original. \label{myP3}
+  \pitem[name={\nref{myP3}$'$}] The modified version. \label{myP3prime}
+\end{prop}
+
+Plain ref: \ref{myP3}.
+
+Oref with suffix: \oref[$'$]{myP3}.
+
+Nref: \nref{myP3}.
+
+Ref to modified: \ref{myP3prime}.
+
+\section{References in item names}
+\begin{prop}
+    \pitem[type=long, Problems with \ref{myP3}]
+    Some problem. \label{P3problem}
+    \pitem[name={\oref[*]{myP3}}]
+    A new version. \label{P3star}
+\end{prop}
+Reference: \ref{P3problem} and \ref{P3star}.
+
+\section{The label key}
+
+\begin{prop}
+  \pitem[label=autolabel, R] Using the label key.
+\end{prop}
+
+Reference: \ref{autolabel}.
+
+\section{Shortcut and gloss}
+
+\begin{prop}
+  \pitem[name={Long Proposition}, display format={\textit{#1}}, shorthand={LP}, shorthand format={ [#1]}, ref format={(#1)}] A long name with a shorthand. \label{lp}
+  \pitem[name={Another Thesis}, display format={\textsc{#1}}, shorthand={AT}] Default shorthand format. \label{at}
+  \pitem[name={Glossed Prop}, gloss={roughly, everything is fine}] A proposition with a gloss. \label{gp}
+  \pitem[name={Full Example}, display format={\textit{#1}}, shorthand={FE}, shorthand format={ [#1]}, gloss={an example}, gloss format={ --- #1}] Both shorthand and gloss. \label{fe}
+\end{prop}
+
+Ref to shorthand item: \ref{lp} (should be (LP)).
+
+Ref to AT: \ref{at} (should be (AT)).
+
+Ref to glossed: \ref{gp} (should be (Glossed Prop) --- gloss does not affect ref).
+
+Ref to full: \ref{fe} (should be (FE) --- shorthand becomes ref).
+
+\section{Propapply and brackets}
+
+\begin{prop}
+  \pitem[name={Brack}, ref format={[#1]}] A bracketed item. \label{brk}
+  \pitem[type=long, Thesis] A long-format item. \label{thesis}
+\end{prop}
+
+Ref to bracketed: \ref{brk} (should be [Brack]).
+
+Oref suffix on brackets: \oref[$'$]{brk} (should be [Brack$'$]).
+
+Nref on brackets: \nref{brk} (should be Brack).
+
+Oref suffix on textsc: \oref[$^*$]{thesis} (should be Thesis$^*$).
+
+Nref on textsc: \nref{thesis} (should be Thesis).
+
+Nref on a ref: \nref{propP} (should be P).
+
+\section{Equation integration}
+
+An equation:
+\begin{equation}
+  E = mc^2 \label{eq:emc}
+\end{equation}
+
+A gather environment:
+\begin{gather}
+  a + b = c \label{eq:abc} \\
+  x^2 + y^2 = z^2 \label{eq:pyth}
+\end{gather}
+
+Interleaved with props:
+\begin{prop}
+  \pitem First premise. \label{eq:prem1}
+  \pitem Second premise. \label{eq:prem2}
+\end{prop}
+
+A further equation:
+\begin{equation}
+  F = ma \label{eq:fma}
+\end{equation}
+
+Ref to equation: \ref{eq:emc} (should be (\textit{number})).
+
+Ref to gather: \ref{eq:abc} and \ref{eq:pyth}.
+
+Ref to prop: \ref{eq:prem1} and \ref{eq:prem2} (should share counter with equations).
+
+Ref to later equation: \ref{eq:fma}.
+
+Oref suffix on equation: \oref[$'$]{eq:emc} (should be (\textit{number}$'$)).
+
+Nref on equation: \nref{eq:emc} (should be bare number).
+
+\section{Inline prop}
+
+Some text with \begin{inlineprop}\pitem[X] an inline proposition\end{inlineprop} in the middle, and then \begin{inlineprop}\pitem[Y] another one\end{inlineprop} here.
+
+\section{Ptag test}
+
+\subsection{Named short ptag}
+
+\begin{equation}
+  E = mc^2 \ptag[P4] \label{eq:ptag1}
+\end{equation}
+
+Ref: \ref{eq:ptag1} (should be (P4)).
+
+\subsection{Named long ptag}
+
+\begin{equation}
+  F = ma \ptag[type=long, name={Newton's~Law}] \label{eq:newton}
+\end{equation}
+
+Ref: \ref{eq:newton} (should be \textsc{Newton's Law}).
+
+\subsection{Ptag with shorthand}
+
+\begin{equation}
+  x + y = z \ptag[name={Addition~Principle}, shorthand={AP}] \label{eq:ap}
+\end{equation}
+
+Ref: \ref{eq:ap} (should be (AP) since shorthand becomes ref).
+
+\subsection{Ptag in align}
+
+\begin{align}
+  a &= b \ptag[P5] \label{eq:ptag2} \\
+  c &= d \ptag[P6] \label{eq:ptag3}
+\end{align}
+
+Refs: \ref{eq:ptag2} (should be (P5)) and \ref{eq:ptag3} (should be (P6)).
+
+\subsection{Ptag with label key}
+
+\begin{equation}
+  g = 9.8 \ptag[label=eq:grav, P7]
+\end{equation}
+
+Ref via label key: \ref{eq:grav} (should be (P7)).
+
+\subsection{Oref and nref on ptag}
+
+Oref suffix: \oref[$'$]{eq:ptag1} (should be (P4$'$)).
+
+Nref: \nref{eq:ptag1} (should be P4).
+
+\section{Counter-stepping ptags}
+
+A baseline equation for reference:
+\begin{equation}
+  a^2 + b^2 = c^2 \label{eq:baseline}
+\end{equation}
+Ref: \ref{eq:baseline} (should be (14)).
+
+\subsection{Numbered ptag in equation}
+
+\begin{equation}
+  v = at \ptag \label{eq:numptag1}
+\end{equation}
+Ref: \ref{eq:numptag1} (should be (15), consecutive after baseline).
+
+\subsection{Numbered ptag in align}
+
+\begin{align}
+  f &= ma \ptag \label{eq:numptag2} \\
+  p &= mv \ptag \label{eq:numptag3}
+\end{align}
+Refs: \ref{eq:numptag2} and \ref{eq:numptag3} (should be (16) and (17), consecutive).
+
+\subsection{Named counter ptag in equation}
+
+\begin{equation}
+  s = ut + \tfrac{1}{2}at^2 \ptag[counter=P] \label{eq:Peq}
+\end{equation}
+Ref: \ref{eq:Peq} (should be (P3)).
+
+Equation counter unchanged: next normal equation should continue from (18).
+
+\subsection{Named counter ptag in align}
+
+\begin{align}
+  E_k &= \tfrac{1}{2}mv^2 \ptag[counter=P] \label{eq:Pctr1} \\
+  E_p &= mgh \ptag[counter=P] \label{eq:Pctr2}
+\end{align}
+Refs: \ref{eq:Pctr1} and \ref{eq:Pctr2} (should be (P4) and (P5)).
+
+\subsection{Named counter ptag in gather}
+
+\begin{gather}
+  \nabla \cdot \mathbf{E} = \frac{\rho}{\varepsilon_0} \ptag[counter=P] \label{eq:Pgath1} \\
+  \nabla \times \mathbf{B} = \mu_0 \mathbf{J} \ptag[counter=P] \label{eq:Pgath2}
+\end{gather}
+Refs: \ref{eq:Pgath1} and \ref{eq:Pgath2} (should be (P6) and (P7)).
+
+\subsection{Mixed: named counter ptag then normal equation}
+
+\begin{equation}
+  G = H - TS \ptag[counter=P] \label{eq:Pmixed}
+\end{equation}
+Ref: \ref{eq:Pmixed} (should be (P8)).
+
+A normal equation after (should use equation counter, not P counter):
+\begin{equation}
+  W = Fd \label{eq:afterP}
+\end{equation}
+Ref: \ref{eq:afterP} (should be (18), equation counter unaffected by P-ptags).
+
+\subsection{Mixed: numbered ptag + normal equation}
+
+\begin{equation}
+  \tau = r \times F \ptag \label{eq:numptag4}
+\end{equation}
+Ref: \ref{eq:numptag4} (should be (19)).
+
+A normal equation after:
+\begin{equation}
+  P = \frac{W}{t} \label{eq:after}
+\end{equation}
+Ref: \ref{eq:after} (should be (20), consecutive with ptag above, no gap).
+
+\subsection{Nesting ptags with equations}
+\begin{prop}
+    \pitem
+    Two of Maxwell's equations:
+    \begin{inlineprop}
+        \begin{align*}
+            \nabla \cdot \mathbf{E} = \frac{\rho}{\varepsilon_0} \ptag \label{eq:inner1} \\
+            \nabla \times \mathbf{B} = \mu_0 \mathbf{J} \ptag \label{eq:inner2}
+        \end{align*}
+    \end{inlineprop}
+\end{prop}
+Ref: \ref{eq:inner1}, \ref{eq:inner2}.
+
+\section{Ref in section heading: \ref{propP}}
+
+This section's title contains a reference to \ref{propP}.
+
+\section{Dimension options}
+
+\subsection{Default spacing (no options)}
+
+\begin{prop}
+    \pitem First item with default spacing.
+    \pitem Second item with default spacing.
+    \pitem Third item with default spacing.
+\end{prop}
+
+\subsection{rightmargin=3cm}
+
+\propoptions{rightmargin=3cm}
+\begin{prop}
+    \pitem First item: the right margin should be noticeably indented.
+    \pitem Second item: this text should wrap well before the page edge,
+    demonstrating that rightmargin is in effect.
+\end{prop}
+\propoptions{rightmargin=}
+
+\subsection{leftmargin=4cm}
+
+\propoptions{leftmargin=4cm}
+\begin{prop}
+    \pitem First item: should be indented far from the left.
+    \pitem Second item with large left margin.
+\end{prop}
+\propoptions{leftmargin=}
+
+\subsection{itemsep=20pt}
+
+\propoptions{itemsep=20pt}
+\begin{prop}
+    \pitem First item.
+    \pitem Second item: there should be a large gap above this.
+    \pitem Third item: and above this.
+\end{prop}
+\propoptions{itemsep=}
+
+\subsection{topsep=30pt}
+
+\propoptions{topsep=30pt}
+Text before the list.
+\begin{prop}
+    \pitem First item: large gap above and below the whole list.
+    \pitem Second item.
+\end{prop}
+Text after the list.
+\propoptions{topsep=}
+
+\subsection{tightspacing}
+
+\propoptions{tightspacing}
+Text before.
+\begin{prop}
+    \pitem First item: the list should be compact.
+    \pitem Second item: minimal spacing around the list and between items.
+    \pitem Third item.
+\end{prop}
+Text after.
+
+\subsection{nosep}
+
+\propoptions{nosep}
+Text before.
+\begin{prop}
+    \pitem First item: zero spacing everywhere.
+    \pitem Second item: no gap between items or around list.
+    \pitem Third item.
+\end{prop}
+Text after.
+
+\section{Equation display format vs.\ ref format}
+
+A normal equation before the group:
+\begin{equation}
+  F = ma \label{eq:before}
+\end{equation}
+Ref: \ref{eq:before} (should be (40), parenthesized).
+
+%% Simulate an axiom section: bold display, plain ref, counter reset.
+\begingroup
+\propoptions{equation display format=\textbf{M#1},
+             equation ref format=M#1}
+\setcounter{equation}{0}
+
+First axiom:
+\begin{equation}
+  \forall x\, (x = x) \label{ax:M1}
+\end{equation}
+Display should be \textbf{M1} (bold, no parens).
+Ref: \ref{ax:M1} (should be M1, plain, no parens).
+
+Second axiom:
+\begin{equation}
+  \forall x\, \forall y\, (x = y \to y = x) \label{ax:M2}
+\end{equation}
+Display should be \textbf{M2}.
+Ref: \ref{ax:M2} (should be M2).
+\endgroup
+
+A normal equation after the group (format should revert):
+\begin{equation}
+  E = mc^2 \label{eq:aftergroup}
+\end{equation}
+Ref: \ref{eq:aftergroup} (should be (43), parenthesized, counter continues).
+
+Cross-refs from inside the group still work: \ref{ax:M1}, \ref{ax:M2}.
+
+\begin{theorem}
+    \begin{enumerate}
+        \item 
+        Part one of theorem.
+        \item
+        Part two of theorem
+    \end{enumerate}
+\end{theorem}
+
+\begin{theorem}
+    \begin{prop}
+        \ritem 
+        Part one of another theorem.
+        \ritem
+        Part two of that theorem
+    \end{prop}
+\end{theorem}
+
+
+\end{document}

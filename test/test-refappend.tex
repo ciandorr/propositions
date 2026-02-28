@@ -1,0 +1,378 @@
+\documentclass{article}
+\usepackage{hyperref}
+\usepackage{amsmath}
+\usepackage{propositions}
+
+\DeclareNumberedType{P}[ref format=(\textbf{#1})]
+
+\newcounter{mainequation}
+\makeatletter
+\newenvironment{axiomset}[1]{%
+  \setcounter{mainequation}{\value{equation}}%
+  \setcounter{equation}{0}%
+  \begingroup
+  \def\theequation{#1\arabic{equation}}%
+  \propoptions{equation format=#1}%
+  \ignorespaces
+}{%
+  \endgroup
+  \setcounter{equation}{\value{mainequation}}%
+  \ignorespacesafterend%
+}
+\makeatother
+
+\begin{document}
+
+Right margin: \the\rightmargin
+
+Level one left margin: \the\leftmargini
+
+Level two left margin: \the\leftmarginii
+
+\section{Parentref in ref format with custom parent type}
+
+\begin{prop}
+    \pitem[type=P]
+    Premise One is a two-part premise.
+    \label{P1}
+    \begin{prop}
+        \pitem
+        The first part is called part a.
+        \label{P1a}
+        \pitem
+        The second part is called part b.
+        \label{P1b}
+    \end{prop}
+    \pitem[type=P]
+    Premise Two is straightforward.
+    \label{P2}
+\end{prop}
+
+References: \ref{P1}, \ref{P1a}, \ref{P1b}, \ref{P2}.
+
+Expected: (\textbf{P1}), (\textbf{P1a}), (\textbf{P1b}), (\textbf{P2}).
+
+\section{Three-level deep nesting}
+
+\begin{prop}
+    \pitem[type=P]
+    Top level.
+    \label{top}
+    \begin{prop}
+        \pitem
+        Level two item a.
+        \label{l2a}
+        \pitem
+        Level two item b.
+        \label{l2b}
+        \begin{prop}
+            \pitem
+            Level three item.
+            \label{l3i}
+            \pitem
+            Another level three.
+            \label{l3ii}
+        \end{prop}
+    \end{prop}
+\end{prop}
+
+References: \ref{top}, \ref{l2a}, \ref{l2b}, \ref{l3i}, \ref{l3ii}.
+
+Expected: (\textbf{P3}), (\textbf{P3a}), (\textbf{P3b}), (\textbf{P3b.i}), (\textbf{P3b.ii}).
+
+\section{Oref and nref on nested refs}
+
+Suffix test: \oref[']{P1a} (expected: (\textbf{P1a'})).
+
+Prefix test: \oref[*][]{P1a} (expected: (\textbf{P1*a})).
+
+Nref test: \nref{P1a} (expected: a).
+
+\section{Lastref and nLastref in running text}
+
+\begin{prop}
+    \pitem[type=P]
+    Premise Three. \label{P3}
+\end{prop}
+
+Lastref: \Lastref{} (expected: (\textbf{P4})).
+
+Lastref with suffix: \Lastref{'} (expected: (\textbf{P4'})).
+
+nLastref: \nLastref{} (expected: P4).
+
+\section{Backward compatibility: ref append key}
+
+\DeclareNumberedType{Q}[
+  ref format=(\textit{#1}),
+]
+\DeclareNumberedType{Qsub}[
+  counter format = \alph{Qsub},
+  display format = #1.,
+  ref append = #1,
+]
+
+\begin{prop}
+    \pitem[type=Q]
+    Item one. \label{q1}
+    \begin{prop}
+        \pitem[type=Qsub]
+        Sub-item a. \label{q1a}
+        \pitem[type=Qsub]
+        Sub-item b. \label{q1b}
+    \end{prop}
+\end{prop}
+
+References: \ref{q1}, \ref{q1a}, \ref{q1b}.
+
+Expected: (\textit{Q1}), (\textit{Q1a}), (\textit{Q1b}).
+
+\section{Standard numbered type still works}
+
+\begin{prop}
+    \pitem First numbered. \label{n1}
+    \pitem Second numbered. \label{n2}
+    \begin{prop}
+        \pitem Sub-item a. \label{n2a}
+        \pitem Sub-item b. \label{n2b}
+    \end{prop}
+\end{prop}
+
+References: \ref{n1}, \ref{n2}, \ref{n2a}, \ref{n2b}.
+
+\section{Counter with explicit name override}
+
+\DeclareNumberedType{R}[ref format=(\textbf{#1})]
+
+\begin{prop}
+    \pitem[type=R, name={Premise~\arabic{R}}]
+    A premise with a richer name. \label{rn1}
+    \pitem[type=R]
+    A plain counter-only item. \label{rn2}
+\end{prop}
+
+Ref with name override: \ref{rn1} (expected: (\textbf{Premise~1})).
+
+Ref without override: \ref{rn2} (expected: (\textbf{R2})).
+
+Nref with name override: \nref{rn1} (expected: Premise~1).
+
+Nref without override: \nref{rn2} (expected: R2).
+
+\section{Alignment=right}
+
+Labels of varying width show the difference between left and right alignment.
+Right-aligned labels should be flush against the item text (like standard
+\texttt{enumerate}); left-aligned labels should start at the left margin.
+
+\begin{prop}
+    \pitem[name={A},   align=right] Right-aligned short label.
+    \pitem[name={BB},  align=right] Right-aligned medium label.
+    \pitem[name={CCC}, align=right] Right-aligned long label.
+    \pitem[name={A},   align=left]  Left-aligned short label (compare with first).
+    \pitem[name={BB},  align=left]  Left-aligned medium label (compare with second).
+    \pitem[name={CCC}, align=left]  Left-aligned long label (compare with third).
+\end{prop}
+
+\section{Ref key on a type declaration}
+
+The \texttt{ref} key bakes the parent prefix into the ref \emph{text} (not the
+format), so \verb|\nref| returns the full hierarchical name.
+
+\DeclareNumberedType{newinner}[
+  counter format=\alph{newinner},
+  display format=#1.,
+  ref={\nParentref\thenewinner},
+  ref format={(#1)}]
+\begin{prop}
+  \pitem Outer item. \label{outer}
+  \begin{prop}
+    \pitem[type=newinner]
+    Subitem. \label{sub1}
+    \pitem[type=newinner]
+    Second subitem. \label{sub2}
+  \end{prop}
+\end{prop}
+
+Ref: \ref{sub1} (expected: (3a)).
+
+Nref: \nref{sub1} (expected: 3a).
+
+Ref outer: \ref{outer} (expected: (3)).
+
+\section{Testing a compact example for the docs}
+
+\DeclareNumberedType{inner}[
+  counter format=\alph{inner},
+  display format=#1.]
+
+\begin{prop}
+  \pitem[OI] Outer item. \label{outer2}
+  \begin{prop}
+    \pitem[type=inner,
+    format=\Parentref{.#1}]
+    \label{dsub1}
+    This subitem will be referenced as \ref{dsub1}, or \nref{dsub1}.
+    \pitem[type=inner,
+    display format=#1.,
+    ref format=\Parentref{.#1}]
+    \label{dsub2}
+    This subitem will be referenced as \ref{dsub2}, or \nref{dsub2}.
+    \pitem[type=inner,
+    name={\nParentref.\theinner}]
+    \label{dsub3}
+    This subitem will be referenced as \ref{dsub3}, or \nref{dsub3}.
+    \pitem[type=inner,
+    ref={\nParentref.\theinner}]
+    \label{dsub4}
+    This subitem will be referenced as \ref{dsub4}, or \nref{dsub4}.
+  \end{prop}
+\end{prop}
+
+
+\section{Testing math mode in names}
+\label{sect:section}
+
+\begin{prop}
+    \pitem[M$'$]
+    Label should look like \textbf{M$'$}, but actually looks like \textbf{M\$'\$}.
+    \pitem[name=M$'$]
+    Label should look like \textbf{M$'$}.
+\end{prop}
+
+\begin{prop}
+    \pitem[Ext\emph{dash}, gloss=boo] \label{ext}
+    Test of other commands in item name.
+    \ref{ext}.
+\end{prop}
+
+\section{Miscellaneous debugging}
+
+
+
+\begin{prop}
+    \pitem \label{first} Item.
+    \pitem[\nref{first}a] Item. \label{second}
+\end{prop}
+That was \ref{second}.
+
+
+
+
+\begin{axiomset}{M}
+\begin{align}
+    \label{third} Stuff
+\end{align}
+\ref{third}
+\end{axiomset}
+
+
+\begin{prop}
+    \pitem \label{a} Thing.
+    \pitem \label{b} Other thing.
+    \pitem[\oref[$'$]{a}] \label{c}
+    Something goes wrong after this.
+	\pitem[\oref[$'$]{b}] \label{d}
+	Check it out.
+\end{prop}
+Refs: \ref{a}, \ref{b}, \ref{c}, \ref{d}.  Now refs to earlier pitems don't make hyperlinks either: \ref{third}. Even refs to things like sections don't: \ref{sect:section}.
+
+\section{Alignment: nextline variants}
+
+\begin{prop}
+    \pitem[name={Short label}, align=nextline]
+    Nextline with a short label (starts at the default label position).
+    \pitem[name={A much longer label that should demonstrate how the nextline option lets labels wrap across multiple lines when they are awkwardly long},
+    align=nextline]
+    Nextline with a long wrapping label.
+    \pitem[name={Short label}, align=left-nextline]
+    Left-nextline with a short label (starts at the left margin).
+    \pitem[name={A much longer label that should demonstrate how the left-nextline option lets labels wrap across multiple lines when they are awkwardly long},
+    align=left-nextline]
+    Left-nextline with a long wrapping label.
+    \pitem[name={Short label}, align=flush-nextline]
+    Flush-nextline with a short label (starts at the item text margin).
+    \pitem[name={A much longer label that should demonstrate how the left-nextline option lets labels wrap across multiple lines when they are awkwardly long},
+    align=flush-nextline]
+    Flush-nextline with a long wrapping label.  This is some more long text to see what's happening at the beginning of the item text.
+    \pitem[name={N}, align=left]
+    Normal left alignment for comparison.
+\end{prop}
+
+\section{Intertext: counter reset moved to pitem}
+This is some text to see where the right margin is in general for main text.  This is some text to see where the right margin is in general for main text.  
+\begin{prop}
+    \pitem[type=P]
+    Multi-clause definition.  This is some text to see where the right margin is on this item.  \label{mcd}
+    \begin{prop}
+        \pitem Clause one. This is some text to see where the right margin is on this item.  \label{cl1}
+        \pitem Clause two. \label{cl2}
+    \end{prop}
+\end{prop}
+Commentary on why these clauses aren't enough and we also need:
+\begin{prop}
+    \item
+    \begin{prop}
+        \pitem Clause three (should be c, not a). \label{cl3}
+    \end{prop}
+\end{prop}
+
+References: \ref{mcd}, \ref{cl1}, \ref{cl2}, \ref{cl3}.
+
+Expected: (\textbf{P5}), (\textbf{P5a}), (\textbf{P5b}), (\textbf{P5c}).
+
+\section{Per-level dimensions with \texttt{labelindent}}
+
+%% Test 1: labelindent alone (class default leftmargin at each level)
+\propoptions{labelindent=0em}
+
+\begin{prop}
+    \pitem[type=P]
+    Outermost item with \verb|labelindent=0em|.  The sub-item labels
+    fill the gap, but the sub-item text is still indented by the class
+    default \verb|\leftmarginii|.
+    \begin{prop}
+        \pitem Sub-item a: label in the gap, text indented.
+        \pitem Sub-item b: same layout.
+    \end{prop}
+    \pitem[type=P]
+    Another outermost item, confirming dimensions are restored.
+\end{prop}
+
+\propoptions{labelindent={}}
+
+%% Test 2: aligned text margins (the original mockup layout).
+%% Level-two leftmargin=0em so text aligns with level one.
+%% Negative labelindent pushes labels left, into the gap.
+\propoptions{labelindent={0em, -1.5em}, leftmargin={3em, 0em}}
+
+\begin{prop}
+    \pitem[type=P]
+    Outermost item.  The level-two text below should align with this
+    text, because \verb|leftmargin={, 0em}| zeroes the level-two margin.
+    \begin{prop}
+        \pitem Sub-item one: its text should align with the level-one
+        text above.  The label sits to the left, in the gap where the
+        outer label was.
+        \pitem Sub-item two: confirming alignment.
+    \end{prop}
+    \pitem[type=P]
+    Another outermost item, confirming level-one layout is unaffected.
+\end{prop}
+
+%% Restore defaults
+\propoptions{labelindent={}, leftmargin={}}
+
+\end{document}
+
+
+
+(P1)        This is an outermost |\pitem|.
+       a.   This is a level-two one: note how the left margin
+            of the text is aligned with the left margin for
+            the outermost one above it.
+       b.   This could be achieved if one could set 
+            |leftmargin=0em| just for the level two list.  
+            |itemindent| and |itemsep| might also need to be
+            set to level-relative values to ensure the 
+            desired alignment.
