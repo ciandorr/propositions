@@ -329,6 +329,63 @@ Ref: \ref{eq:after} (should be (20), consecutive with ptag above, no gap).
 \end{prop}
 Ref: \ref{eq:inner1}, \ref{eq:inner2}.
 
+\section{Display math level tracking inside prop}
+
+% New feature: display math inside prop/inlineprop increments the nesting
+% level, so \ptag behaves as if one level deeper.
+
+\subsection{Named ptag inside equation inside prop (level unchanged by arg)}
+
+\begin{prop}
+  \pitem[A] First premise. \label{dlevel:pitemA}
+  \begin{equation}
+    E = mc^2 \ptag[Named] \label{dlevel:named}
+  \end{equation}
+  \pitem[B] Second premise. \label{dlevel:pitemB}
+\end{prop}
+
+% \ptag has an explicit argument, so it uses the default type regardless of
+% level.  Ref should be \textbf{Named} (same as a plain default-type pitem).
+Ref to named ptag (should be \textbf{Named}): \ref{dlevel:named}.
+
+\subsection{Unnamed ptag inside equation inside prop (uses leveltwo)}
+
+\begin{prop}
+  \pitem First item. \label{dlevel:outer}
+  \begin{equation}
+    F = ma \ptag \label{dlevel:unnumbered}
+  \end{equation}
+\end{prop}
+
+% Without the hook, \ptag (no arg) at level 1 would use numbered/numpropi.
+% With the hook, level is incremented to 2, so leveltwo (numpropii, alphabetic).
+Ref to unnamed ptag (should be alphabetic sub-item like ``a.'' format): \ref{dlevel:unnumbered}.
+
+\subsection{Unnamed ptag inside align inside prop (tests \textbackslash aftergroup with multi-row amsmath)}
+
+\begin{prop}
+  \pitem Premise. \label{dlevel:align_outer}
+  \begin{align}
+    x &= y \ptag \label{dlevel:align1} \\
+    p &= q \ptag \label{dlevel:align2}
+  \end{align}
+\end{prop}
+
+% Both ptags should be at level 2 (leveltwo type).
+Refs (both should be alphabetic): \ref{dlevel:align1} and \ref{dlevel:align2}.
+
+\subsection{Level restored after display math}
+
+\begin{prop}
+  \pitem First. \label{dlevel:before}
+  \begin{equation}
+    a = b \ptag \label{dlevel:inside}
+  \end{equation}
+  \pitem After equation: level should be restored to 1 (numbered type). \label{dlevel:after}
+\end{prop}
+
+Refs: \ref{dlevel:before}, \ref{dlevel:inside}, \ref{dlevel:after}.
+
 \section{Ref in section heading: \ref{propP}}
 
 This section's title contains a reference to \ref{propP}.

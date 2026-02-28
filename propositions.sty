@@ -707,6 +707,21 @@
   }
 
 
+\cs_new_protected:Nn \__props_display_end:
+  { \int_gdecr:N \g__props_level_int }
+
+\AtBeginDocument
+  {
+    \tex_everydisplay:D \expandafter { \the \tex_everydisplay:D
+      \int_compare:nNnT \g__props_level_int > { 0 }
+        {
+          \int_gincr:N \g__props_level_int
+          \aftergroup \__props_display_end:
+        }
+    }
+  }
+
+
 \cs_new_protected:Nn \__props_tag_star:n { \tag* { #1 } }
 
 \cs_new_protected:Nn \__props_ptag_finish_ref:nn

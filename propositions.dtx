@@ -223,6 +223,8 @@
 %
 %   Within \texttt{prop}, \cs{pitem} (see below) creates labelled items.  The ordinary \cs{item} command is still available for unlabelled items.
 %
+%   Any display math environment (|\equation|, |align|, etc.) used inside \texttt{prop} or \texttt{inlineprop} automatically increments the nesting level for its duration, so that \cs{ptag} inside such an environment behaves as if it were one level deeper.
+%
 %   The optional \meta{keys} argument accepts the same keys as \refCom{propoptions} (\autoref{sect:global}), with effects local to this environment.
 % \end{docEnvironment}
 %
@@ -1457,6 +1459,29 @@
               { \__props_eqdispfmt:n
                   { \ignorespaces #1 \unskip \@@italiccorr } } }
       }
+  }
+
+%<doc>%% ====================================================================
+%<doc>%% Display math level tracking
+%<doc>%% ====================================================================
+%<doc>%% Inside a prop/inlineprop (level > 0), every display math environment
+%<doc>%% increments the nesting level at its start and decrements it at its
+%<doc>%% end.  This is achieved via \everydisplay (fires for all display math,
+%<doc>%% including all amsmath environments) plus \aftergroup to schedule the
+%<doc>%% decrement when the display math group closes.
+
+\cs_new_protected:Nn \__props_display_end:
+  { \int_gdecr:N \g__props_level_int }
+
+\AtBeginDocument
+  {
+    \tex_everydisplay:D \expandafter { \the \tex_everydisplay:D
+      \int_compare:nNnT \g__props_level_int > { 0 }
+        {
+          \int_gincr:N \g__props_level_int
+          \aftergroup \__props_display_end:
+        }
+    }
   }
 
 %<doc>%% ====================================================================
