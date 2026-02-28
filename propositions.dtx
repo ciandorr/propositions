@@ -309,7 +309,7 @@
 %   A new user macro, equivalent to \cs{pitem}\texttt{[type=}\meta{name}\texttt{]}.  Any further keys given to the macro are passed to \cs{pitem}.
 % \end{docKey}
 %
-% If the type \meta{name} already exists, |\SetItemType| modifies or adds keys.  For example, |\SetItemType{short}{align=flush}| changes the alignment of the built-in |short| type while preserving its other settings.
+% If the type \meta{name} already exists, |\SetItemType| modifies or adds keys.  For example, |\SetItemType{default}{align=flush}| changes the alignment of the built-in |default| type while preserving its other settings.
 %
 % \begin{example}
 % \SetItemType{angle}{
@@ -359,7 +359,8 @@
 % \begin{tabular}{llllll}
 %   \textbf{Type} & \textbf{Shortcut} & \textbf{Counter} & \textbf{Display} &
 %   \textbf{Ref} & \textbf{Align} \\\hline
-%   |short| & none* & none & \textbf{Name} & \textbf{Name} & left \\
+%   |plain| & none & none & Name & Name & left \\
+%   |default| & none* & none & \textbf{Name} & \textbf{Name} & left \\
 %   |long| & |\litem| & none & \textbf{Name} & Name & flush \\
 %   |bullet| & |\bitem| & none & \textbullet & \textbullet & default \\
 %   |roman| & |\ritem| & |roman| & (i) & (i) & left \\
@@ -373,7 +374,7 @@
 % \end{center}
 %
 % \begin{itemize}
-%   \item[*] The |short| type is auto-selected when |\pitem| or |\ptag| has an optional argument but no |type| key.
+%   \item[*] The |default| type is auto-selected when |\pitem| or |\ptag| has an optional argument but no |type| key.
 %   \item[$\dag$] The |numbered|--|levelfive| types are auto-selected when |\pitem| or |\ptag| has no optional argument, depending on nesting level.
 %   \item[$\ddag$] The |equations| package option changes |numbered|'s counter to |equation|.
 %     The |numpropii|--|numpropv| counters reset automatically when a |\pitem| at the next lower level is processed.
@@ -397,7 +398,7 @@
 % |\nref| is often useful in the argument of |\pitem|, when the 
 % the name of one proposition should depend on that of another:
 % \begin{example}
-% \SetItemType{short}{format=(#1)}
+% \SetItemType{default}{format=(#1)}
 % \begin{prop}
 %   \pitem[Phys]
 %   Everything is physical.
@@ -555,7 +556,7 @@
 %
 % \subsection{Default types}
 %
-% \begin{docKey}{default type}{=\meta{type}}{initially \texttt{short}}
+% \begin{docKey}{default type}{=\meta{type}}{initially \texttt{default}}
 %   The type used when \cs{pitem} or \cs{ptag} is given a name or counter but no explicit \texttt{type}.
 % \end{docKey}
 %
@@ -1153,7 +1154,7 @@
 
     %% --- Resolve type ---
     %% If the user didn't specify type=, infer it:
-    %%   - name or counter given -> use the default type (typically "short")
+    %%   - name or counter given -> use the default type (typically "default")
     %%   - nothing given -> use the level default (e.g. "numbered" at level 1)
     \tl_if_empty:NT \l__props_type_tl
       {
@@ -1910,7 +1911,7 @@
 %<doc>%% Default global settings (set before options so user options override)
 %<doc>%% ====================================================================
 
-\tl_set:Nn \l__props_default_type_tl { short }
+\tl_set:Nn \l__props_default_type_tl { default }
 \prop_put:Nnn \l__props_level_defaults_prop { 1 } { numbered }
 \prop_put:Nnn \l__props_level_defaults_prop { 2 } { leveltwo }
 \prop_put:Nnn \l__props_level_defaults_prop { 3 } { levelthree }
@@ -1927,7 +1928,13 @@
 %<doc>%% Default type declarations
 %<doc>%% ====================================================================
 
-\SetItemType { short }
+\SetItemType { plain }
+  {
+    counter     = none ,
+    format      = #1 ,
+  }
+
+\SetItemType { default }
   {
     counter     = none ,
     format      = \textbf{#1} ,

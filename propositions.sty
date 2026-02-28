@@ -428,7 +428,7 @@
 
     %% --- Resolve type ---
     %% If the user didn't specify type=, infer it:
-    %%   - name or counter given -> use the default type (typically "short")
+    %%   - name or counter given -> use the default type (typically "default")
     %%   - nothing given -> use the level default (e.g. "numbered" at level 1)
     \tl_if_empty:NT \l__props_type_tl
       {
@@ -1107,7 +1107,7 @@
   { \keys_set:nn { props / global } { #1 } }
 
 
-\tl_set:Nn \l__props_default_type_tl { short }
+\tl_set:Nn \l__props_default_type_tl { default }
 \prop_put:Nnn \l__props_level_defaults_prop { 1 } { numbered }
 \prop_put:Nnn \l__props_level_defaults_prop { 2 } { leveltwo }
 \prop_put:Nnn \l__props_level_defaults_prop { 3 } { levelthree }
@@ -1118,7 +1118,13 @@
 \ProcessKeyOptions [ props / global ]
 
 
-\SetItemType { short }
+\SetItemType { plain }
+  {
+    counter     = none ,
+    format      = #1 ,
+  }
+
+\SetItemType { default }
   {
     counter     = none ,
     format      = \textbf{#1} ,
