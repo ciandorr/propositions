@@ -518,4 +518,31 @@ Cross-refs from inside the group still work: \ref{ax:M1}, \ref{ax:M2}.
 \end{theorem}
 
 
+\section{Titlecase reference commands}
+
+\begin{prop}
+  \pitem[the Identity Theory, format={the #1}]
+  Mental states are brain states.
+  \label{tc:identity}
+  \pitem[Q]
+  A short-named item.
+  \label{tc:Q}
+\end{prop}
+
+Ref: \ref{tc:identity} (expected: the Identity Theory).
+
+Titlecase Ref: \Ref{tc:identity} (expected: The Identity Theory).
+
+Titlecase Ref*: \Ref*{tc:identity} (expected: The Identity Theory, no hyperlink).
+
+Nref: \nref{tc:identity} (expected: the Identity Theory).
+
+Titlecase Nref: \Nref{tc:identity} (expected: The Identity Theory).
+
+Oref suffix: \oref[$'$]{tc:identity} (expected: the Identity Theory$'$).
+
+Titlecase Oref: \Oref[$'$]{tc:identity} (expected: The Identity Theory$'$).
+
+Titlecase on short name: \Ref{tc:Q} (expected: \textbf{Q} --- already uppercase).
+
 \end{document}

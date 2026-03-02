@@ -95,9 +95,9 @@ Nref test: \nref{P1a} (expected: a).
     Premise Three. \label{P3}
 \end{prop}
 
-Lastref: \Lastref{} (expected: (\textbf{P4})).
+Lastref: \lastref{} (expected: (\textbf{P4})).
 
-Lastref with suffix: \Lastref{'} (expected: (\textbf{P4'})).
+Lastref with suffix: \lastref{'} (expected: (\textbf{P4'})).
 
 nLastref: \nLastref{} (expected: P4).
 
@@ -210,12 +210,12 @@ Ref outer: \ref{outer} (expected: (3)).
   \pitem[OI] Outer item. \label{outer2}
   \begin{prop}
     \pitem[type=inner,
-    format=\Parentref{.#1}]
+    format=\parentref{.#1}]
     \label{dsub1}
     This subitem will be referenced as \ref{dsub1}, or \nref{dsub1}.
     \pitem[type=inner,
     display format=#1.,
-    ref format=\Parentref{.#1}]
+    ref format=\parentref{.#1}]
     \label{dsub2}
     This subitem will be referenced as \ref{dsub2}, or \nref{dsub2}.
     \pitem[type=inner,
@@ -362,6 +362,57 @@ Expected: (\textbf{P5}), (\textbf{P5a}), (\textbf{P5b}), (\textbf{P5c}).
 
 %% Restore defaults
 \propoptions{labelindent={}, leftmargin={}}
+
+
+\section{Titlecase reference commands}
+
+\DeclareNumberedType{TC}[ref format=(\textbf{#1})]
+
+\begin{prop}
+    \pitem[type=TC, name={Identity Theory},ref format={(\textbf{the #1})}]
+    Mental states are physical states.
+    \label{tc:id}
+    \pitem[type=TC]
+    A plain numbered TC item.
+    \label{tc:num}
+    \begin{prop}
+        \pitem
+        Sub-item a.
+        \label{tc:sub}
+    \end{prop}
+    \pitem[test,type=TC]
+    An unnumbered TC item with lower case name.
+    \label{tc:lower}
+    \begin{prop}
+        \pitem
+        Sub-item a.
+        \label{tc:lowersub}
+    \end{prop}
+\end{prop}
+
+Ref: \ref{tc:id} (expected: (\textbf{the Identity Theory})).
+
+Ref (titlecase): \Ref{tc:id} (expected: (\textbf{The Identity Theory})).
+
+Ref* (titlecase, no link): \Ref*{tc:id} (expected: (\textbf{The Identity Theory}), no hyperlink).
+
+Nref: \nref{tc:id} (expected: Identity Theory).
+
+Nref (titlecase): \Nref{tc:id} (expected: Identity Theory).
+
+Oref: \oref[$'$]{tc:id} (expected: (\textbf{the Identity Theory$'$})).
+
+Oref (titlecase): \Oref[$'$]{tc:id} (expected: (\textbf{The Identity Theory$'$})).
+
+Lastref: \lastref{} (expected: (\textbf{test})).
+
+Lastref (titlecase): \Lastref{} (expected: (\textbf{Test})).
+
+Nested ref (titlecase): \Ref{tc:sub} (expected: (\textbf{TC2a}) --- TC is
+already uppercase).
+
+More examples: \Ref{tc:lower} (expected: (\textbf{Test})),
+\Ref{tc:lowersub} (expected: (\textbf{Testa})).
 
 \end{document}
 

@@ -327,7 +327,7 @@
 %   Everything is angular.
 % \end{prop}
 % No further discussion of 
-% \Lastref{} is needed.
+% \lastref{} is needed.
 % \end{example}
 %
 % \begin{docCommand}{DeclareNumberedType}{\marg{name}\oarg{keys}}
@@ -389,12 +389,25 @@
 % \LaTeX{} references is that |\ref| produces \emph{formatted}
 % output: for example, |\textbf| might be applied to the name, or the number might be wrapped in parentheses.  The formatting is controlled by the |format| key (or separately by |display format| and |ref format|).
 %
+% \begin{docCommands}{
+%   { doc name = Ref,  doc parameter = \marg{label} },
+%   { doc name = {Ref*}, doc parameter = \marg{label} },
+% }
+%   Titlecase variant of |\ref|: uppercases the first letter of the
+%   formatted output.  For example, if |\ref{thesis}| produces
+%   `the Identity Theory', then |\Ref{thesis}| produces
+%   `The Identity Theory'.  The starred form suppresses the hyperlink.
+%   Note: |\Ref| only affects propositions references (those stored
+%   via \cs{propapply}); for other label types, it behaves like |\ref|.
+% \end{docCommands}
 %
 % \begin{docCommands}{
 %   { doc name = nref,  doc parameter = \marg{label} },
 %   { doc name = {nref*}, doc parameter = \marg{label} },
+%   { doc name = Nref,  doc parameter = \marg{label} },
+%   { doc name = {Nref*}, doc parameter = \marg{label} },
 % }
-%   ``Naked ref.''  Outputs the bare reference content with all formatting stripped.  If \cs{ref}\texttt{\{premise\}} produces~`(P1)', then \cs{nref}\texttt{\{premise\}} produces~`P1'.  The starred form suppresses the hyperlink.
+%   ``Naked ref.''  Outputs the bare reference content with all formatting stripped.  If \cs{ref}\texttt{\{premise\}} produces~`(P1)', then \cs{nref}\texttt{\{premise\}} produces~`P1'.  The starred form suppresses the hyperlink.  \cs{Nref} is the titlecase variant: it uppercases the first letter of the bare content.
 % \end{docCommands}
 %
 % |\nref| is often useful in the argument of |\pitem|, when the 
@@ -426,8 +439,10 @@
 % \begin{docCommands}{
 %   { doc name = oref,  doc parameter = \oarg{prefix}\oarg{suffix}\marg{label} },
 %   { doc name = {oref*}, doc parameter = \oarg{prefix}\oarg{suffix}\marg{label} },
+%   { doc name = Oref,  doc parameter = \oarg{prefix}\oarg{suffix}\marg{label} },
+%   { doc name = {Oref*}, doc parameter = \oarg{prefix}\oarg{suffix}\marg{label} },
 % }
-%   ``Ref with options.''  Extends \cs{ref} by injecting a prefix and/or suffix \emph{inside} the formatting.  With one optional argument, \meta{suffix} is appended; with two, \meta{prefix} is prepended and \meta{suffix} appended.  For instance, if \cs{ref}\texttt{\{premise\}} produces~`(P1)', then \cs{oref}\texttt{[*]\{premise\}} produces~`(P1*)' and \cs{oref}\texttt{[cf.\string~][*]\{premise\}} produces~`(cf.\string~P1*)'.  The starred form suppresses the hyperlink.
+%   ``Ref with options.''  Extends \cs{ref} by injecting a prefix and/or suffix \emph{inside} the formatting.  With one optional argument, \meta{suffix} is appended; with two, \meta{prefix} is prepended and \meta{suffix} appended.  For instance, if \cs{ref}\texttt{\{premise\}} produces~`(P1)', then \cs{oref}\texttt{[*]\{premise\}} produces~`(P1*)' and \cs{oref}\texttt{[cf.\string~][*]\{premise\}} produces~`(cf.\string~P1*)'.  The starred form suppresses the hyperlink.  \cs{Oref} is the titlecase variant: it uppercases the first letter of the output.
 % \end{docCommands}
 % 
 % |\oref| can also be useful in the name of |\pitem|s, if 
@@ -452,23 +467,29 @@
 % \end{example}
 %
 % 
-% \begin{docCommand}{Lastref}{\oarg{prefix}\marg{suffix}}
-%   Formatted reference to the most recently processed \cs{pitem} or \cs{ptag}, even without a \cs{label}.  Useful for back-references in running text.  With one argument, \meta{suffix} is appended; with two, \meta{prefix} is also prepended.  Use \cs{Lastref}\texttt{\{\}} for a plain reference.
-% \end{docCommand}
+% \begin{docCommands}{
+%   { doc name = lastref,  doc parameter = \oarg{prefix}\marg{suffix} },
+%   { doc name = Lastref,  doc parameter = \oarg{prefix}\marg{suffix} },
+% }
+%   Formatted reference to the most recently processed \cs{pitem} or \cs{ptag}, even without a \cs{label}.  Useful for back-references in running text.  With one argument, \meta{suffix} is appended; with two, \meta{prefix} is also prepended.  Use \cs{lastref}\texttt{\{\}} for a plain reference.  \cs{Lastref} is the titlecase variant: it uppercases the first letter.
+% \end{docCommands}
 %
 % \begin{docCommand}{nLastref}{}
-%   Like \refCom{Lastref}\texttt{\{\}} but returns the bare content without formatting.  Takes no arguments; simply output any desired suffix directly afterwards.
+%   Like \cs{lastref}\texttt{\{\}} but returns the bare content without formatting.  Takes no arguments; simply output any desired suffix directly afterwards.
 % \end{docCommand}
 %
-% \begin{docCommand}{Parentref}{\oarg{prefix}\marg{suffix}}
-%   Inside a nested \texttt{prop} (or \texttt{inlineprop}), produces a formatted reference to the most recent item of the enclosing level.  Same argument convention as \refCom{Lastref}.
-% \end{docCommand}
+% \begin{docCommands}{
+%   { doc name = parentref,  doc parameter = \oarg{prefix}\marg{suffix} },
+%   { doc name = Parentref,  doc parameter = \oarg{prefix}\marg{suffix} },
+% }
+%   Inside a nested \texttt{prop} (or \texttt{inlineprop}), produces a formatted reference to the most recent item of the enclosing level.  Same argument convention as \refCom{lastref}.  \cs{Parentref} is the titlecase variant: it uppercases the first letter.
+% \end{docCommands}
 %
 % \begin{docCommand}{nParentref}{}
-%   Like \refCom{Parentref}\texttt{\{\}} but returns the bare content without formatting.  Takes no arguments; simply output any desired suffix directly afterwards.
+%   Like \cs{parentref}\texttt{\{\}} but returns the bare content without formatting.  Takes no arguments; simply output any desired suffix directly afterwards.
 % \end{docCommand}
 %
-% \refCom{Parentref} and \refCom{nParentref} are useful for making subitems whose names derive from their parent's:
+% \refCom{parentref} and \refCom{nParentref} are useful for making subitems whose names derive from their parent's:
 % \begin{example}
 % \DeclareNumberedType{inner}[
 %   counter format=\alph{inner},
@@ -478,13 +499,13 @@
 %   \label{outer2}
 %   \begin{prop}
 %     \pitem[type=inner,
-%       format=\Parentref{.#1}]
+%       format=\parentref{.#1}]
 %     \label{dsub1}
 %     Ref: \ref{dsub1},
 %     naked: \nref{dsub1}.
 %     \pitem[type=inner,
 %       display format=#1.,
-%       ref format=\Parentref{.#1}]
+%       ref format=\parentref{.#1}]
 %     \label{dsub2}
 %     Ref: \ref{dsub2},
 %     naked: \nref{dsub2}.
@@ -493,7 +514,7 @@
 % \end{example}
 %
 % The built-in |leveltwo| and |levelthree| types have
-% |ref format=\Parentref{#1}| and |ref format=\Parentref{.#1}|,
+% |ref format=\parentref{#1}| and |ref format=\parentref{.#1}|,
 % respectively, so that if the parent references
 % as~`(\textbf{P1})', a |leveltwo| sub-item references
 % as~`(\textbf{P1a})' and |\nref| returns just~`a'.
@@ -685,12 +706,13 @@
 \tl_new:N   \l__props_ref_text_tl        %% what goes into \@currentlabel
 \tl_new:N   \l__props_item_output_tl     %% formatted display (displayfmt + shorthand + gloss)
 \bool_new:N \l__props_ptag_bool          %% true during \ptag processing
+\bool_new:N \l__props_titlecase_bool    %% true when \Ref etc. want titlecasing
 
 %<doc>%% --- Parent-ref stacks and last-item storage ---
 %<doc>%% Two global seq stacks hold the template/content of the parent item.
 %<doc>%% Pushed on \begin{prop}/\begin{inlineprop}, popped on \end.
 %<doc>%% Two global tl variables hold the most recent item's template/content,
-%<doc>%% used by \Lastref/\nLastref for linguex-style back-references.
+%<doc>%% used by \lastref/\nLastref for linguex-style back-references.
 \seq_new:N \g__props_parent_tpl_seq
 \seq_new:N \g__props_parent_cnt_seq
 \tl_new:N  \g__props_last_tpl_tl
@@ -721,7 +743,7 @@
 %<doc>%% \protected@edef expands expandable macros (including \propfmtarg
 %<doc>%% tokens from an outer \propapply scope) while preserving robust
 %<doc>%% commands like \textbullet.  This enables correct resolution of
-%<doc>%% nested \Parentref references.  \oref and \nref work by locally
+%<doc>%% nested \parentref references.  \oref and \nref work by locally
 %<doc>%% redefining \propapply to inject prefixes/suffixes or strip
 %<doc>%% formatting.
 %<doc>%%
@@ -739,16 +761,36 @@
 \cs_new_protected:Npn \propapply #1#2
   {
     \group_begin:
-    \protected@edef \propfmtarg { #2 }
-    #1
+    \bool_if:NTF \l__props_titlecase_bool
+      {
+        %% \protected@edef strips the e-TeX \protected flag from
+        %% \propfmtarg, so subsequent inner calls can expand it.
+        \protected@edef \propfmtarg { #2 }
+        %% If the template starts with \propapply (nested ref via
+        %% \parentref), run the normal path but keep the flag set
+        %% so the inner \propapply applies ucfirst.  Otherwise,
+        %% expand the template (substituting \propfmtarg) and apply
+        %% \text_titlecase_first:n here.
+        \tl_if_head_eq_meaning:nNTF { #1 } \propapply
+          { #1 }
+          {
+            \bool_set_false:N \l__props_titlecase_bool
+            \protected@edef \l_tmpa_tl { #1 }
+            \exp_args:NV \text_titlecase_first:n \l_tmpa_tl
+          }
+      }
+      {
+        \protected@edef \propfmtarg { #2 }
+        #1
+      }
     \group_end:
   }
 
 %<doc>%% ====================================================================
-%<doc>%% \Parentref / \nParentref / \Lastref / \nLastref
+%<doc>%% \parentref / \nParentref / \lastref / \nLastref
 %<doc>%% ====================================================================
 %<doc>%%
-%<doc>%% \Parentref reads the top of the parent stacks, wrapping the result
+%<doc>%% \parentref reads the top of the parent stacks, wrapping the result
 %<doc>%% in \propapply so the parent's template is preserved.  When \nref
 %<doc>%% strips the outermost \propapply, the parent contribution vanishes,
 %<doc>%% leaving only the child content — as expected.
@@ -757,7 +799,7 @@
 %<doc>%% suitable for use in \the<counter> definitions where the parent
 %<doc>%% prefix should be part of the counter *name* and survive \nref.
 %<doc>%%
-%<doc>%% \Lastref / \nLastref are analogous but read from the last-item
+%<doc>%% \lastref / \nLastref are analogous but read from the last-item
 %<doc>%% globals instead of the parent stacks, enabling linguex-style
 %<doc>%% back-references without \label.
 %<doc>%%
@@ -765,14 +807,14 @@
 %<doc>%% inside \protected@edef (e.g. when building aux-file content).
 %<doc>%%
 %<doc>%% Argument convention:
-%<doc>%%   \Parentref{suffix}           — appends suffix to parent content
-%<doc>%%   \Parentref[prefix]{suffix}   — wraps parent content with both
-%<doc>%%   \Parentref{}                 — plain parent ref (empty suffix)
+%<doc>%%   \parentref{suffix}           — appends suffix to parent content
+%<doc>%%   \parentref[prefix]{suffix}   — wraps parent content with both
+%<doc>%%   \parentref{}                 — plain parent ref (empty suffix)
 %<doc>%%
 %<doc>%% Note: the last argument must be mandatory for expandable commands
 %<doc>%% (xparse requirement), so the suffix is mandatory rather than optional.
 
-\NewExpandableDocumentCommand \Parentref { o m }
+\NewExpandableDocumentCommand \parentref { o m }
   {
     \IfValueTF { #1 }
       {
@@ -790,7 +832,7 @@
 \NewExpandableDocumentCommand \nParentref { }
   { \seq_item:Nn \g__props_parent_cnt_seq { 1 } }
 
-\NewExpandableDocumentCommand \Lastref { o m }
+\NewExpandableDocumentCommand \lastref { o m }
   {
     \IfValueTF { #1 }
       {
@@ -807,6 +849,26 @@
 
 \NewExpandableDocumentCommand \nLastref { }
   { \g__props_last_cnt_tl }
+
+%<doc>%% ====================================================================
+%<doc>%% \Parentref / \Lastref — titlecase versions (for running text)
+%<doc>%% ====================================================================
+
+\NewDocumentCommand \Parentref { o m }
+  {
+    \bool_set_true:N \l__props_titlecase_bool
+    \IfValueTF { #1 }
+      { \parentref [ #1 ] { #2 } }
+      { \parentref { #2 } }
+  }
+
+\NewDocumentCommand \Lastref { o m }
+  {
+    \bool_set_true:N \l__props_titlecase_bool
+    \IfValueTF { #1 }
+      { \lastref [ #1 ] { #2 } }
+      { \lastref { #2 } }
+  }
 
 %<doc>%% ====================================================================
 %<doc>%% Variant generation
@@ -912,7 +974,7 @@
         \cs_set:Npn \l__props_reffmt:n ##1 { #1 }
       } ,
     ref~append      .code:n    =
-      { \cs_set:Npn \l__props_reffmt:n ##1 { \Parentref{#1} } } ,
+      { \cs_set:Npn \l__props_reffmt:n ##1 { \parentref{#1} } } ,
     shorthand       .tl_set:N  = \l__props_shorthand_tl ,
     shorthand~format .cs_set:Np = \l__props_shorthandfmt:n #1 ,
     gloss           .tl_set:N  = \l__props_gloss_tl ,
@@ -1038,7 +1100,7 @@
         \cs_set:Npn \l__props_reffmt:n ##1 { #1 }
       } ,
     ref~append      .code:n    =
-      { \cs_set:Npn \l__props_reffmt:n ##1 { \Parentref{#1} } } ,
+      { \cs_set:Npn \l__props_reffmt:n ##1 { \parentref{#1} } } ,
     shorthand       .tl_set:N  = \l__props_shorthand_tl ,
     shorthand~format .cs_set:Np = \l__props_shorthandfmt:n #1 ,
     gloss           .tl_set:N  = \l__props_gloss_tl ,
@@ -1105,7 +1167,7 @@
         \cs_set:Npn \l__props_reffmt:n ##1 { #1 }
       } ,
     ref~append      .code:n =
-      { \cs_set:Npn \l__props_reffmt:n ##1 { \Parentref{#1} } } ,
+      { \cs_set:Npn \l__props_reffmt:n ##1 { \parentref{#1} } } ,
     shorthand       .code:n =
       {
         \tl_set:Nn \l__props_shorthand_tl { #1 }
@@ -1305,8 +1367,8 @@
     \IfValueTF { #1 }
       { \__props_resolve_item:n { #1 } }
       { \__props_resolve_item:n { } }
-    \__props_set_ref:
     \__props_output_item:
+    \__props_set_ref:
     \tl_if_empty:NF \l__props_label_tl
       { \exp_args:NV \label \l__props_label_tl }
   }
@@ -1321,7 +1383,7 @@
 \cs_new_protected:Nn \__props_build_ref_text:
   {
     %% Build a \propapply{template}{content} token list for the aux file.
-    %% Also save the template and content globally for \Lastref and the
+    %% Also save the template and content globally for \lastref and the
     %% parent stacks (pushed when entering a nested prop environment).
     \protected@xdef \g__props_last_tpl_tl
       { \l__props_reffmt:n { \propfmtarg } }
@@ -1384,7 +1446,6 @@
         \cs_set_protected:Npn \propapply #1#2
           {
             \group_begin:
-            \protected@edef \propfmtarg { #2 }
             \def \hyper@link@ [##1]##2##3##4{##4\Hy@xspace@end}
             \def \hyper@@anchor ##1##2{##2\Hy@xspace@end}
             \def \hyper@link ##1##2##3{##3\Hy@xspace@end}
@@ -1396,7 +1457,21 @@
             \def \hyper@linkurl ##1##2{##1\Hy@xspace@end}
             \def \hyper@linkfile ##1##2##3{##1\Hy@xspace@end}
             \let \Hy@backout \@gobble
-            #1
+            \bool_if:NTF \l__props_titlecase_bool
+              {
+                \protected@edef \propfmtarg { #2 }
+                \tl_if_head_eq_meaning:nNTF { #1 } \propapply
+                  { #1 }
+                  {
+                    \bool_set_false:N \l__props_titlecase_bool
+                    \protected@edef \l_tmpa_tl { #1 }
+                    \exp_args:NV \text_titlecase_first:n \l_tmpa_tl
+                  }
+              }
+              {
+                \protected@edef \propfmtarg { #2 }
+                #1
+              }
             \group_end:
           }
         %% Make \autoref work for propanchor labels (outputs the
@@ -1406,10 +1481,15 @@
           {
             \def \propapply #1#2{ #2 }
             \def \propfmtarg { }
+            \def \Ref #1{ \ref{#1} }
             \def \oref #1{ \ref{#1} }
+            \def \Oref #1{ \ref{#1} }
             \def \nref #1{ \ref{#1} }
+            \def \Nref #1{ \ref{#1} }
+            \def \parentref #1{ }
             \def \Parentref #1{ }
             \def \nParentref { }
+            \def \lastref #1{ }
             \def \Lastref #1{ }
             \def \nLastref { }
           }
@@ -1822,17 +1902,17 @@
     %% Save the current (standard) \propapply so we can restore it
     %% inside the redefined version.  This ensures prefix/suffix only
     %% apply at the outermost \propapply; any nested \propapply from
-    %% \Parentref etc. uses the standard definition.
+    %% \parentref etc. uses the standard definition.
+    %% Delegation to the saved version also ensures that hyperlink
+    %% suppression and titlecase handling are applied correctly.
     \cs_set_eq:NN \__props_std_propapply:ww \propapply
     \cs_set_protected:Npx \propapply ##1##2
       {
-        \exp_not:N \group_begin:
         \exp_not:N \cs_set_eq:NN \exp_not:N \propapply
           \exp_not:N \__props_std_propapply:ww
-        \exp_not:N \protected@edef \exp_not:N \propfmtarg
+        \exp_not:N \__props_std_propapply:ww
+          { ##1 }
           { \exp_not:V \l_tmpa_tl ##2 \exp_not:V \l_tmpb_tl }
-        ##1
-        \exp_not:N \group_end:
       }
   }
 
@@ -1859,6 +1939,63 @@
   {
     \group_begin:
     \cs_set:Npn \propapply ##1##2 { ##2 }
+    \IfBooleanTF { #1 }
+      { \__props_orig_ref:w * { #2 } }
+      { \__props_orig_ref:w   { #2 } }
+    \group_end:
+  }
+
+%<doc>%% ====================================================================
+%<doc>%% \Ref — titlecase ref
+%<doc>%% ====================================================================
+
+%<doc>%% Overrides the LaTeX kernel's \Ref, which does not understand
+%<doc>%% \propapply.  For non-propositions labels (equations, sections, etc.)
+%<doc>%% \Ref behaves like \ref (no titlecasing); use \MakeUppercase{\ref{..}}
+%<doc>%% for those if needed.  Deferred to \AtBeginDocument because the kernel
+%<doc>%% re-establishes its own \Ref during \begin{document}; our definition
+%<doc>%% must come after that.
+\AtBeginDocument
+  {
+    \DeclareDocumentCommand \Ref { s m }
+      {
+        \group_begin:
+        \bool_set_true:N \l__props_titlecase_bool
+        \IfBooleanTF { #1 }
+          { \__props_orig_ref:w * { #2 } }
+          { \__props_orig_ref:w   { #2 } }
+        \group_end:
+      }
+  }
+
+%<doc>%% ====================================================================
+%<doc>%% \Oref — titlecase ref with optional prefix/suffix
+%<doc>%% ====================================================================
+
+\NewDocumentCommand \Oref { s o o m }
+  {
+    \group_begin:
+    \bool_set_true:N \l__props_titlecase_bool
+    \IfValueTF { #3 }
+      { \__props_oref_setup:nn { #2 } { #3 } }
+      {
+        \IfValueT { #2 }
+          { \__props_oref_setup:nn { } { #2 } }
+      }
+    \IfBooleanTF { #1 }
+      { \__props_orig_ref:w * { #4 } }
+      { \__props_orig_ref:w   { #4 } }
+    \group_end:
+  }
+
+%<doc>%% ====================================================================
+%<doc>%% \Nref — titlecase naked ref
+%<doc>%% ====================================================================
+
+\NewDocumentCommand \Nref { s m }
+  {
+    \group_begin:
+    \cs_set:Npn \propapply ##1##2 { \text_titlecase_first:n { ##2 } }
     \IfBooleanTF { #1 }
       { \__props_orig_ref:w * { #2 } }
       { \__props_orig_ref:w   { #2 } }
@@ -2028,7 +2165,7 @@
   {
     counter        = numpropii ,
     display~format = #1. ,
-    ref~format     = \Parentref{#1} ,
+    ref~format     = \parentref{#1} ,
   }
 
 \newcounter { numpropiii }
@@ -2037,7 +2174,7 @@
   {
     counter        = numpropiii ,
     display~format = (#1) ,
-    ref~format     = \Parentref{.#1} ,
+    ref~format     = \parentref{.#1} ,
   }
 
 \newcounter { numpropiv }

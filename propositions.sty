@@ -68,6 +68,7 @@
 \tl_new:N   \l__props_ref_text_tl        %% what goes into \@currentlabel
 \tl_new:N   \l__props_item_output_tl     %% formatted display (displayfmt + shorthand + gloss)
 \bool_new:N \l__props_ptag_bool          %% true during \ptag processing
+\bool_new:N \l__props_titlecase_bool    %% true when \Ref etc. want titlecasing
 
 \seq_new:N \g__props_parent_tpl_seq
 \seq_new:N \g__props_parent_cnt_seq
@@ -85,13 +86,33 @@
 \cs_new_protected:Npn \propapply #1#2
   {
     \group_begin:
-    \protected@edef \propfmtarg { #2 }
-    #1
+    \bool_if:NTF \l__props_titlecase_bool
+      {
+        %% \protected@edef strips the e-TeX \protected flag from
+        %% \propfmtarg, so subsequent inner calls can expand it.
+        \protected@edef \propfmtarg { #2 }
+        %% If the template starts with \propapply (nested ref via
+        %% \parentref), run the normal path but keep the flag set
+        %% so the inner \propapply applies ucfirst.  Otherwise,
+        %% expand the template (substituting \propfmtarg) and apply
+        %% \text_titlecase_first:n here.
+        \tl_if_head_eq_meaning:nNTF { #1 } \propapply
+          { #1 }
+          {
+            \bool_set_false:N \l__props_titlecase_bool
+            \protected@edef \l_tmpa_tl { #1 }
+            \exp_args:NV \text_titlecase_first:n \l_tmpa_tl
+          }
+      }
+      {
+        \protected@edef \propfmtarg { #2 }
+        #1
+      }
     \group_end:
   }
 
 
-\NewExpandableDocumentCommand \Parentref { o m }
+\NewExpandableDocumentCommand \parentref { o m }
   {
     \IfValueTF { #1 }
       {
@@ -109,7 +130,7 @@
 \NewExpandableDocumentCommand \nParentref { }
   { \seq_item:Nn \g__props_parent_cnt_seq { 1 } }
 
-\NewExpandableDocumentCommand \Lastref { o m }
+\NewExpandableDocumentCommand \lastref { o m }
   {
     \IfValueTF { #1 }
       {
@@ -126,6 +147,23 @@
 
 \NewExpandableDocumentCommand \nLastref { }
   { \g__props_last_cnt_tl }
+
+
+\NewDocumentCommand \Parentref { o m }
+  {
+    \bool_set_true:N \l__props_titlecase_bool
+    \IfValueTF { #1 }
+      { \parentref [ #1 ] { #2 } }
+      { \parentref { #2 } }
+  }
+
+\NewDocumentCommand \Lastref { o m }
+  {
+    \bool_set_true:N \l__props_titlecase_bool
+    \IfValueTF { #1 }
+      { \lastref [ #1 ] { #2 } }
+      { \lastref { #2 } }
+  }
 
 
 \cs_generate_variant:Nn \tl_gset_eq:NN { cN }
@@ -215,7 +253,7 @@
         \cs_set:Npn \l__props_reffmt:n ##1 { #1 }
       } ,
     ref~append      .code:n    =
-      { \cs_set:Npn \l__props_reffmt:n ##1 { \Parentref{#1} } } ,
+      { \cs_set:Npn \l__props_reffmt:n ##1 { \parentref{#1} } } ,
     shorthand       .tl_set:N  = \l__props_shorthand_tl ,
     shorthand~format .cs_set:Np = \l__props_shorthandfmt:n #1 ,
     gloss           .tl_set:N  = \l__props_gloss_tl ,
@@ -319,7 +357,7 @@
         \cs_set:Npn \l__props_reffmt:n ##1 { #1 }
       } ,
     ref~append      .code:n    =
-      { \cs_set:Npn \l__props_reffmt:n ##1 { \Parentref{#1} } } ,
+      { \cs_set:Npn \l__props_reffmt:n ##1 { \parentref{#1} } } ,
     shorthand       .tl_set:N  = \l__props_shorthand_tl ,
     shorthand~format .cs_set:Np = \l__props_shorthandfmt:n #1 ,
     gloss           .tl_set:N  = \l__props_gloss_tl ,
@@ -380,7 +418,7 @@
         \cs_set:Npn \l__props_reffmt:n ##1 { #1 }
       } ,
     ref~append      .code:n =
-      { \cs_set:Npn \l__props_reffmt:n ##1 { \Parentref{#1} } } ,
+      { \cs_set:Npn \l__props_reffmt:n ##1 { \parentref{#1} } } ,
     shorthand       .code:n =
       {
         \tl_set:Nn \l__props_shorthand_tl { #1 }
@@ -571,8 +609,8 @@
     \IfValueTF { #1 }
       { \__props_resolve_item:n { #1 } }
       { \__props_resolve_item:n { } }
-    \__props_set_ref:
     \__props_output_item:
+    \__props_set_ref:
     \tl_if_empty:NF \l__props_label_tl
       { \exp_args:NV \label \l__props_label_tl }
   }
@@ -583,7 +621,7 @@
 \cs_new_protected:Nn \__props_build_ref_text:
   {
     %% Build a \propapply{template}{content} token list for the aux file.
-    %% Also save the template and content globally for \Lastref and the
+    %% Also save the template and content globally for \lastref and the
     %% parent stacks (pushed when entering a nested prop environment).
     \protected@xdef \g__props_last_tpl_tl
       { \l__props_reffmt:n { \propfmtarg } }
@@ -635,7 +673,6 @@
         \cs_set_protected:Npn \propapply #1#2
           {
             \group_begin:
-            \protected@edef \propfmtarg { #2 }
             \def \hyper@link@ [##1]##2##3##4{##4\Hy@xspace@end}
             \def \hyper@@anchor ##1##2{##2\Hy@xspace@end}
             \def \hyper@link ##1##2##3{##3\Hy@xspace@end}
@@ -647,7 +684,21 @@
             \def \hyper@linkurl ##1##2{##1\Hy@xspace@end}
             \def \hyper@linkfile ##1##2##3{##1\Hy@xspace@end}
             \let \Hy@backout \@gobble
-            #1
+            \bool_if:NTF \l__props_titlecase_bool
+              {
+                \protected@edef \propfmtarg { #2 }
+                \tl_if_head_eq_meaning:nNTF { #1 } \propapply
+                  { #1 }
+                  {
+                    \bool_set_false:N \l__props_titlecase_bool
+                    \protected@edef \l_tmpa_tl { #1 }
+                    \exp_args:NV \text_titlecase_first:n \l_tmpa_tl
+                  }
+              }
+              {
+                \protected@edef \propfmtarg { #2 }
+                #1
+              }
             \group_end:
           }
         %% Make \autoref work for propanchor labels (outputs the
@@ -657,10 +708,15 @@
           {
             \def \propapply #1#2{ #2 }
             \def \propfmtarg { }
+            \def \Ref #1{ \ref{#1} }
             \def \oref #1{ \ref{#1} }
+            \def \Oref #1{ \ref{#1} }
             \def \nref #1{ \ref{#1} }
+            \def \Nref #1{ \ref{#1} }
+            \def \parentref #1{ }
             \def \Parentref #1{ }
             \def \nParentref { }
+            \def \lastref #1{ }
             \def \Lastref #1{ }
             \def \nLastref { }
           }
@@ -1017,17 +1073,17 @@
     %% Save the current (standard) \propapply so we can restore it
     %% inside the redefined version.  This ensures prefix/suffix only
     %% apply at the outermost \propapply; any nested \propapply from
-    %% \Parentref etc. uses the standard definition.
+    %% \parentref etc. uses the standard definition.
+    %% Delegation to the saved version also ensures that hyperlink
+    %% suppression and titlecase handling are applied correctly.
     \cs_set_eq:NN \__props_std_propapply:ww \propapply
     \cs_set_protected:Npx \propapply ##1##2
       {
-        \exp_not:N \group_begin:
         \exp_not:N \cs_set_eq:NN \exp_not:N \propapply
           \exp_not:N \__props_std_propapply:ww
-        \exp_not:N \protected@edef \exp_not:N \propfmtarg
+        \exp_not:N \__props_std_propapply:ww
+          { ##1 }
           { \exp_not:V \l_tmpa_tl ##2 \exp_not:V \l_tmpb_tl }
-        ##1
-        \exp_not:N \group_end:
       }
   }
 
@@ -1051,6 +1107,48 @@
   {
     \group_begin:
     \cs_set:Npn \propapply ##1##2 { ##2 }
+    \IfBooleanTF { #1 }
+      { \__props_orig_ref:w * { #2 } }
+      { \__props_orig_ref:w   { #2 } }
+    \group_end:
+  }
+
+
+\AtBeginDocument
+  {
+    \DeclareDocumentCommand \Ref { s m }
+      {
+        \group_begin:
+        \bool_set_true:N \l__props_titlecase_bool
+        \IfBooleanTF { #1 }
+          { \__props_orig_ref:w * { #2 } }
+          { \__props_orig_ref:w   { #2 } }
+        \group_end:
+      }
+  }
+
+
+\NewDocumentCommand \Oref { s o o m }
+  {
+    \group_begin:
+    \bool_set_true:N \l__props_titlecase_bool
+    \IfValueTF { #3 }
+      { \__props_oref_setup:nn { #2 } { #3 } }
+      {
+        \IfValueT { #2 }
+          { \__props_oref_setup:nn { } { #2 } }
+      }
+    \IfBooleanTF { #1 }
+      { \__props_orig_ref:w * { #4 } }
+      { \__props_orig_ref:w   { #4 } }
+    \group_end:
+  }
+
+
+\NewDocumentCommand \Nref { s m }
+  {
+    \group_begin:
+    \cs_set:Npn \propapply ##1##2 { \text_titlecase_first:n { ##2 } }
     \IfBooleanTF { #1 }
       { \__props_orig_ref:w * { #2 } }
       { \__props_orig_ref:w   { #2 } }
@@ -1205,7 +1303,7 @@
   {
     counter        = numpropii ,
     display~format = #1. ,
-    ref~format     = \Parentref{#1} ,
+    ref~format     = \parentref{#1} ,
   }
 
 \newcounter { numpropiii }
@@ -1214,7 +1312,7 @@
   {
     counter        = numpropiii ,
     display~format = (#1) ,
-    ref~format     = \Parentref{.#1} ,
+    ref~format     = \parentref{.#1} ,
   }
 
 \newcounter { numpropiv }
