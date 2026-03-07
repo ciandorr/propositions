@@ -253,7 +253,7 @@
 % \end{docKey}
 %
 % \begin{docKey}{align}{=\meta{type}}{no default}
-%   How the label should be positioned.  Possible values: \texttt{default} (offset controlled by \cs{labelwidth} and \cs{labelsep}), \texttt{right} (right-aligned, like \texttt{enumerate}), \texttt{left} (aligned with left margin of surrounding text), \texttt{flush} (aligned with left margin of item text), \texttt{nextline} (label on its own line), \texttt{left-nextline}, and \texttt{flush-nextline}.
+%   How the label should be positioned.  Possible values: \texttt{default} (offset controlled by \cs{labelwidth} and \cs{labelsep}), \texttt{right} (right-aligned, like \texttt{enumerate}), \texttt{center} (centered within the label box), \texttt{left} (aligned with left margin of surrounding text), \texttt{flush} (aligned with left margin of item text), \texttt{nextline} (label on its own line), \texttt{left-nextline}, and \texttt{flush-nextline}.
 %   Has no effect inside \texttt{inlineprop} or \cs{ptag}.
 % \end{docKey}
 %
@@ -261,8 +261,20 @@
 %   Formatting applied to the \texttt{name}: use \texttt{\#1} for the argument, e.g.\ \texttt{format=\string\textbf\{(\#1)\}}.  Shorthand for setting both \texttt{display format} and \texttt{ref format}.
 % \end{docKey}
 %
-% \begin{docKey}{display format}{=\meta{template}}{no default}
+% \begin{docKey}{name format}{=\meta{template}}{no default}
 %   Format for displaying the name in the proposition's label.  Does not affect cross-references.
+%   (Synonym: \texttt{display format}.)
+% \end{docKey}
+%
+% \begin{docKey}{display format}{=\meta{template}}{no default}
+%   Synonym for \texttt{name format}.
+% \end{docKey}
+%
+% \begin{docKey}{label format}{=\meta{template}}{no default}
+%   Format applied to the \emph{entire} assembled label, i.e.\ the name (after
+%   \texttt{name format}), shorthand, and gloss together.  Use \texttt{\#1} for
+%   the whole assembled text.  For example, \texttt{label format=\#1:}\ appends
+%   a colon after the complete label.  Does not affect cross-references.
 % \end{docKey}
 %
 % \begin{docKey}{ref format}{=\meta{template}}{no default}
@@ -577,6 +589,16 @@
 %   Sets \cs{topsep}, \cs{itemsep}, and \cs{parsep} all to zero.
 % \end{docKey}
 %
+% \begin{docKey}{continue}{=\meta{boolean}}{initially \texttt{true}}
+%   When \texttt{true} (the default), a \texttt{prop} environment that
+%   immediately follows another \texttt{prop} (with no intervening
+%   paragraph text) replaces the normal \cs{topsep}-based inter-list
+%   space with \cs{itemsep}\,+\,\cs{parsep}, giving the visual
+%   appearance of a single continuous list.  This works at any nesting
+%   level.  Set to \texttt{false} to suppress this behaviour for a
+%   specific environment or globally via \refCom{propoptions}.
+% \end{docKey}
+%
 % \subsection{Default types}
 %
 % \begin{docKey}{default type}{=\meta{type}}{initially \texttt{default}}
@@ -686,6 +708,7 @@
 \cs_new:Npn \l__props_reffmt:n      #1 { #1 }
 \cs_new:Npn \l__props_shorthandfmt:n #1 { ~ [#1] }
 \cs_new:Npn \l__props_glossfmt:n    #1 { ~ (#1) }
+\cs_new:Npn \l__props_labelfmt:n    #1 { #1 }
 
 %<doc>%% --- Environment mode ---
 %<doc>%% True inside a prop environment, false inside inlineprop.
@@ -856,18 +879,22 @@
 
 \NewDocumentCommand \Parentref { o m }
   {
+    \group_begin:
     \bool_set_true:N \l__props_titlecase_bool
     \IfValueTF { #1 }
       { \parentref [ #1 ] { #2 } }
       { \parentref { #2 } }
+    \group_end:
   }
 
 \NewDocumentCommand \Lastref { o m }
   {
+    \group_begin:
     \bool_set_true:N \l__props_titlecase_bool
     \IfValueTF { #1 }
       { \lastref [ #1 ] { #2 } }
       { \lastref { #2 } }
+    \group_end:
   }
 
 %<doc>%% ====================================================================
@@ -887,6 +914,7 @@
 %<doc>%%   \g__props_type_<T>_counter_tl      (token list)
 %<doc>%%   \g__props_type_<T>_displayfmt:n       (one-arg macro)
 %<doc>%%   \g__props_type_<T>_reffmt:n        (one-arg macro)
+%<doc>%%   \g__props_type_<T>_labelfmt:n       (one-arg macro)
 %<doc>%% etc.
 
 \cs_new_protected:Nn \__props_type_ensure:n
@@ -899,6 +927,7 @@
         \cs_gset:cpn { g__props_type_ #1 _reffmt:n }      ##1 { ##1 }
         \cs_gset:cpn { g__props_type_ #1 _shorthandfmt:n }  ##1 { ~ [##1] }
         \cs_gset:cpn { g__props_type_ #1 _glossfmt:n }     ##1 { ~ (##1) }
+        \cs_gset:cpn { g__props_type_ #1 _labelfmt:n }     ##1 { ##1 }
         \tl_new:c { g__props_type_ #1 _name_tl }
         \tl_new:c { g__props_type_ #1 _ref_tl }
         \tl_new:c { g__props_type_ #1 _shorthand_tl }
@@ -923,6 +952,8 @@
           { g__props_type_ \l__props_type_tl _shorthandfmt:n }
         \cs_set_eq:Nc \l__props_glossfmt:n
           { g__props_type_ \l__props_type_tl _glossfmt:n }
+        \cs_set_eq:Nc \l__props_labelfmt:n
+          { g__props_type_ \l__props_type_tl _labelfmt:n }
         \tl_set_eq:Nc \l__props_name_tl
           { g__props_type_ \l__props_type_tl _name_tl }
         \tl_set_eq:Nc \l__props_ref_tl
@@ -966,7 +997,9 @@
     align           .tl_set:N  = \l__props_alignment_tl ,
     counter         .tl_set:N  = \l__props_counter_tl ,
     ref             .tl_set:N  = \l__props_ref_tl ,
+    name~format     .cs_set:Np = \l__props_displayfmt:n #1 ,
     display~format  .cs_set:Np = \l__props_displayfmt:n #1 ,
+    label~format    .cs_set:Np = \l__props_labelfmt:n #1 ,
     ref~format      .cs_set:Np = \l__props_reffmt:n #1 ,
     format          .code:n    =
       {
@@ -1013,9 +1046,10 @@
     \__props_type_ensure:n { #1 }
     \tl_gset_eq:cN { g__props_type_ #1 _alignment_tl }    \l__props_alignment_tl
     \tl_gset_eq:cN { g__props_type_ #1 _counter_tl }      \l__props_counter_tl
-    \cs_gset_eq:cN { g__props_type_ #1 _displayfmt:n }       \l__props_displayfmt:n
+    \cs_gset_eq:cN { g__props_type_ #1 _displayfmt:n }    \l__props_displayfmt:n
+    \cs_gset_eq:cN { g__props_type_ #1 _labelfmt:n }      \l__props_labelfmt:n
     \cs_gset_eq:cN { g__props_type_ #1 _reffmt:n }        \l__props_reffmt:n
-    \cs_gset_eq:cN { g__props_type_ #1 _shorthandfmt:n }   \l__props_shorthandfmt:n
+    \cs_gset_eq:cN { g__props_type_ #1 _shorthandfmt:n }  \l__props_shorthandfmt:n
     \cs_gset_eq:cN { g__props_type_ #1 _glossfmt:n }      \l__props_glossfmt:n
     \tl_gset_eq:cN { g__props_type_ #1 _name_tl }         \l__props_name_tl
     \tl_gset_eq:cN { g__props_type_ #1 _ref_tl }          \l__props_ref_tl
@@ -1037,8 +1071,9 @@
   {
     \tl_set:Nn  \l__props_alignment_tl { default }
     \tl_set:Nn  \l__props_counter_tl   { none }
-    \cs_set:Npn \l__props_displayfmt:n ##1     { ##1 }
-    \cs_set:Npn \l__props_reffmt:n  ##1     { ##1 }
+    \cs_set:Npn \l__props_displayfmt:n ##1   { ##1 }
+    \cs_set:Npn \l__props_labelfmt:n ##1    { ##1 }
+    \cs_set:Npn \l__props_reffmt:n ##1      { ##1 }
     \cs_set:Npn \l__props_shorthandfmt:n ##1 { ~ [##1] }
     \cs_set:Npn \l__props_glossfmt:n ##1    { ~ (##1) }
     \tl_clear:N \l__props_name_tl
@@ -1092,7 +1127,9 @@
     name            .tl_set:N  = \l__props_name_tl ,
     align           .tl_set:N  = \l__props_alignment_tl ,
     ref             .tl_set:N  = \l__props_ref_tl ,
+    name~format     .cs_set:Np = \l__props_displayfmt:n #1 ,
     display~format  .cs_set:Np = \l__props_displayfmt:n #1 ,
+    label~format    .cs_set:Np = \l__props_labelfmt:n #1 ,
     ref~format      .cs_set:Np = \l__props_reffmt:n #1 ,
     format          .code:n    =
       {
@@ -1159,7 +1196,9 @@
       {
         \tl_set:Nn \l__props_ref_tl { #1 }
       } ,
+    name~format     .cs_set:Np = \l__props_displayfmt:n #1 ,
     display~format  .cs_set:Np = \l__props_displayfmt:n #1 ,
+    label~format    .cs_set:Np = \l__props_labelfmt:n #1 ,
     ref~format      .cs_set:Np = \l__props_reffmt:n  #1 ,
     format          .code:n =
       {
@@ -1204,6 +1243,7 @@
     \tl_clear:N   \l__props_crefname_tl
     \cs_set:Npn \l__props_shorthandfmt:n ##1 { ~ [##1] }
     \cs_set:Npn \l__props_glossfmt:n    ##1 { ~ (##1) }
+    \cs_set:Npn \l__props_labelfmt:n    ##1 { ##1 }
 
     %% --- Phase 1: parse user keys ---
     %% If the argument has no = sign, treat it as a bare name so that
@@ -1337,6 +1377,10 @@
           { \l__props_glossfmt:n { \l__props_gloss_tl } }
         \tl_put_right:NV \l__props_item_output_tl \l_tmpa_tl
       }
+
+    %% --- Apply label format to the assembled label ---
+    \protected@edef \l__props_item_output_tl
+      { \l__props_labelfmt:n { \l__props_item_output_tl } }
   }
 
 %<doc>%% ====================================================================
@@ -1542,6 +1586,17 @@
   }
 
 %<doc>%% ====================================================================
+%<doc>%% Consecutive-list hook: clear the signal when paragraph text intervenes
+%<doc>%% ====================================================================
+%<doc>%% The para/begin hook fires whenever TeX enters horizontal mode to start
+%<doc>%% a paragraph.  A blank source line between two prop environments does
+%<doc>%% NOT fire it (vertical-mode \par is a no-op), so only real intervening
+%<doc>%% text breaks the consecutive sequence — which is exactly what we want.
+
+\AddToHook { para/begin }
+  { \bool_gset_false:N \g__props_last_was_prop_bool }
+
+%<doc>%% ====================================================================
 %<doc>%% Display math level tracking
 %<doc>%% ====================================================================
 %<doc>%% Inside a prop/inlineprop (level > 0), every display math environment
@@ -1697,6 +1752,14 @@
                 \vspace { -\parsep } \noindent \ignorespaces
               }
               {
+            \str_if_eq:VnTF \l__props_alignment_tl { center }
+              {
+                %% Center in label box (\hss absorbs space on both sides)
+                \cs_set:Nn \__props_display_label:n { \hss \mbox{##1} \hss }
+                \item [ \l__props_item_output_tl ]
+                \cs_set:Nn \__props_display_label:n { \mbox{##1} \hfill }
+              }
+              {
             \str_if_eq:VnTF \l__props_alignment_tl { right }
               {
                 %% Right-align in label box (like standard enumerate)
@@ -1705,6 +1768,7 @@
                 \cs_set:Nn \__props_display_label:n { \mbox{##1} \hfill }
               }
               { \item [ \l__props_item_output_tl ] }
+              }
               }
               }
               }
@@ -1736,6 +1800,23 @@
 
 %<doc>%% \makelabel for prop lists: left-aligns the label and prevents line breaks.
 \cs_new:Nn \__props_display_label:n { \mbox{#1} \hfill }
+
+%<doc>%% --- Consecutive-list (continue) state ---
+%<doc>%% \l__props_continue_bool: true (default) = participate in consecutive joining.
+%<doc>%% \g__props_last_was_prop_bool: signal set at \end{prop}, cleared by
+%<doc>%%   \begin{prop} or by the para/begin hook (intervening paragraph text).
+%<doc>%% \g__props_suppress_topsep_bool: internal flag passed from begin-code to
+%<doc>%%   the list parameter block and then to the post-\begin{list} fixup.
+%<doc>%% \g__props_natural_topsepadd_skip: saved \topsep+\partopsep for restoring
+%<doc>%%   \@topsepadd after \begin{list} so that after-spacing is unaffected.
+%<doc>%% \g__props_prev_itemsep_parsep_skip: \itemsep+\parsep saved at \end{prop}
+%<doc>%%   for use as the TARGET spacing by the immediately following \begin{prop}.
+\bool_new:N \l__props_continue_bool
+\bool_set_true:N \l__props_continue_bool
+\bool_new:N \g__props_last_was_prop_bool
+\bool_new:N \g__props_suppress_topsep_bool
+\skip_new:N \g__props_natural_topsepadd_skip
+\skip_new:N \g__props_prev_itemsep_parsep_skip
 
 %<doc>%% Helper: apply a dimension override that may be a single value or a
 %<doc>%% comma-separated per-level list.  \#1 = tl variable, \#2 = dimension.
@@ -1782,6 +1863,32 @@
         \msg_warning:nnx { props } { global-only-keys }
           { \l_tmpa_tl }
       }
+    %% Consecutive-list joining: if the previous environment was a prop
+    %% with continue=true, and this one also has continue=true, and no
+    %% paragraph text has intervened (flag still set), cancel the
+    %% inter-list \topsep glue and replace it with the TARGET spacing
+    %% (\itemsep+\parsep saved from the previous prop).  We use
+    %% \vskip -G \vskip TARGET instead of \unskip, since \unskip is
+    %% not valid in outer vertical mode.  \lastskip>0 guards against
+    %% page breaks: if the page builder consumed the glue we fall
+    %% through gracefully with normal spacing.
+    \bool_if:NT \l__props_continue_bool
+      {
+        \bool_if:NT \g__props_last_was_prop_bool
+          {
+            \dim_compare:nNnT { \lastskip } > { 0pt }
+              {
+                %% Temporarily borrow \g__props_natural_topsepadd_skip
+                %% to store the full rubber glue for cancellation;
+                %% it is properly overwritten in the parameter block.
+                \skip_gset:Nn \g__props_natural_topsepadd_skip { \lastskip }
+                \vskip -\g__props_natural_topsepadd_skip
+                \vskip \g__props_prev_itemsep_parsep_skip
+                \bool_gset_true:N \g__props_suppress_topsep_bool
+              }
+          }
+      }
+    \bool_gset_false:N \g__props_last_was_prop_bool
     \begin{list} {}
       {
         \cs_set:Npn \makelabel ##1 { \__props_display_label:n {##1} }
@@ -1831,9 +1938,38 @@
                   }
               }
           }
+        %% Consecutive-list: if signalled, save the natural \@topsepadd
+        %% (\topsep+\partopsep, since we are entering from vmode) for
+        %% after-spacing restoration, then set \topsep to TARGET so
+        %% that \@trivlist's \addvspace{TARGET} sees \lastskip=TARGET
+        %% (deposited by the pre-\begin{list} \vskip) and does nothing.
+        %% Net before-spacing = TARGET = \g__props_prev_itemsep_parsep_skip.
+        \bool_if:NT \g__props_suppress_topsep_bool
+          {
+            \skip_gset:Nn \g__props_natural_topsepadd_skip { \topsep }
+            \skip_gadd:Nn \g__props_natural_topsepadd_skip { \partopsep }
+            \setlength { \topsep } { \g__props_prev_itemsep_parsep_skip }
+            \setlength { \partopsep } { \z@ }
+          }
+      }
+    %% Restore \@topsepadd to the natural value so that \endtrivlist
+    %% uses the correct (unmodified) topsep for after-spacing.
+    \bool_if:NT \g__props_suppress_topsep_bool
+      {
+        \@topsepadd = \g__props_natural_topsepadd_skip
+        \bool_gset_false:N \g__props_suppress_topsep_bool
       }
   }
   {
+    %% Save this list's \itemsep+\parsep as the TARGET spacing for the
+    %% immediately following \begin{prop}.  Must be done BEFORE
+    %% \end{list}, because \end{list} closes the list group and
+    %% restores \itemsep/\parsep to their enclosing-scope values.
+    \bool_if:NT \l__props_continue_bool
+      {
+        \skip_gset:Nn \g__props_prev_itemsep_parsep_skip { \itemsep }
+        \skip_gadd:Nn \g__props_prev_itemsep_parsep_skip { \parsep }
+      }
     \end{list}
     %% Pop parent stacks.  At level >= 2, restore the popped values
     %% into \g__props_last_* so that re-entering a prop for intertext
@@ -1854,6 +1990,10 @@
     \int_compare:nNnTF { \g__props_level_int } > { 0 }
       { \bool_gset_true:N \g__props_display_mode_bool }
       { \bool_gset_false:N \g__props_display_mode_bool }
+    %% Signal that the next prop may join seamlessly (cleared by
+    %% \begin{prop} or by the para/begin hook if text intervenes).
+    \bool_if:NT \l__props_continue_bool
+      { \bool_gset_true:N \g__props_last_was_prop_bool }
   }
 
 %<doc>%% ====================================================================
@@ -2042,6 +2182,8 @@
         \tl_set:Nn \l__props_itemsep_tl { 0pt }
         \tl_set:Nn \l__props_parsep_tl  { 0pt }
       } ,
+    continue          .bool_set:N  = \l__props_continue_bool ,
+    continue          .default:n   = { true } ,
     level~1           .code:n      =
       { \prop_put:Nnn \l__props_level_defaults_prop { 1 } { #1 } } ,
     level~2           .code:n      =
@@ -2113,7 +2255,7 @@
 
 \SetItemType { bullet }
   {
-    align          = default ,
+    align          = center ,
     name           = \textbullet ,
     display~format = #1 ,
     macro          = \bitem ,

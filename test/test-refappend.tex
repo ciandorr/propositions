@@ -159,19 +159,23 @@ Nref with name override: \nref{rn1} (expected: Premise~1).
 
 Nref without override: \nref{rn2} (expected: R2).
 
-\section{Alignment=right}
+\section{Alignment=right and center}
 
-Labels of varying width show the difference between left and right alignment.
-Right-aligned labels should be flush against the item text (like standard
-\texttt{enumerate}); left-aligned labels should start at the left margin.
+Labels of varying width show the difference between left, right, and centered
+alignment.  Right-aligned labels are flush against the item text (like standard
+\texttt{enumerate}); left-aligned labels start at the left margin; centered
+labels are centered in the label box.
 
 \begin{prop}
-    \pitem[name={A},   align=right] Right-aligned short label.
-    \pitem[name={BB},  align=right] Right-aligned medium label.
-    \pitem[name={CCC}, align=right] Right-aligned long label.
-    \pitem[name={A},   align=left]  Left-aligned short label (compare with first).
-    \pitem[name={BB},  align=left]  Left-aligned medium label (compare with second).
-    \pitem[name={CCC}, align=left]  Left-aligned long label (compare with third).
+    \pitem[name={A},   align=right]  Right-aligned short label.
+    \pitem[name={BB},  align=right]  Right-aligned medium label.
+    \pitem[name={CCC}, align=right]  Right-aligned long label.
+    \pitem[name={A},   align=left]   Left-aligned short label (compare with first).
+    \pitem[name={BB},  align=left]   Left-aligned medium label (compare with second).
+    \pitem[name={CCC}, align=left]   Left-aligned long label (compare with third).
+    \pitem[name={A},   align=center] Centered short label.
+    \pitem[name={BB},  align=center] Centered medium label.
+    \pitem[name={CCC}, align=center] Centered long label.
 \end{prop}
 
 \section{Ref key on a type declaration}
@@ -413,6 +417,54 @@ already uppercase).
 
 More examples: \Ref{tc:lower} (expected: (\textbf{Test})),
 \Ref{tc:lowersub} (expected: (\textbf{Testa})).
+
+\section{Label format and name format keys}
+
+\DeclareNumberedType{LF}[ref format=(#1)]
+
+%% label format on type declaration
+\DeclareNumberedType{LG}[ref format=(#1), label format=#1:]
+
+\begin{prop}
+    \pitem[type=LF, label format=#1:]
+    Item with label-format colon, declared per-item. \label{lf1}
+    \pitem[type=LF, label format=#1:]
+    Second item; confirm colon appears. \label{lf2}
+    \pitem[type=LF]
+    Third item; no colon (label format reset). \label{lf3}
+\end{prop}
+
+Expected: \texttt{LF1:} \quad \texttt{LF2:} \quad \texttt{LF3} (no colon).
+
+\begin{prop}
+    \pitem[type=LG]
+    Type-level label format. \label{lg1}
+    \pitem[type=LG, shorthand=SH, gloss=a gloss]
+    Item with shorthand and gloss; colon after all. \label{lg2}
+\end{prop}
+
+Expected: \texttt{LG1:} \quad \texttt{LG2~[SH]~(a gloss):} (colon after gloss).
+
+%% name format is a synonym for display format
+\DeclareNumberedType{NF}[name format=\textit{#1}, ref format=(#1)]
+
+\begin{prop}
+    \pitem[type=NF, gloss={should not be italic}]
+    Item with name format (italic). \label{nf1}
+\end{prop}
+
+Expected: \textit{NF1} in display; \texttt{(NF1)} for ref: \ref{nf1}.
+
+\section{Testing stuff}
+
+
+\begin{enumerate}
+    \item Normal.  
+    \item Now going to set leftmargin.  \labelsep=4cm
+    \item Now going to set it way back \leftmargin=1cm
+    \item Did this do anything I wonder?
+\end{enumerate}
+
 
 \end{document}
 

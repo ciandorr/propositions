@@ -1,0 +1,139 @@
+\documentclass{article}
+\usepackage[parsep=0em,itemsep=0em]{propositions}
+
+\begin{document}
+
+\section{Test: \texttt{continue} key}
+
+\subsection{Two consecutive prop environments (default: continue=true)}
+
+Before text.
+
+\begin{prop}
+  \pitem First prop, item A.
+  \pitem First prop, item B.
+\end{prop}
+
+\begin{prop}
+  \pitem Second prop, item C.
+  \pitem Second prop, item D.
+\end{prop}
+
+After text.
+
+\subsection{Three consecutive prop environments}
+
+Before text.
+
+\begin{prop}
+  \pitem Prop 1, item A.
+\end{prop}
+
+\begin{prop}
+  \pitem Prop 2, item B.
+\end{prop}
+
+\begin{prop}
+  \pitem Prop 3, item C.
+\end{prop}
+
+After text.
+
+\subsection{Two consecutive prop environments with blank line between (should still continue)}
+
+Before text.
+
+\begin{prop}
+  \pitem First prop, item A.
+  \pitem First prop, item B.
+\end{prop}
+
+\begin{prop}
+  \pitem Second prop, item C.
+  \pitem Second prop, item D.
+\end{prop}
+
+After text.
+
+\subsection{Intervening text breaks the chain}
+
+Before text.
+
+\begin{prop}
+  \pitem First prop, item A.
+\end{prop}
+
+Some intervening text here.
+
+\begin{prop}
+  \pitem Second prop — should have normal topsep spacing above.
+\end{prop}
+
+After text.
+
+\subsection{With continue=false globally}
+
+\propoptions{continue=false}
+
+Before text.
+
+\begin{prop}
+  \pitem First prop, item A.
+\end{prop}
+
+\begin{prop}
+  \pitem Second prop — should have normal topsep spacing (continue=false).
+\end{prop}
+
+After text.
+
+\propoptions{continue=true}
+
+\subsection{Per-environment continue=false}
+
+Before text.
+
+\begin{prop}
+  \pitem First prop, item A.
+\end{prop}
+
+\begin{prop}[continue=false]
+  \pitem Second prop — should have normal topsep spacing.
+\end{prop}
+
+\begin{prop}
+  \pitem Third prop — continue=true again (but previous broke chain, should be normal).
+\end{prop}
+
+After text.
+
+\subsection{Nested prop environments}
+
+Before text.
+
+\begin{prop}
+  \pitem Outer item 1.
+  \begin{prop}
+    \pitem Inner item A.
+  \end{prop}
+  \begin{prop}
+    \pitem Inner item B — should continue from inner A.
+  \end{prop}
+  \pitem Outer item 2.
+\end{prop}
+
+After text.
+
+\subsection{Reference: single prop environment}
+
+Before text.
+
+\begin{prop}
+  \pitem Item A.
+  \pitem Item B.
+  \pitem Item C.
+\end{prop}
+
+After text.
+
+\end{document}
