@@ -289,14 +289,14 @@ Refs: \ref{a}, \ref{b}, \ref{c}, \ref{d}.  Now refs to earlier pitems don't make
     \pitem[name={A much longer label that should demonstrate how the nextline option lets labels wrap across multiple lines when they are awkwardly long},
     align=nextline]
     Nextline with a long wrapping label.
-    \pitem[name={Short label}, align=left-nextline]
-    Left-nextline with a short label (starts at the left margin).
-    \pitem[name={A much longer label that should demonstrate how the left-nextline option lets labels wrap across multiple lines when they are awkwardly long},
-    align=left-nextline]
-    Left-nextline with a long wrapping label.
+    \pitem[name={Short label}, align=nextline, labelindent=0pt]
+    Nextline with labelindent=0pt (starts at the left margin, replaces left-nextline).
+    \pitem[name={A much longer label that should demonstrate how the nextline option with labelindent=0pt lets labels wrap across multiple lines when they are awkwardly long},
+    align=nextline, labelindent=0pt]
+    Nextline with labelindent=0pt and a long wrapping label.
     \pitem[name={Short label}, align=flush-nextline]
     Flush-nextline with a short label (starts at the item text margin).
-    \pitem[name={A much longer label that should demonstrate how the left-nextline option lets labels wrap across multiple lines when they are awkwardly long},
+    \pitem[name={A much longer label that should demonstrate how the flush-nextline option lets labels wrap across multiple lines when they are awkwardly long},
     align=flush-nextline]
     Flush-nextline with a long wrapping label.  This is some more long text to see what's happening at the beginning of the item text.
     \pitem[name={N}, align=left]

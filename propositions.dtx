@@ -253,7 +253,7 @@
 % \end{docKey}
 %
 % \begin{docKey}{align}{=\meta{type}}{no default}
-%   How the label should be positioned.  Possible values: \texttt{default} (offset controlled by \cs{labelwidth} and \cs{labelsep}), \texttt{right} (right-aligned, like \texttt{enumerate}), \texttt{center} (centered within the label box), \texttt{flush} (aligned with left margin of item text), \texttt{nextline} (label on its own line), \texttt{left-nextline}, and \texttt{flush-nextline}.
+%   How the label should be positioned.  Possible values: \texttt{left} (standard left-aligned label, offset controlled by \cs{labelwidth} and \cs{labelsep}), \texttt{right} (right-aligned, like \texttt{enumerate}), \texttt{center} (centered within the label box), \texttt{flush} (aligned with left margin of item text), \texttt{nextline} (label on its own line), and \texttt{flush-nextline}.
 %   Has no effect inside \texttt{inlineprop} or \cs{ptag}.
 %   For left-margin alignment, use \texttt{labelindent=0em} instead.
 % \end{docKey}
@@ -1121,7 +1121,7 @@
 %<doc>%% the actual value is loaded from the type preset in Phase 2.
 \cs_new_protected:Nn \__props_decl_reset:
   {
-    \tl_set:Nn  \l__props_alignment_tl { default }
+    \tl_set:Nn  \l__props_alignment_tl { left }
     \tl_clear:N \l__props_pi_labelwidth_tl
     \tl_clear:N \l__props_pi_labelsep_tl
     \tl_clear:N \l__props_pi_itemindent_tl
@@ -1762,20 +1762,26 @@
   }
 
 %<doc>%% Display mode: use \item[...] with alignment and dimension control.
-%<doc>%% If any per-item dimension key is set (labelindent, labelwidth,
-%<doc>%% labelsep, itemindent), label placement is computed from those.
-%<doc>%% Otherwise the alignment key controls placement.
+%<doc>%% Nextline variants handle their own labelindent, so they always
+%<doc>%% go through the alignment path.  For other alignments, per-item
+%<doc>%% dimension keys route through the pidim handler.
 \cs_new_protected:Nn \__props_output_item_display:
   {
-    \bool_lazy_any:nTF
-      {
-        { ! \tl_if_empty_p:N \l__props_pi_labelindent_tl }
-        { ! \tl_if_empty_p:N \l__props_pi_labelwidth_tl }
-        { ! \tl_if_empty_p:N \l__props_pi_labelsep_tl }
-        { ! \tl_if_empty_p:N \l__props_pi_itemindent_tl }
-      }
-      { \__props_output_item_pidim: }
+    \bool_lazy_or:nnTF
+      { \str_if_eq_p:Vn \l__props_alignment_tl { nextline } }
+      { \str_if_eq_p:Vn \l__props_alignment_tl { flush-nextline } }
       { \__props_output_item_align: }
+      {
+        \bool_lazy_any:nTF
+          {
+            { ! \tl_if_empty_p:N \l__props_pi_labelindent_tl }
+            { ! \tl_if_empty_p:N \l__props_pi_labelwidth_tl }
+            { ! \tl_if_empty_p:N \l__props_pi_labelsep_tl }
+            { ! \tl_if_empty_p:N \l__props_pi_itemindent_tl }
+          }
+          { \__props_output_item_pidim: }
+          { \__props_output_item_align: }
+      }
   }
 
 %<doc>%% Per-item dimension positioning.
@@ -1848,25 +1854,18 @@
                 \l__props_item_output_tl \hspace{\labelsep} ]
       }
       {
-        \str_if_eq:VnTF \l__props_alignment_tl { left-nextline }
-          {
-            %% Label on own line(s), starting at the left edge
-            %% of the label area.  Issue a blank \item and typeset
-            %% the label as ordinary paragraph text with negative
-            %% \leftskip; then cancel the inter-paragraph space.
-            \item []
-            { \leftskip = \dimexpr -\labelwidth - \labelsep \relax
-              \l__props_item_output_tl \par }
-            \vspace { -\parsep } \noindent \ignorespaces
-          }
-          {
         \str_if_eq:VnTF \l__props_alignment_tl { nextline }
           {
-            %% Label on own line(s), starting at the default label
-            %% position (same as alignment=default).
+            %% Label on own line(s).  When per-item labelindent is set,
+            %% the label starts at that distance from the enclosing margin.
+            %% Otherwise, the label starts at the standard label position
+            %% (which already reflects any global labelindent setting).
             \item []
-            { \leftskip = \dimexpr \itemindent
-                - \labelwidth - \labelsep \relax
+            { \tl_if_empty:NTF \l__props_pi_labelindent_tl
+                { \leftskip = \dimexpr \itemindent
+                    - \labelwidth - \labelsep \relax }
+                { \leftskip = \dimexpr \l__props_pi_labelindent_tl
+                    - \leftmargin \relax }
               \l__props_item_output_tl \par }
             \vspace { -\parsep } \noindent \ignorespaces
           }
@@ -1897,7 +1896,6 @@
             \cs_set:Nn \__props_display_label:n { \mbox{##1} \hfill }
           }
           { \item [ \l__props_item_output_tl ] }
-          }
           }
           }
           }
@@ -2449,7 +2447,7 @@
 \SetItemType { levelfour }
   {
     counter        = numpropiv ,
-    align          = default ,
+    align          = left ,
     name           = \textbullet ,
     display~format = #1 ,
   }
@@ -2458,7 +2456,7 @@
 \SetItemType { levelfive }
   {
     counter        = numpropv ,
-    align          = default ,
+    align          = left ,
     name           = -- ,
     display~format = #1 ,
   }
