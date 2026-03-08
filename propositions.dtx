@@ -253,8 +253,33 @@
 % \end{docKey}
 %
 % \begin{docKey}{align}{=\meta{type}}{no default}
-%   How the label should be positioned.  Possible values: \texttt{default} (offset controlled by \cs{labelwidth} and \cs{labelsep}), \texttt{right} (right-aligned, like \texttt{enumerate}), \texttt{center} (centered within the label box), \texttt{left} (aligned with left margin of surrounding text), \texttt{flush} (aligned with left margin of item text), \texttt{nextline} (label on its own line), \texttt{left-nextline}, and \texttt{flush-nextline}.
+%   How the label should be positioned.  Possible values: \texttt{default} (offset controlled by \cs{labelwidth} and \cs{labelsep}), \texttt{right} (right-aligned, like \texttt{enumerate}), \texttt{center} (centered within the label box), \texttt{flush} (aligned with left margin of item text), \texttt{nextline} (label on its own line), \texttt{left-nextline}, and \texttt{flush-nextline}.
 %   Has no effect inside \texttt{inlineprop} or \cs{ptag}.
+%   For left-margin alignment, use \texttt{labelindent=0em} instead.
+% \end{docKey}
+%
+% \begin{docKey}{labelindent}{=\meta{length}}{no default, per-item}
+%   Positions the label's left edge at \meta{length} from the enclosing
+%   left margin.  For example, \texttt{labelindent=0em} aligns the label
+%   with the surrounding text.  When the label plus \cs{labelsep} would
+%   overflow into the item text, the first line is pushed right
+%   automatically (like the global \texttt{labelindent} key).
+%   Can be set per-item, per-type, or globally via \cs{propoptions}.
+% \end{docKey}
+%
+% \begin{docKey}{labelwidth}{=\meta{length}}{no default, per-item}
+%   Overrides the effective label box width for this item.  The label is
+%   repositioned as if \cs{labelwidth} were \meta{length}, without
+%   changing the actual list dimension.
+% \end{docKey}
+%
+% \begin{docKey}{labelsep}{=\meta{length}}{no default, per-item}
+%   Overrides the effective label-to-text gap for this item.
+% \end{docKey}
+%
+% \begin{docKey}{itemindent}{=\meta{length}}{no default, per-item}
+%   Overrides the effective first-line indent for this item.
+%   Only increases are fully supported; decreases are clamped to zero.
 % \end{docKey}
 %
 % \begin{docKey}{format}{=\meta{template}}{no default}
@@ -327,8 +352,8 @@
 %
 % \begin{example}
 % \SetItemType{angle}{
-%   align = left,
-%   display format = 
+%   labelindent = 0em,
+%   display format =
 %     \textbf{$\langle$#1$\rangle$},
 %   ref format     = 
 %     $\langle$#1$\rangle$,
@@ -695,6 +720,13 @@
 \tl_new:N   \l__props_type_tl
 \tl_new:N   \l__props_counter_tl
 \tl_new:N   \l__props_alignment_tl
+\tl_new:N   \l__props_pi_labelwidth_tl
+\tl_new:N   \l__props_pi_labelsep_tl
+\tl_new:N   \l__props_pi_itemindent_tl
+\tl_new:N   \l__props_pi_labelindent_tl
+\dim_new:N  \l__props_save_labelwidth_dim
+\dim_new:N  \l__props_save_labelsep_dim
+\dim_new:N  \l__props_save_itemindent_dim
 \tl_new:N   \l__props_ref_tl
 \tl_new:N   \l__props_label_tl
 \tl_new:N   \l__props_shorthand_tl
@@ -932,6 +964,10 @@
         \tl_new:c { g__props_type_ #1 _ref_tl }
         \tl_new:c { g__props_type_ #1 _shorthand_tl }
         \tl_new:c { g__props_type_ #1 _gloss_tl }
+        \tl_new:c { g__props_type_ #1 _pi_labelwidth_tl }
+        \tl_new:c { g__props_type_ #1 _pi_labelsep_tl }
+        \tl_new:c { g__props_type_ #1 _pi_itemindent_tl }
+        \tl_new:c { g__props_type_ #1 _pi_labelindent_tl }
       }
   }
 
@@ -964,6 +1000,14 @@
           { g__props_type_ \l__props_type_tl _gloss_tl }
         \tl_set_eq:Nc \l__props_crefname_tl
           { g__props_type_ \l__props_type_tl _crefname_tl }
+        \tl_set_eq:Nc \l__props_pi_labelwidth_tl
+          { g__props_type_ \l__props_type_tl _pi_labelwidth_tl }
+        \tl_set_eq:Nc \l__props_pi_labelsep_tl
+          { g__props_type_ \l__props_type_tl _pi_labelsep_tl }
+        \tl_set_eq:Nc \l__props_pi_itemindent_tl
+          { g__props_type_ \l__props_type_tl _pi_itemindent_tl }
+        \tl_set_eq:Nc \l__props_pi_labelindent_tl
+          { g__props_type_ \l__props_type_tl _pi_labelindent_tl }
       }
       {
         \msg_error:nnx { props } { unknown-type } { \l__props_type_tl }
@@ -995,6 +1039,10 @@
   {
     name            .tl_set:N  = \l__props_name_tl ,
     align           .tl_set:N  = \l__props_alignment_tl ,
+    labelwidth      .tl_set:N  = \l__props_pi_labelwidth_tl ,
+    labelsep        .tl_set:N  = \l__props_pi_labelsep_tl ,
+    itemindent      .tl_set:N  = \l__props_pi_itemindent_tl ,
+    labelindent     .tl_set:N  = \l__props_pi_labelindent_tl ,
     counter         .tl_set:N  = \l__props_counter_tl ,
     ref             .tl_set:N  = \l__props_ref_tl ,
     name~format     .cs_set:Np = \l__props_displayfmt:n #1 ,
@@ -1056,6 +1104,10 @@
     \tl_gset_eq:cN { g__props_type_ #1 _shorthand_tl }   \l__props_shorthand_tl
     \tl_gset_eq:cN { g__props_type_ #1 _gloss_tl }       \l__props_gloss_tl
     \tl_gset_eq:cN { g__props_type_ #1 _crefname_tl }   \l__props_crefname_tl
+    \tl_gset_eq:cN { g__props_type_ #1 _pi_labelwidth_tl }  \l__props_pi_labelwidth_tl
+    \tl_gset_eq:cN { g__props_type_ #1 _pi_labelsep_tl }    \l__props_pi_labelsep_tl
+    \tl_gset_eq:cN { g__props_type_ #1 _pi_itemindent_tl }  \l__props_pi_itemindent_tl
+    \tl_gset_eq:cN { g__props_type_ #1 _pi_labelindent_tl } \l__props_pi_labelindent_tl
   }
 
 %<doc>%% ====================================================================
@@ -1070,6 +1122,10 @@
 \cs_new_protected:Nn \__props_decl_reset:
   {
     \tl_set:Nn  \l__props_alignment_tl { default }
+    \tl_clear:N \l__props_pi_labelwidth_tl
+    \tl_clear:N \l__props_pi_labelsep_tl
+    \tl_clear:N \l__props_pi_itemindent_tl
+    \tl_clear:N \l__props_pi_labelindent_tl
     \tl_set:Nn  \l__props_counter_tl   { none }
     \cs_set:Npn \l__props_displayfmt:n ##1   { ##1 }
     \cs_set:Npn \l__props_labelfmt:n ##1    { ##1 }
@@ -1192,6 +1248,10 @@
         \tl_set:Nn \l__props_name_tl { \use:c { the #1 } }
       } ,
     align       .tl_set:N = \l__props_alignment_tl ,
+    labelwidth  .tl_set:N = \l__props_pi_labelwidth_tl ,
+    labelsep    .tl_set:N = \l__props_pi_labelsep_tl ,
+    itemindent  .tl_set:N = \l__props_pi_itemindent_tl ,
+    labelindent .tl_set:N = \l__props_pi_labelindent_tl ,
     ref         .code:n =
       {
         \tl_set:Nn \l__props_ref_tl { #1 }
@@ -1241,6 +1301,10 @@
     \tl_clear:N   \l__props_shorthand_tl
     \tl_clear:N   \l__props_gloss_tl
     \tl_clear:N   \l__props_crefname_tl
+    \tl_clear:N   \l__props_pi_labelwidth_tl
+    \tl_clear:N   \l__props_pi_labelsep_tl
+    \tl_clear:N   \l__props_pi_itemindent_tl
+    \tl_clear:N   \l__props_pi_labelindent_tl
     \cs_set:Npn \l__props_shorthandfmt:n ##1 { ~ [##1] }
     \cs_set:Npn \l__props_glossfmt:n    ##1 { ~ (##1) }
     \cs_set:Npn \l__props_labelfmt:n    ##1 { ##1 }
@@ -1697,12 +1761,85 @@
       { \__props_output_item_inline: }
   }
 
-%<doc>%% Display mode: use \item[...] with alignment control.
-%<doc>%%   "flush"   — label starts at the left text margin (pushes text right)
-%<doc>%%   "left"    — label is left-aligned in the label box (natural position)
-%<doc>%%   "right"   — label is right-aligned in the label box (like enumerate)
-%<doc>%%   "default" — standard LaTeX left-aligned label
+%<doc>%% Display mode: use \item[...] with alignment and dimension control.
+%<doc>%% If any per-item dimension key is set (labelindent, labelwidth,
+%<doc>%% labelsep, itemindent), label placement is computed from those.
+%<doc>%% Otherwise the alignment key controls placement.
 \cs_new_protected:Nn \__props_output_item_display:
+  {
+    \bool_lazy_any:nTF
+      {
+        { ! \tl_if_empty_p:N \l__props_pi_labelindent_tl }
+        { ! \tl_if_empty_p:N \l__props_pi_labelwidth_tl }
+        { ! \tl_if_empty_p:N \l__props_pi_labelsep_tl }
+        { ! \tl_if_empty_p:N \l__props_pi_itemindent_tl }
+      }
+      { \__props_output_item_pidim: }
+      { \__props_output_item_align: }
+  }
+
+%<doc>%% Per-item dimension positioning.
+%<doc>%% Temporarily overrides \cs{labelwidth}, \cs{labelsep}, and/or
+%<doc>%% \cs{itemindent} so that the \cs{item} mechanism places the label
+%<doc>%% exactly as it would in a list with those dimensions.  After the
+%<doc>%% \cs{item} call the original values are restored.
+%<doc>%%
+%<doc>%% When \texttt{labelsep} is overridden without an explicit
+%<doc>%% \texttt{labelwidth}, the effective label width is expanded by the
+%<doc>%% labelsep reduction so that the label--text invariant
+%<doc>%% $\mathit{LW}+\mathit{LS}=\texttt{\string\leftmargin}$ is preserved.
+%<doc>%%
+%<doc>%% When \texttt{labelindent} is set, the same Case~1/Case~2 logic
+%<doc>%% used by the global \texttt{labelindent} option is applied:
+%<doc>%% Case~1 (label fits) widens \cs{labelsep};
+%<doc>%% Case~2 (label overflows) increases \cs{itemindent}.
+\cs_new_protected:Nn \__props_output_item_pidim:
+  {
+    %% Save current list dimensions.
+    \dim_set:Nn \l__props_save_labelwidth_dim { \labelwidth }
+    \dim_set:Nn \l__props_save_labelsep_dim   { \labelsep }
+    \dim_set:Nn \l__props_save_itemindent_dim { \itemindent }
+    %% Apply per-item overrides.
+    %% Order matters: labelsep first (may auto-expand labelwidth),
+    %% then explicit labelwidth (overrides any auto-expansion),
+    %% then itemindent, then labelindent (may adjust labelsep/itemindent).
+    \tl_if_empty:NF \l__props_pi_labelsep_tl
+      {
+        \tl_if_empty:NT \l__props_pi_labelwidth_tl
+          { \dim_add:Nn \labelwidth
+              { \labelsep - \l__props_pi_labelsep_tl } }
+        \setlength { \labelsep } { \l__props_pi_labelsep_tl }
+      }
+    \tl_if_empty:NF \l__props_pi_labelwidth_tl
+      { \setlength { \labelwidth } { \l__props_pi_labelwidth_tl } }
+    \tl_if_empty:NF \l__props_pi_itemindent_tl
+      { \setlength { \itemindent } { \l__props_pi_itemindent_tl } }
+    \tl_if_empty:NF \l__props_pi_labelindent_tl
+      {
+        \dim_compare:nTF
+          { \labelwidth + \l__props_pi_labelindent_tl
+              <= \leftmargin + \itemindent }
+          { %% Case 1: label fits — absorb slack into labelsep
+            \setlength { \labelsep }
+              { \dimexpr \leftmargin + \itemindent
+                  - \labelwidth - \l__props_pi_labelindent_tl \relax }
+          }
+          { %% Case 2: label overflows — push first line right
+            \setlength { \itemindent }
+              { \dimexpr \labelwidth + \labelsep
+                  - \leftmargin + \l__props_pi_labelindent_tl \relax }
+          }
+      }
+    %% Emit \item with modified dimensions.
+    \item [ \l__props_item_output_tl ]
+    %% Restore original dimensions.
+    \setlength { \labelwidth } { \l__props_save_labelwidth_dim }
+    \setlength { \labelsep }   { \l__props_save_labelsep_dim }
+    \setlength { \itemindent } { \l__props_save_itemindent_dim }
+  }
+
+%<doc>%% Alignment-based label placement (no per-item dim overrides).
+\cs_new_protected:Nn \__props_output_item_align:
   {
     \str_if_eq:VnTF \l__props_alignment_tl { flush }
       {
@@ -1711,67 +1848,58 @@
                 \l__props_item_output_tl \hspace{\labelsep} ]
       }
       {
-        \str_if_eq:VnTF \l__props_alignment_tl { left }
+        \str_if_eq:VnTF \l__props_alignment_tl { left-nextline }
           {
-            %% Negative space to left-align in the label box
-            \item [ \hspace{\dimexpr \labelwidth + \labelsep
-                      - \leftmargin - \itemindent \relax}
-                    \l__props_item_output_tl ]
+            %% Label on own line(s), starting at the left edge
+            %% of the label area.  Issue a blank \item and typeset
+            %% the label as ordinary paragraph text with negative
+            %% \leftskip; then cancel the inter-paragraph space.
+            \item []
+            { \leftskip = \dimexpr -\labelwidth - \labelsep \relax
+              \l__props_item_output_tl \par }
+            \vspace { -\parsep } \noindent \ignorespaces
           }
           {
-            \str_if_eq:VnTF \l__props_alignment_tl { left-nextline }
-              {
-                %% Label on own line(s), starting at the left edge
-                %% of the label area.  Issue a blank \item and typeset
-                %% the label as ordinary paragraph text with negative
-                %% \leftskip; then cancel the inter-paragraph space.
-                \item []
-                { \leftskip = \dimexpr -\labelwidth - \labelsep \relax
-                  \l__props_item_output_tl \par }
-                \vspace { -\parsep } \noindent \ignorespaces
-              }
-              {
-            \str_if_eq:VnTF \l__props_alignment_tl { nextline }
-              {
-                %% Label on own line(s), starting at the default label
-                %% position (same as alignment=default).
-                \item []
-                { \leftskip = \dimexpr \itemindent
-                    - \labelwidth - \labelsep \relax
-                  \l__props_item_output_tl \par }
-                \vspace { -\parsep } \noindent \ignorespaces
-              }
-              {
-            \str_if_eq:VnTF \l__props_alignment_tl { flush-nextline }
-              {
-                %% Label on own line(s), starting at the text margin.
-                %% Blank \item, label as ordinary paragraph text,
-                %% then cancel the inter-paragraph space.
-                \item []
-                \l__props_item_output_tl \par
-                \vspace { -\parsep } \noindent \ignorespaces
-              }
-              {
-            \str_if_eq:VnTF \l__props_alignment_tl { center }
-              {
-                %% Center in label box (\hss absorbs space on both sides)
-                \cs_set:Nn \__props_display_label:n { \hss \mbox{##1} \hss }
-                \item [ \l__props_item_output_tl ]
-                \cs_set:Nn \__props_display_label:n { \mbox{##1} \hfill }
-              }
-              {
-            \str_if_eq:VnTF \l__props_alignment_tl { right }
-              {
-                %% Right-align in label box (like standard enumerate)
-                \cs_set:Nn \__props_display_label:n { \hss \mbox{##1} }
-                \item [ \l__props_item_output_tl ]
-                \cs_set:Nn \__props_display_label:n { \mbox{##1} \hfill }
-              }
-              { \item [ \l__props_item_output_tl ] }
-              }
-              }
-              }
-              }
+        \str_if_eq:VnTF \l__props_alignment_tl { nextline }
+          {
+            %% Label on own line(s), starting at the default label
+            %% position (same as alignment=default).
+            \item []
+            { \leftskip = \dimexpr \itemindent
+                - \labelwidth - \labelsep \relax
+              \l__props_item_output_tl \par }
+            \vspace { -\parsep } \noindent \ignorespaces
+          }
+          {
+        \str_if_eq:VnTF \l__props_alignment_tl { flush-nextline }
+          {
+            %% Label on own line(s), starting at the text margin.
+            %% Blank \item, label as ordinary paragraph text,
+            %% then cancel the inter-paragraph space.
+            \item []
+            \l__props_item_output_tl \par
+            \vspace { -\parsep } \noindent \ignorespaces
+          }
+          {
+        \str_if_eq:VnTF \l__props_alignment_tl { center }
+          {
+            %% Center in label box (\hss absorbs space on both sides)
+            \cs_set:Nn \__props_display_label:n { \hss \mbox{##1} \hss }
+            \item [ \l__props_item_output_tl ]
+            \cs_set:Nn \__props_display_label:n { \mbox{##1} \hfill }
+          }
+          {
+        \str_if_eq:VnTF \l__props_alignment_tl { right }
+          {
+            %% Right-align in label box (like standard enumerate)
+            \cs_set:Nn \__props_display_label:n { \hss \mbox{##1} }
+            \item [ \l__props_item_output_tl ]
+            \cs_set:Nn \__props_display_label:n { \mbox{##1} \hfill }
+          }
+          { \item [ \l__props_item_output_tl ] }
+          }
+          }
+          }
           }
       }
   }
@@ -2265,7 +2393,6 @@
   {
     \SetItemType { numbered }
       {
-        align          = left ,
         counter        = equation ,
         display~format = \__props_eqdispfmt:n{#1} ,
         ref~format     = \__props_eqreffmt:n{#1} ,
@@ -2275,7 +2402,6 @@
     \newcounter { numpropi }
     \SetItemType { numbered }
       {
-        align       = left ,
         counter     = numpropi ,
         format      = (#1) ,
       }

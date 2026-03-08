@@ -1,137 +1,152 @@
-
 This session is being continued from a previous conversation that ran out of context. The summary below covers the earlier portion of the conversation.
 
 Summary:
 1. Primary Request and Intent:
-   - The user is working on the `propositions` LaTeX package (a .dtx/docstrip package using LaTeX3/expl3), continuing from a corrupted previous session.
-   - Initial discussion: considered implementing per-item dimension keys (`itemindent`, `labelsep`, `labelwidth`, `labelindent`) for `\pitem`, and evaluated whether `leftmargin`/`rightmargin` per-item overrides were feasible (concluded: not worth it).
-   - Main feature implemented: a `continue` key (default `true`) for the `prop` environment. When enabled, consecutive `prop` environments (with no intervening paragraph text) replace the normal `\topsep`-based inter-list space with `\itemsep + \parsep`, making them visually appear as a single continuous list. Works at any nesting level.
-   - The user's final explicit request before the summary: "Can you run some tests to make sure it works?"
+   - The user is developing the `propositions` LaTeX package (a `.dtx`/docstrip package using LaTeX3/expl3).
+   - **Prior session work (completed):** A `continue` bug fix (blank line between consecutive prop environments) and implementation of per-item dimension keys (`labelwidth`, `labelsep`, `itemindent`, `labelindent`) for `\pitem`.
+   - **This session's requests:**
+     1. Finish the visual verification of test outputs from the prior session.
+     2. Remove all `labelindent=0em` settings from default item types (since standard lengths already give that effect).
+     3. Fix the overlap bug in section 1.4 of test-pidim.pdf where `labelsep=0pt` on the "Tight" item causes the label text to overlap the item text. The user stated: "The idea is to have each pitem behave just as it would if it was item in an ambient list with the corresponding dimension set, and there is no setting of list dimensions that makes for such overlap. I'm not sure what's happening but I suspect that we are failing to properly model the automatic expansion of the label box that normally prevents overlap."
 
 2. Key Technical Concepts:
    - LaTeX3/expl3 package development using `.dtx`/`.ins`/docstrip workflow
-   - LaTeX list internals: `\@topsepadd`, `\@trivlist`, `\endtrivlist`, `\addvspace`, `\lastskip`, `\unskip`
-   - `\topsep` governs BOTH before-spacing (via `\addvspace{\@topsepadd}` in `\@trivlist`) AND after-spacing (via `\addvspace{\@topsepadd}` in `\endtrivlist`) — critical insight requiring the `\@topsepadd` restoration trick
-   - `\AddToHook{para/begin}` fires when TeX enters horizontal mode (actual paragraph text), NOT for blank lines in vertical mode — this is the mechanism for clearing the "consecutive" signal
-   - Page-break safety: check `\lastskip > 0` before `\unskip`; if the page builder consumed the glue, `\lastskip = 0` and we fall through gracefully
-   - `\bool_lazy_and:nnT`, `\bool_if:NT`, `\dim_compare:nNnT` — LaTeX3 conditionals
-   - `\skip_gset:Nn`, `\skip_gadd:Nn` — LaTeX3 rubber-length operations
-   - `\tex_unskip:D` — expl3 name for primitive `\unskip`
-   - `\keys_define:nn { props / global }` with `.bool_set:N` and `.default:n`
-   - `\setlength`/`\addtolength` for preserving rubber length stretch/shrink components
+   - LaTeX list internals: `\labelwidth`, `\labelsep`, `\itemindent`, `\leftmargin`
+   - `\makelabel` in propositions: `\mbox{#1}\hfill`, placed in `\hbox to \labelwidth{...}`
+   - `\@labels` box construction in `\@item`: `\hskip -\labelwidth \hskip -\labelsep \hbox to \labelwidth{\makelabel{#1}}`
+   - The LW+LS invariant: in standard LaTeX lists (`\@listi`), `\labelwidth = \leftmargin - \labelsep`, so when labelsep changes, labelwidth should adjust
+   - `\rlap` approach (OLD, replaced): placed content at zero width within the label, using leading/trailing `\hspace` to control positioning. Failed because it couldn't model automatic label box expansion.
+   - Direct dimension override approach (NEW): temporarily modify `\labelwidth`, `\labelsep`, `\itemindent` before `\item`, then restore after. This lets the standard LaTeX `\@item` mechanism handle positioning naturally.
+   - Global labelindent Case 1/Case 2 logic: Case 1 (label fits) widens labelsep; Case 2 (label overflows) increases itemindent to push first-line text right.
 
 3. Files and Code Sections:
-   - **`/Users/cd50/Dropbox/texmf/tex/latex/propositions/propositions.dtx`** — primary source file, all edits made here
-     - Documentation addition (after `nosep` entry, around line 589):
-       ```
-       % \begin{docKey}{continue}{=\meta{boolean}}{initially \texttt{true}}
-       %   When \texttt{true} (the default), a \texttt{prop} environment that
-       %   immediately follows another \texttt{prop} (with no intervening
-       %   paragraph text) replaces the normal \cs{topsep}-based inter-list
-       %   space with \cs{itemsep}\,+\,\cs{parsep}, giving the visual
-       %   appearance of a single continuous list.  This works at any nesting
-       %   level.  Set to \texttt{false} to suppress this behaviour for a
-       %   specific environment or globally via \refCom{propoptions}.
-       % \end{docKey}
-       ```
-     - New variable declarations (after `\cs_new:Nn \__props_display_label:n`):
+
+   - **`/Users/cd50/Dropbox/texmf/tex/latex/propositions/propositions.dtx`** — primary source file, ALL edits made here
+   
+     - **Removed `labelindent=0em` from numbered type definitions** (two instances):
+       - Equations variant (was at ~line 2443): removed `labelindent = 0em ,` from `\SetItemType { numbered }` 
+       - Non-equations variant (was at ~line 2453): removed `labelindent = 0em ,` from `\SetItemType { numbered }`
+       - Documentation examples at line 355 and package preamble at line 26 were kept (they demonstrate the feature)
+
+     - **Added save dimension variables** (after line ~726):
        ```latex
-       \bool_new:N \l__props_continue_bool
-       \bool_set_true:N \l__props_continue_bool
-       \bool_new:N \g__props_last_was_prop_bool
-       \bool_new:N \g__props_suppress_topsep_bool
-       \skip_new:N \g__props_natural_topsepadd_skip
+       \dim_new:N  \l__props_save_labelwidth_dim
+       \dim_new:N  \l__props_save_labelsep_dim
+       \dim_new:N  \l__props_save_itemindent_dim
        ```
-     - `\AddToHook` for paragraph signal clearing:
+
+     - **Complete replacement of `\__props_output_item_pidim:`** — the old rlap-based approach was replaced with direct dimension override:
        ```latex
-       \AddToHook { para/begin }
-         { \bool_gset_false:N \g__props_last_was_prop_bool }
-       ```
-     - `prop` BEGIN code — before `\begin{list}` (consecutive check):
-       ```latex
-       \bool_if:NT \l__props_continue_bool
+       %<doc>%% Per-item dimension positioning.
+       %<doc>%% Temporarily overrides \cs{labelwidth}, \cs{labelsep}, and/or
+       %<doc>%% \cs{itemindent} so that the \cs{item} mechanism places the label
+       %<doc>%% exactly as it would in a list with those dimensions.  After the
+       %<doc>%% \cs{item} call the original values are restored.
+       %<doc>%%
+       %<doc>%% When \texttt{labelsep} is overridden without an explicit
+       %<doc>%% \texttt{labelwidth}, the effective label width is expanded by the
+       %<doc>%% labelsep reduction so that the label--text invariant
+       %<doc>%% $\mathit{LW}+\mathit{LS}=\texttt{\string\leftmargin}$ is preserved.
+       %<doc>%%
+       %<doc>%% When \texttt{labelindent} is set, the same Case~1/Case~2 logic
+       %<doc>%% used by the global \texttt{labelindent} option is applied:
+       %<doc>%% Case~1 (label fits) widens \cs{labelsep};
+       %<doc>%% Case~2 (label overflows) increases \cs{itemindent}.
+       \cs_new_protected:Nn \__props_output_item_pidim:
          {
-           \bool_if:NT \g__props_last_was_prop_bool
+           %% Save current list dimensions.
+           \dim_set:Nn \l__props_save_labelwidth_dim { \labelwidth }
+           \dim_set:Nn \l__props_save_labelsep_dim   { \labelsep }
+           \dim_set:Nn \l__props_save_itemindent_dim { \itemindent }
+           %% Apply per-item overrides.
+           %% Order matters: labelsep first (may auto-expand labelwidth),
+           %% then explicit labelwidth (overrides any auto-expansion),
+           %% then itemindent, then labelindent (may adjust labelsep/itemindent).
+           \tl_if_empty:NF \l__props_pi_labelsep_tl
              {
-               \dim_compare:nNnT { \lastskip } > { 0pt }
-                 {
-                   \tex_unskip:D
-                   \bool_gset_true:N \g__props_suppress_topsep_bool
+               \tl_if_empty:NT \l__props_pi_labelwidth_tl
+                 { \dim_add:Nn \labelwidth
+                     { \labelsep - \l__props_pi_labelsep_tl } }
+               \setlength { \labelsep } { \l__props_pi_labelsep_tl }
+             }
+           \tl_if_empty:NF \l__props_pi_labelwidth_tl
+             { \setlength { \labelwidth } { \l__props_pi_labelwidth_tl } }
+           \tl_if_empty:NF \l__props_pi_itemindent_tl
+             { \setlength { \itemindent } { \l__props_pi_itemindent_tl } }
+           \tl_if_empty:NF \l__props_pi_labelindent_tl
+             {
+               \dim_compare:nTF
+                 { \labelwidth + \l__props_pi_labelindent_tl
+                     <= \leftmargin + \itemindent }
+                 { %% Case 1: label fits — absorb slack into labelsep
+                   \setlength { \labelsep }
+                     { \dimexpr \leftmargin + \itemindent
+                         - \labelwidth - \l__props_pi_labelindent_tl \relax }
+                 }
+                 { %% Case 2: label overflows — push first line right
+                   \setlength { \itemindent }
+                     { \dimexpr \labelwidth + \labelsep
+                         - \leftmargin + \l__props_pi_labelindent_tl \relax }
                  }
              }
-         }
-       \bool_gset_false:N \g__props_last_was_prop_bool
-       ```
-     - `prop` BEGIN code — in parameter block (after all `\__props_apply_dim` calls, after labelindent):
-       ```latex
-       \bool_if:NT \g__props_suppress_topsep_bool
-         {
-           \skip_gset:Nn \g__props_natural_topsepadd_skip { \topsep }
-           \skip_gadd:Nn \g__props_natural_topsepadd_skip { \partopsep }
-           \setlength { \topsep } { \itemsep }
-           \addtolength { \topsep } { \parsep }
-           \setlength { \partopsep } { \z@ }
+           %% Emit \item with modified dimensions.
+           \item [ \l__props_item_output_tl ]
+           %% Restore original dimensions.
+           \setlength { \labelwidth } { \l__props_save_labelwidth_dim }
+           \setlength { \labelsep }   { \l__props_save_labelsep_dim }
+           \setlength { \itemindent } { \l__props_save_itemindent_dim }
          }
        ```
-     - `prop` BEGIN code — after `\begin{list}` closes (restore `\@topsepadd`):
-       ```latex
-       \bool_if:NT \g__props_suppress_topsep_bool
-         {
-           \@topsepadd = \g__props_natural_topsepadd_skip
-           \bool_gset_false:N \g__props_suppress_topsep_bool
-         }
-       ```
-     - `prop` END code — at end, after display_mode setting:
-       ```latex
-       \bool_if:NT \l__props_continue_bool
-         { \bool_gset_true:N \g__props_last_was_prop_bool }
-       ```
-     - `continue` key in `props/global`:
-       ```latex
-       continue          .bool_set:N  = \l__props_continue_bool ,
-       continue          .default:n   = { true } ,
-       ```
-   - **`/Users/cd50/Dropbox/texmf/tex/latex/propositions/propositions.sty`** — generated from dtx via `pdflatex propositions.ins`; reflects all the above changes. Compiled cleanly, verified with `pdflatex test-props.tex` (no errors).
-   - **`/Users/cd50/Dropbox/texmf/tex/latex/propositions/test/test-props.tex`** — existing test file used to verify no runtime errors after rebuild.
+
+     - **The `\__props_output_item_align:` function** — unchanged, still handles alignment when no per-item dims are set.
+
+     - **The `\__props_output_item_display:` dispatch** — unchanged, dispatches to pidim or align based on whether any per-item dim key is set.
+
+     - **All other per-item dimension infrastructure remains unchanged**: variable declarations, type storage/loading/saving, key definitions in `props/pitem` and `props/declare-type`, decl reset and resolve_item reset.
+
+   - **`/Users/cd50/Dropbox/texmf/tex/latex/propositions/test/test-pidim.tex`** — test file for per-item dimensions, unchanged, tests: default numbered, explicit labelindent=0em, labelindent=1em, labelsep override (Wide/Tight/Normal), labelwidth override, long label overflow, combined labelindent+labelsep
+
+   - **`/Users/cd50/Dropbox/texmf/tex/latex/propositions/test/test-continue.tex`** — test for continue feature, unchanged
+
+   - **`/Users/cd50/Dropbox/texmf/tex/latex/propositions/test/test-props.tex`** — main test file, unchanged
+
+   - **`/Users/cd50/Dropbox/texmf/tex/latex/propositions/propositions.sty`** — rebuilt from .dtx via `pdflatex propositions.ins`
 
 4. Errors and fixes:
-   - No compilation errors encountered. The `.ins` run and subsequent `test-props.tex` compile both succeeded cleanly.
-   - Conceptual issue caught during discussion: setting `\topsep` in the parameter block would affect BOTH before-spacing and after-spacing. Fix: save the natural `\@topsepadd` (= `\topsep + \partopsep`) into `\g__props_natural_topsepadd_skip` before overriding `\topsep`, then locally restore `\@topsepadd` after `\begin{list}` returns (still inside the list group). Since `\endtrivlist` reads `\@topsepadd` before calling `\endgroup`, it sees the restored value.
-   - User corrected: no need to capture previous list's `\itemsep`/`\parsep` globally — use the new list's values (computed in its own parameter block). Implemented accordingly.
-   - User corrected: no level check needed — the mechanism works at all nesting levels. Implemented without any level restriction.
+   - **Overlap bug in labelsep=0pt per-item override (section 1.4 "Tight" item):**
+     - Root cause: The `\rlap`-based approach placed label content at offset S within a `\labelwidth`-wide mbox. With S = LS (list's labelsep), the content only had LW-S visual space before reaching the text, but needed LW (the full labelwidth). In standard LaTeX lists, reducing labelsep automatically expands labelwidth (via `\@listi`: `\labelwidth = \leftmargin - \labelsep`), but the rlap simulation didn't model this.
+     - User feedback: "The idea is to have each pitem behave just as it would if it was item in an ambient list with the corresponding dimension set, and there is no setting of list dimensions that makes for such overlap. I'm not sure what's happening but I suspect that we are failing to properly model the automatic expansion of the label box that normally prevents overlap."
+     - Fix: Completely rewrote `\__props_output_item_pidim:` to directly override `\labelwidth`, `\labelsep`, `\itemindent` before calling `\item`, then restore after. When labelsep is overridden without explicit labelwidth, the effective labelwidth auto-expands by the labelsep reduction (preserving the LW+LS=leftmargin invariant). For labelindent, the same Case 1/Case 2 logic as the global option is used.
+     - Status: Implementation done, **not yet fully tested** — test-props.tex compiled successfully (10 pages), but test-pidim.tex and test-continue.tex have not yet been compiled with the new code, and no visual verification has been done.
 
 5. Problem Solving:
-   - **`\unskip` page-break safety**: Gating the entire adjustment on `\lastskip > 0` handles the case where the page builder consumed the inter-list glue; we fall through to normal `\topsep` behavior in that edge case.
-   - **`\topsep` affecting both before and after spacing**: Solved by the three-phase approach (parameter block saves+overrides, post-`\begin{list}` restores `\@topsepadd` locally within the list group).
-   - **Signal clearing**: `\AddToHook{para/begin}` correctly clears the flag only on actual paragraph text — blank source lines between two prop environments (vertical-mode `\par`) do NOT fire this hook, so they don't break the seamless behavior.
-   - **`continue` key scoping**: `\l__props_continue_bool` is local, initialized to `true` at package load. `\propoptions{continue=false}` sets it in the current scope (effectively globally if used in preamble). The `prop` optional argument overrides it locally per environment.
+   - Extensive analysis of LaTeX list internals: traced through `\@item`, `\@labels` box construction, `\makelabel`, `\everypar` mechanism, and `\hbox to \labelwidth` behavior to understand why `\rlap` caused overlap and whether direct dimension overrides would work.
+   - Key insight: `\@labels` is set globally by `\@item` using current values of `\labelwidth` and `\labelsep` at call time. So temporarily overriding these before `\item` works — the `\@labels` box captures the overridden values, and restoring after ensures subsequent items use originals.
+   - Concern identified but not yet tested: `\itemindent` affects `\parindent` via `\@item`, and the everypar's `\kern-\itemindent` reads `\itemindent` when the paragraph starts (after our restore). This may or may not cause issues — needs empirical testing.
 
 6. All user messages:
-   - "I'm starting a new session to work more on the `propositions` package... I have been thinking about the option align=left in this package... I think that what would really make sense would be to implement length keys itemindent, labelsep, labelwidth, and labelindent for `\pitem`... However, before I ask you to implement these options, I want to consider whether it would be possible to override leftmargin and rightmargin in the same way... Could you have a think about whether there would be any not-too-complex way to get the effect of overriding leftmargin or rightmargin just for one `\pitem` in a `prop` list?"
-   - "Here's one thought: is there a way we could have a prop environment leave a signal that will disappear at the next following \par, such that if one prop environment is called immediately after another, it could know and replace the standard space between two successive list environments with the space between two items in the same list environment? Then we could adjust dimensions like leftmargin while still preserving the vertical spacing of list items."
-   - "Just one note of caution on the following sentence in your plan 'And in the parameter block, after all overrides, if the suppress flag is set: \topsep = \dimexpr\itemsep+\parsep\relax, \partopsep = \z@'. Remember that in a list environment, \topsep governs both the space before and the space after. In the case we are talking about (a prop immediately after another), we want the space before the list to be different, but the space after it to be the same as usual. I'm not sure that this can be achieved just by setting the dimensions."
-   - "OK, this sounds well worked out. Let's implement it, but make it optional. Can we have a new key `continue` (true by default) settable by `\propoptions` and in the optional argument of `prop`, that turns on this behavior?"
-   - Three questions about the `\unskip` plan: (i) `\unskip` in outer vmode concerns; (ii) whose `\itemsep+\parsep` to use; (iii) whether a level check is needed.
-   - "Cool! Can you run some tests to make sure it works? Your task is to create a detailed summary..." [summary request]
+   - "Hi, are you there?"
+   - "Yes. Please finish the check. Also, please delete all the labelindent=0em settings from the default item types: with the standard lengths, we in effect have labelindent=0em globally, so there is no need to override it."
+   - "One problem there: in the item called 'Tight' in section 1.4 of test-pidm.pdf, which has labelsep-0pt, the text of the item actually overlaps the text of the label ('Tight'). This is not desired. The idea is to have each pitem behave just as it would if it was item in an ambient list with the corresponding dimension set, and there is no setting of list dimensions that makes for such overlap. I'm not sure what's happening but I suspect that we are failing to properly model the automatic expansion of the label box that normally prevents overlap."
+   - "Continue from where you left off."
 
 7. Pending Tasks:
-   - Run actual tests to verify the `continue` feature works correctly in practice (spacing looks right for consecutive prop environments with and without the feature, with `continue=false`, with intervening text, etc.)
-   - Implement per-item dimension keys (`itemindent`, `labelsep`, `labelwidth`, `labelindent`) for `\pitem` (discussed but not yet implemented — the user said "let's work on the two things separately" and the `continue` feature was first)
-   - Build the documentation PDF (`pdflatex propositions.dtx`)
-   - Commit the changes
+   - Compile test-pidim.tex and test-continue.tex with the new pidim implementation
+   - Visually verify ALL test PDFs (test-pidim, test-continue, test-props) to confirm the new approach works
+   - Specifically verify that the "Tight" label in section 1.4 no longer overlaps
+   - Check that all other pidim scenarios still work (labelindent=0em, labelindent=1em, labelwidth override, long label overflow Case 2, combined labelindent+labelsep)
+   - Check that test-props.pdf page 1 numbered items still work without the removed `labelindent=0em`
 
 8. Current Work:
-   The implementation of the `continue` key was just completed. All six edits to `propositions.dtx` were made and verified:
-   1. Documentation for the `continue` key added
-   2. Four new internal variables declared (`\l__props_continue_bool`, `\g__props_last_was_prop_bool`, `\g__props_suppress_topsep_bool`, `\g__props_natural_topsepadd_skip`)
-   3. `\AddToHook{para/begin}` installed to clear the consecutive flag
-   4. Three-part logic added to `prop` BEGIN code (pre-`\begin{list}` check, parameter block topsep override, post-`\begin{list}` `\@topsepadd` restoration)
-   5. Flag-setting added to `prop` END code
-   6. `continue` key added to `props/global` key family
-   
-   `pdflatex propositions.ins` was run successfully to regenerate `propositions.sty`, and `pdflatex test-props.tex` compiled cleanly with no errors.
+   I had just finished rewriting `\__props_output_item_pidim:` to use direct dimension overrides instead of the `\rlap`-based approach. I rebuilt the .sty and compiled test-props.tex successfully. I was about to compile test-pidim.tex and test-continue.tex when the user said "Continue from where you left off." The compilation commands for those two tests had not yet been run.
+
+   The todo list state was:
+   - "Remove labelindent=0em from default item types" — completed
+   - "Rewrite pidim to locally override list dimensions instead of rlap" — in_progress
+   - "Rebuild .sty and compile tests" — pending
+   - "Visually verify test output" — pending
 
 9. Optional Next Step:
-   The user's most recent request was: "Cool! Can you run some tests to make sure it works?"
-   
-   The next step is to write and run a targeted test document that exercises the `continue` feature: consecutive prop environments with default settings, with `continue=false`, with intervening text (verifying the flag clears), and at nested levels. This should be compiled and the output inspected for correct spacing.
+   Compile test-pidim.tex and test-continue.tex with the new pidim implementation, then visually verify all test PDFs. The user's last explicit request was "Continue from where you left off" — I was in the middle of testing the rewritten pidim function. Specifically, test-props.tex compiled successfully but test-pidim.tex and test-continue.tex still need compilation and all outputs need visual verification to confirm the overlap bug is fixed.
+
+If you need specific details from before compaction (like exact code snippets, error messages, or content you generated), read the full transcript at: /Users/cd50/.claude/projects/-Users-cd50-

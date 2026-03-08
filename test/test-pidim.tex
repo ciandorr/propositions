@@ -1,0 +1,92 @@
+\documentclass{article}
+\usepackage{propositions}
+
+\begin{document}
+
+\section{Per-item dimension keys}
+
+\subsection{Reference: default numbered type (labelindent=0em)}
+
+Before text.
+
+\begin{prop}
+  \pitem Item A (default numbered, labelindent=0em from type).
+  \pitem Item B.
+\end{prop}
+
+After text.
+
+\subsection{Explicit labelindent=0em on a named item}
+
+Before text.
+
+\begin{prop}
+  \pitem[labelindent=0em, name=P1] First named item, left-aligned.
+  \pitem[labelindent=0em, name=P2] Second named item, left-aligned.
+  \pitem[name=P3] Third named item, default alignment.
+\end{prop}
+
+After text.
+
+\subsection{labelindent=1em (indented from margin)}
+
+Before text.
+
+\begin{prop}
+  \pitem[labelindent=1em, name=Test] Indented 1em from margin.
+  \pitem Item B (default numbered).
+\end{prop}
+
+After text.
+
+\subsection{labelsep override}
+
+Before text.
+
+\begin{prop}
+  \pitem[labelsep=2em, name=Wide] Extra-wide gap.
+  \pitem[labelsep=0pt, name=Tight but with a lot of text] No gap.
+  \pitem[name=Normal] Normal gap.
+\end{prop}
+
+After text.
+
+\subsection{labelwidth override}
+
+Before text.
+
+\begin{prop}
+  \pitem[labelwidth=4em, name=W] Wide label box (shifted left).
+  \pitem[labelwidth=0.5em, name=Narrow] Narrow label box (shifted right because name doesn't fit in it).
+  \pitem[name=Def] Default label box.
+\end{prop}
+
+After text.
+
+\subsection{labelindent with long label (overflow / Case 2)}
+
+Before text.
+
+\begin{prop}
+  \pitem[labelindent=0em, name={A Very Long Label Indeed}]
+    This label overflows, so the first line should be pushed right.
+  \pitem Normal item after overflow.
+\end{prop}
+
+After text.
+
+\subsection{Combined: labelindent + labelsep}
+
+Before text.
+
+\begin{prop}
+  \pitem[labelindent=0em, labelsep=1em, name=X]
+    Left-aligned with 1em gap.
+  \pitem[labelindent=0em, labelsep=0pt, name=Y]
+    Left-aligned with no gap.
+  \pitem Default numbered.
+\end{prop}
+
+After text.
+
+\end{document}
