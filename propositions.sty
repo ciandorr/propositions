@@ -572,35 +572,36 @@
         \tl_set_eq:NN \l__props_display_text_tl \l__props_name_tl
       }
       {
-        %% Numbered item: step counter, display text = \the<counter>
+        %% Numbered item: step counter and display \the<counter>,
+        %% but only when no explicit name was given.
         \cs_if_exist:cTF { c@ \l__props_counter_tl }
           {
-            %% In ptag mode inside an equation (not align/gather), the
-            %% environment already stepped the equation counter via
-            %% \incr@eqnum.  We skip our step to avoid a gap.
-            %% In align/gather, no per-row step happens, so we step.
-            %% For non-equation counters (e.g. P), always step.
-            \bool_if:NTF \l__props_ptag_bool
+            \tl_if_empty:NTF \l__props_name_tl
               {
-                %% ptag mode: skip step for equation counter in equation env
-                %% (the env already stepped it); step in align/gather or for
-                %% non-equation counters.
-                \tl_if_eq:NnTF \l__props_counter_tl { equation }
+                %% No explicit name — step the counter and use its value.
+                %% In ptag mode inside an equation (not align/gather), the
+                %% environment already stepped the equation counter via
+                %% \incr@eqnum.  We skip our step to avoid a gap.
+                %% In align/gather, no per-row step happens, so we step.
+                %% For non-equation counters (e.g. P), always step.
+                \bool_if:NTF \l__props_ptag_bool
                   {
-                    \ifinalign@
-                      \stepcounter { \l__props_counter_tl }
-                    \else \ifingather@
-                      \stepcounter { \l__props_counter_tl }
-                    \fi \fi
+                    \tl_if_eq:NnTF \l__props_counter_tl { equation }
+                      {
+                        \ifinalign@
+                          \stepcounter { \l__props_counter_tl }
+                        \else \ifingather@
+                          \stepcounter { \l__props_counter_tl }
+                        \fi \fi
+                      }
+                      { \stepcounter { \l__props_counter_tl } }
                   }
                   { \stepcounter { \l__props_counter_tl } }
-              }
-              { \stepcounter { \l__props_counter_tl } }
-            %% If no explicit name, default to \the<counter>
-            \tl_if_empty:NT \l__props_name_tl
-              {
                 \protected@edef \l__props_name_tl
                   { \use:c { the \l__props_counter_tl } }
+              }
+              {
+                %% Explicit name — skip the counter step entirely.
               }
             \protected@edef \l__props_display_text_tl
               { \l__props_name_tl }
