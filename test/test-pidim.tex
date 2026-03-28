@@ -1,92 +1,150 @@
 \documentclass{article}
 \usepackage{propositions}
 
+%% Helper: a framed label that stretches to fill \labelwidth.
+%% The frame makes the allocated label box visible.
+%% When the content is wider than \labelwidth the box expands to
+%% fit, mimicking standard LaTeX's automatic label-box expansion.
+\newlength{\flabelwd}
+\newcommand{\flabel}[1]{%
+  \settowidth{\flabelwd}{\textbf{#1}}%
+  \ifdim\flabelwd<\dimexpr\labelwidth-2\fboxsep-2\fboxrule\relax
+    \setlength{\flabelwd}{\dimexpr\labelwidth-2\fboxsep-2\fboxrule\relax}%
+  \fi
+  \fbox{\makebox[\flabelwd]{\textbf{#1}\hfill}}}
+
 \begin{document}
 
 \section{Per-item dimension keys}
 
-\subsection{Reference: default numbered type (labelindent=0em)}
+In each test, labels are shown inside an \verb|\fbox| that fills the
+entire \verb|\labelwidth|, so the allocated label box is visible.
 
-Before text.
-
-\begin{prop}
-  \pitem Item A (default numbered, labelindent=0em from type).
-  \pitem Item B.
-\end{prop}
-
-After text.
-
-\subsection{Explicit labelindent=0em on a named item}
-
-Before text.
+%%------------------------------------------------------------
+\subsection{Baseline: no per-item overrides}
 
 \begin{prop}
-  \pitem[labelindent=0em, name=P1] First named item, left-aligned.
-  \pitem[labelindent=0em, name=P2] Second named item, left-aligned.
-  \pitem[name=P3] Third named item, default alignment.
+  \pitem[name=\flabel{A}] Default dimensions.
+  \pitem[name=\flabel{B}] Same.
 \end{prop}
 
-After text.
+%%------------------------------------------------------------
+\subsection{labelsep override only}
 
-\subsection{labelindent=1em (indented from margin)}
-
-Before text.
+The resolver should derive \texttt{labelwidth} (pos~4), expanding it
+when labelsep shrinks and vice versa, preserving the label's left-edge
+position.
 
 \begin{prop}
-  \pitem[labelindent=1em, name=Test] Indented 1em from margin.
-  \pitem Item B (default numbered).
+  \pitem[labelsep=2em, name=\flabel{Wide}] labelsep=2em: box shrinks.
+  \pitem[labelsep=0pt, name=\flabel{Tight}] labelsep=0pt: box expands.
+  \pitem[name=\flabel{Normal}] No override (baseline).
 \end{prop}
 
-After text.
+%%------------------------------------------------------------
+\subsection{labelwidth override only}
 
-\subsection{labelsep override}
-
-Before text.
+Resolver should derive \texttt{labelindent} (effectively a no-op since
+LI is not a register), or fall through to labelsep.  Since labelsep is
+not user-set, it absorbs the deficit.
 
 \begin{prop}
-  \pitem[labelsep=2em, name=Wide] Extra-wide gap.
-  \pitem[labelsep=0pt, name=Tight but with a lot of text] No gap.
-  \pitem[name=Normal] Normal gap.
+  \pitem[labelwidth=4em, name=\flabel{W}]
+    labelwidth=4em: wider box, labelsep or LI adjusts.
+  \pitem[labelwidth=0.5em, name=\flabel{N}]
+    labelwidth=0.5em: tiny box, label overflows it.
+  \pitem[name=\flabel{Def}] Default.
 \end{prop}
 
-After text.
+%%------------------------------------------------------------
+\subsection{labelindent override only}
 
-\subsection{labelwidth override}
-
-Before text.
+Resolver derives \texttt{labelwidth} (pos~4).  With labelindent=0em the
+label sits at the margin; with labelindent=1em it is indented.
 
 \begin{prop}
-  \pitem[labelwidth=4em, name=W] Wide label box (shifted left).
-  \pitem[labelwidth=0.5em, name=Narrow] Narrow label box (shifted right because name doesn't fit in it).
-  \pitem[name=Def] Default label box.
+  \pitem[labelindent=0em, name=\flabel{Flush}]
+    labelindent=0em: label flush with margin.
+  \pitem[labelindent=1em, name=\flabel{Ind}]
+    labelindent=1em: label indented, box shrinks.
+  \pitem[name=\flabel{Def}] No override.
 \end{prop}
 
-After text.
+%%------------------------------------------------------------
+\subsection{labelindent + labelsep (both per-item)}
 
-\subsection{labelindent with long label (overflow / Case 2)}
-
-Before text.
+Both are user-set, so the resolver must derive \texttt{labelwidth}
+(the lowest-priority non-user-set candidate).
 
 \begin{prop}
-  \pitem[labelindent=0em, name={A Very Long Label Indeed}]
-    This label overflows, so the first line should be pushed right.
-  \pitem Normal item after overflow.
+  \pitem[labelindent=0em, labelsep=1em, name=\flabel{X}]
+    labelindent=0em, labelsep=1em.
+  \pitem[labelindent=0em, labelsep=0pt, name=\flabel{Y}]
+    labelindent=0em, labelsep=0pt: box should be wider than X's.
+  \pitem[name=\flabel{Ref}] No override.
 \end{prop}
 
-After text.
+%%------------------------------------------------------------
+\subsection{Long label overflow (itemindent derived)}
 
-\subsection{Combined: labelindent + labelsep}
-
-Before text.
+When the label is too wide for the available space, labelwidth would go
+negative.  The resolver skips it and derives \texttt{itemindent}
+instead, pushing the first line right.
 
 \begin{prop}
-  \pitem[labelindent=0em, labelsep=1em, name=X]
-    Left-aligned with 1em gap.
-  \pitem[labelindent=0em, labelsep=0pt, name=Y]
-    Left-aligned with no gap.
-  \pitem Default numbered.
+  \pitem[labelindent=0em, name=\flabel{A Very Long Label Indeed}]
+    Long label: first line pushed right.
+  \pitem[name=\flabel{OK}] Normal item after overflow.
 \end{prop}
 
-After text.
+%%------------------------------------------------------------
+\subsection{Global labelsep respected by per-item resolver}
+
+Here \verb|\propoptions| sets labelsep=1.5em.  A per-item
+\texttt{labelindent=0em} override should \emph{not} adjust labelsep
+(it is user-set globally); instead \texttt{labelwidth} is derived.
+
+\begingroup
+\propoptions{labelsep=1.5em}
+\begin{prop}
+  \pitem[name=\flabel{A}] Baseline with global labelsep=1.5em.
+  \pitem[labelindent=0em, name=\flabel{B}]
+    Per-item labelindent=0em: labelsep stays 1.5em, labelwidth adjusts.
+  \pitem[name=\flabel{C}] Back to baseline.
+\end{prop}
+\endgroup
+
+%%------------------------------------------------------------
+\subsection{Global labelwidth respected by per-item resolver}
+
+Here \verb|\propoptions| sets labelwidth=3em.  A per-item
+\texttt{labelsep=0pt} should \emph{not} shrink labelwidth (it is
+user-set globally); instead \texttt{labelindent} absorbs the change
+(no visible effect since LI is not a register), or labelsep/itemindent
+adjusts.  Since labelwidth is protected, the box stays 3em wide.
+
+\begingroup
+\propoptions{labelwidth=3em}
+\begin{prop}
+  \pitem[name=\flabel{A}] Baseline with global labelwidth=3em.
+  \pitem[labelsep=0pt, name=\flabel{B}]
+    Per-item labelsep=0pt: labelwidth should stay 3em.
+  \pitem[name=\flabel{C}] Back to baseline.
+\end{prop}
+\endgroup
+
+%%------------------------------------------------------------
+\subsection{All three per-item: fallback to default priority}
+
+When labelwidth, labelsep, and itemindent are all set per-item, and
+labelindent creates a deficit, the fallback tries them in default
+priority order (LW, LS, II) ignoring user-set status.
+
+\begin{prop}
+  \pitem[labelindent=0em, labelwidth=1.5em, labelsep=0.5em,
+         itemindent=0pt, name=\flabel{All}]
+    All four per-item keys set.  Fallback resolves the deficit.
+  \pitem[name=\flabel{Ref}] Reference item.
+\end{prop}
 
 \end{document}
