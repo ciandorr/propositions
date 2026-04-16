@@ -301,8 +301,8 @@
     %% overrides from \l__props_decl_overrides_tl (not passed
     %% through arguments, to preserve # tokens in format keys).
     \__props_type_ensure:n { #1 }
-    \tl_gset_eq:cN { g__props_type_ #1 _parent_tl }    \l__props_decl_parent_tl
-    \tl_gset_eq:cN { g__props_type_ #1 _overrides_tl } \l__props_decl_overrides_tl
+    \tl_set_eq:cN { g__props_type_ #1 _parent_tl }    \l__props_decl_parent_tl
+    \tl_set_eq:cN { g__props_type_ #1 _overrides_tl } \l__props_decl_overrides_tl
   }
 
 
@@ -342,17 +342,35 @@
 \NewDocumentCommand \SetItemType { m m }
   {
     %% Separate type= and macro= from the rest.
-    %% \keys_set_known processes known keys (type, macro) and stores
-    %% unknown keys (the overrides) in \l__props_decl_overrides_tl.
     \tl_clear:N \l__props_decl_parent_tl
     \tl_clear:N \l__props_decl_macro_tl
     \keys_set_known:nnN { props / declare-type-special }
       { #2 } \l__props_decl_overrides_tl
-    %% Store parent + overrides.
+    %% If the type already exists and no new parent was given,
+    %% preserve existing parent and prepend existing overrides
+    %% so that unspecified keys keep their previous values.
+    \tl_if_exist:cT { g__props_type_ #1 _parent_tl }
+      {
+        \tl_if_empty:NT \l__props_decl_parent_tl
+          {
+            \tl_set_eq:Nc \l__props_decl_parent_tl
+              { g__props_type_ #1 _parent_tl }
+          }
+        \tl_set_eq:Nc \l_tmpa_tl { g__props_type_ #1 _overrides_tl }
+        \tl_if_empty:NF \l_tmpa_tl
+          {
+            \tl_put_left:Nn \l__props_decl_overrides_tl { , }
+            \tl_put_left:NV \l__props_decl_overrides_tl \l_tmpa_tl
+          }
+      }
+    %% Store parent + merged overrides.
     \__props_store_type:n { #1 }
     %% Create macro command if specified.
     \tl_if_empty:NF \l__props_decl_macro_tl
       { \exp_args:NV \__props_define_macro:Nn \l__props_decl_macro_tl { #1 } }
+    %% If this is the equation type and hooks are active, sync them.
+    \str_if_eq:nnT { #1 } { equation }
+      { \bool_if:NT \g__props_eqhooks_bool { \__props_sync_equation_hooks: } }
   }
 
 
@@ -396,11 +414,7 @@
   {
     name        .tl_set:N = \l__props_name_tl ,
     type        .tl_set:N = \l__props_type_tl ,
-    counter     .code:n =
-      {
-        \tl_set:Nn \l__props_counter_tl { #1 }
-        \tl_set:Nn \l__props_name_tl { \use:c { the #1 } }
-      } ,
+    counter     .tl_set:N = \l__props_counter_tl ,
     counter~format .code:n =
       {
         \bool_set_true:N \l__props_has_counter_format_bool
@@ -765,10 +779,22 @@
   }
 
 
+\cs_new_protected:Nn \__props_sync_equation_hooks:
+  {
+    \__props_decl_reset:
+    \tl_set:Nn \l__props_type_tl { equation }
+    \__props_type_load:
+    \cs_set_eq:NN \__props_eqdispfmt:n \l__props_displayfmt:n
+    \cs_set_eq:NN \__props_eqreffmt:n  \l__props_reffmt:n
+  }
+
 \AtBeginDocument
   {
     \bool_if:NT \g__props_equations_bool
-      { \bool_gset_true:N \g__props_eqhooks_bool }
+      {
+        \bool_gset_true:N \g__props_eqhooks_bool
+        \__props_sync_equation_hooks:
+      }
     \bool_if:NT \g__props_eqhooks_bool
       {
         %% Redefine the equation "prefix" macro so that \ref{eq:foo}
@@ -790,18 +816,35 @@
   { \bool_gset_false:N \g__props_last_was_prop_bool }
 
 
+\tl_new:N \g__props_dispmath_save_tpl_tl
+\tl_new:N \g__props_dispmath_save_cnt_tl
+
+\cs_new_protected:Nn \__props_display_start:
+  {
+    \int_compare:nNnT \g__props_level_int > { 0 }
+      {
+        %% Save current last-item data for the push.
+        \tl_gset_eq:NN \g__props_dispmath_save_tpl_tl \g__props_last_tpl_tl
+        \tl_gset_eq:NN \g__props_dispmath_save_cnt_tl \g__props_last_cnt_tl
+        %% Push onto parent stacks using the saved copies.
+        \seq_gpush:NV \g__props_parent_tpl_seq \g__props_dispmath_save_tpl_tl
+        \seq_gpush:NV \g__props_parent_cnt_seq \g__props_dispmath_save_cnt_tl
+        \int_gincr:N \g__props_level_int
+        \aftergroup \__props_display_end:
+      }
+  }
+
 \cs_new_protected:Nn \__props_display_end:
-  { \int_gdecr:N \g__props_level_int }
+  {
+    \int_gdecr:N \g__props_level_int
+    \seq_gpop:NN \g__props_parent_tpl_seq \l_tmpa_tl
+    \seq_gpop:NN \g__props_parent_cnt_seq \l_tmpb_tl
+  }
 
 \AtBeginDocument
   {
-    \tex_everydisplay:D \expandafter { \the \tex_everydisplay:D
-      \int_compare:nNnT \g__props_level_int > { 0 }
-        {
-          \int_gincr:N \g__props_level_int
-          \aftergroup \__props_display_end:
-        }
-    }
+    \tex_everydisplay:D \expandafter
+      { \tex_the:D \tex_everydisplay:D \__props_display_start: }
   }
 
 
@@ -1411,25 +1454,10 @@
     default~ptag~type         .tl_set:N = \l__props_default_ptag_type_tl ,
     default~nameless~type     .tl_set:N = \l__props_default_nameless_type_tl ,
     default~ptag~nameless~type .tl_set:N = \l__props_default_ptag_nameless_type_tl ,
-    equation~format   .code:n      =
-      {
-        \bool_gset_true:N \g__props_eqhooks_bool
-        \cs_set:Npn \__props_eqdispfmt:n ##1 { #1 }
-        \cs_set:Npn \__props_eqreffmt:n  ##1 { #1 }
-      } ,
-    equation~display~format .code:n =
-      {
-        \bool_gset_true:N \g__props_eqhooks_bool
-        \cs_set:Npn \__props_eqdispfmt:n ##1 { #1 }
-      } ,
-    equation~ref~format     .code:n =
-      {
-        \bool_gset_true:N \g__props_eqhooks_bool
-        \cs_set:Npn \__props_eqreffmt:n  ##1 { #1 }
-      } ,
     equations         .code:n      =
       {
         \bool_gset_true:N \g__props_equations_bool
+        \bool_gset_true:N \g__props_eqhooks_bool
         \tl_set:Nn \l__props_default_nameless_type_tl { eqnum }
       } ,
     equations         .default:n   = { true } ,
@@ -1526,13 +1554,13 @@
     format      = (#1) ,
   }
 
-%% equation: uses the equation counter with equation tag formatting.
-%% Always defined; activated by the equations package option.
+%% equation: uses the equation counter.
+%% When the equations option is active, the equation hooks
+%% (\tagform@ and \p@equation) are synced from this type's formats.
 \SetItemType { equation }
   {
     counter        = equation ,
-    display~format = \__props_eqdispfmt:n{#1} ,
-    ref~format     = \__props_eqreffmt:n{#1} ,
+    format         = (#1) ,
   }
 
 %% numbered: dispatches to the level-appropriate type via live parent.

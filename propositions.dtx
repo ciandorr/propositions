@@ -508,13 +508,10 @@
 %   display format = (#1), ref format = \parentref{.#1}}
 % \end{codebox}
 %
-% \item[\texttt{equation}] Uses the |equation| counter with customisable equation tag formatting.
+% \item[\texttt{equation}] Uses the |equation| counter.  When the |equations| option is active, \cs{SetItemType}\texttt{\{equation\}\{...\}} automatically updates the \cs{tagform@} and \cs{ref} hooks for all equations.
 % \begin{codebox}
-% \SetItemType{equation}{counter = equation,
-%   display format = <eqdispfmt>, ref format = <eqreffmt>}
+% \SetItemType{equation}{counter = equation, format = (#1)}
 % \end{codebox}
-% (The display and ref formats use internal hooks controlled by the
-% \texttt{equation format} keys; see \autoref{sect:global}.)
 % \end{description}
 %
 % \subsubsection*{Dispatcher types}
@@ -776,22 +773,16 @@
 %   If set, overrides \texttt{default nameless type} for \cs{ptag} items only.
 % \end{docKey}
 %
-% \subsection{Formatting and referencing equation numbers}
+% \subsection{Equation numbering}
 %
 % \begin{docKey}{equations}{}{no value, \textbf{global only}}
-%   An alias for \texttt{default nameless type\,=\,eqnum}.  The built-in \texttt{eqnum} type is like \texttt{numbered} but uses the \texttt{equation} counter at nesting level~1, sharing counter values with standard displayed equations.  Also installs the equation format hooks (see below), so that \cs{oref} and \cs{nref} work with equation labels.
-% \end{docKey}
+%   Sets \texttt{default nameless type\,=\,eqnum} and installs hooks so that standard displayed equations (\texttt{\string\begin\{equation\}}, etc.) use the same formatting as the \texttt{equation} item type.  Both \cs{tagform@} (display tags) and \cs{p@equation} (reference formatting) are synced from the \texttt{equation} type's \texttt{display format} and \texttt{ref format}.
 %
-% \begin{docKey}{equation format}{=\meta{template}}{initially \texttt{(\#1)}}
-%   Shorthand: sets both \texttt{equation display format} and \texttt{equation ref format}.  Also installs the equation format hooks independently of the \texttt{equations} option.
-% \end{docKey}
-%
-% \begin{docKey}{equation display format}{=\meta{template}}{initially \texttt{(\#1)}}
-%   Controls how equation tags appear in the PDF (via \cs{tagform@}).  Use \texttt{\#1} for the number.  Does not affect \cs{ref} output.  Also installs the equation format hooks independently of the \texttt{equations} option.  Locally scoped.
-% \end{docKey}
-%
-% \begin{docKey}{equation ref format}{=\meta{template}}{initially \texttt{(\#1)}}
-%   Controls how \cs{ref} (and \cs{oref}, \cs{nref}) render equation labels.  Use \texttt{\#1} for the number.  Does not affect the displayed tag.  Also installs the equation format hooks independently of the \texttt{equations} option.  Locally scoped.
+%   To change the equation format, redefine the \texttt{equation} type:
+%\begin{codebox}
+% \SetItemType{equation}{format = [#1]}
+%\end{codebox}
+%   This automatically updates \cs{tagform@} and \cs{ref} output for all equations.
 % \end{docKey}
 %
 % \section{Compatibility}
@@ -1208,8 +1199,8 @@
     %% overrides from \l__props_decl_overrides_tl (not passed
     %% through arguments, to preserve # tokens in format keys).
     \__props_type_ensure:n { #1 }
-    \tl_gset_eq:cN { g__props_type_ #1 _parent_tl }    \l__props_decl_parent_tl
-    \tl_gset_eq:cN { g__props_type_ #1 _overrides_tl } \l__props_decl_overrides_tl
+    \tl_set_eq:cN { g__props_type_ #1 _parent_tl }    \l__props_decl_parent_tl
+    \tl_set_eq:cN { g__props_type_ #1 _overrides_tl } \l__props_decl_overrides_tl
   }
 
 %<doc>%% ====================================================================
@@ -1261,17 +1252,35 @@
 \NewDocumentCommand \SetItemType { m m }
   {
     %% Separate type= and macro= from the rest.
-    %% \keys_set_known processes known keys (type, macro) and stores
-    %% unknown keys (the overrides) in \l__props_decl_overrides_tl.
     \tl_clear:N \l__props_decl_parent_tl
     \tl_clear:N \l__props_decl_macro_tl
     \keys_set_known:nnN { props / declare-type-special }
       { #2 } \l__props_decl_overrides_tl
-    %% Store parent + overrides.
+    %% If the type already exists and no new parent was given,
+    %% preserve existing parent and prepend existing overrides
+    %% so that unspecified keys keep their previous values.
+    \tl_if_exist:cT { g__props_type_ #1 _parent_tl }
+      {
+        \tl_if_empty:NT \l__props_decl_parent_tl
+          {
+            \tl_set_eq:Nc \l__props_decl_parent_tl
+              { g__props_type_ #1 _parent_tl }
+          }
+        \tl_set_eq:Nc \l_tmpa_tl { g__props_type_ #1 _overrides_tl }
+        \tl_if_empty:NF \l_tmpa_tl
+          {
+            \tl_put_left:Nn \l__props_decl_overrides_tl { , }
+            \tl_put_left:NV \l__props_decl_overrides_tl \l_tmpa_tl
+          }
+      }
+    %% Store parent + merged overrides.
     \__props_store_type:n { #1 }
     %% Create macro command if specified.
     \tl_if_empty:NF \l__props_decl_macro_tl
       { \exp_args:NV \__props_define_macro:Nn \l__props_decl_macro_tl { #1 } }
+    %% If this is the equation type and hooks are active, sync them.
+    \str_if_eq:nnT { #1 } { equation }
+      { \bool_if:NT \g__props_eqhooks_bool { \__props_sync_equation_hooks: } }
   }
 
 %<doc>%% ====================================================================
@@ -1324,11 +1333,7 @@
   {
     name        .tl_set:N = \l__props_name_tl ,
     type        .tl_set:N = \l__props_type_tl ,
-    counter     .code:n =
-      {
-        \tl_set:Nn \l__props_counter_tl { #1 }
-        \tl_set:Nn \l__props_name_tl { \use:c { the #1 } }
-      } ,
+    counter     .tl_set:N = \l__props_counter_tl ,
     counter~format .code:n =
       {
         \bool_set_true:N \l__props_has_counter_format_bool
@@ -1723,10 +1728,26 @@
 %<doc>%% Equation formatting integration
 %<doc>%% ====================================================================
 
+%<doc>%% Sync the equation hooks (\cs{tagform@} and \cs{p@equation}) with the
+%<doc>%% current definition of the \texttt{equation} item type.
+%<doc>%% Called automatically when \cs{SetItemType}\texttt{\{equation\}\{...\}}
+%<doc>%% is used while the hooks are active.
+\cs_new_protected:Nn \__props_sync_equation_hooks:
+  {
+    \__props_decl_reset:
+    \tl_set:Nn \l__props_type_tl { equation }
+    \__props_type_load:
+    \cs_set_eq:NN \__props_eqdispfmt:n \l__props_displayfmt:n
+    \cs_set_eq:NN \__props_eqreffmt:n  \l__props_reffmt:n
+  }
+
 \AtBeginDocument
   {
     \bool_if:NT \g__props_equations_bool
-      { \bool_gset_true:N \g__props_eqhooks_bool }
+      {
+        \bool_gset_true:N \g__props_eqhooks_bool
+        \__props_sync_equation_hooks:
+      }
     \bool_if:NT \g__props_eqhooks_bool
       {
         %% Redefine the equation "prefix" macro so that \ref{eq:foo}
@@ -1763,18 +1784,40 @@
 %<doc>%% including all amsmath environments) plus \aftergroup to schedule the
 %<doc>%% decrement when the display math group closes.
 
+%<doc>%% For display math, we save the parent data in dedicated
+%<doc>%% global variables and push/pop them around the math group.
+%<doc>%% Direct \cs{seq\_gpush} in \cs{everydisplay} is unreliable
+%<doc>%% (amsmath group nesting can corrupt the sequence), so we
+%<doc>%% save the data, then push/pop in a protected helper.
+\tl_new:N \g__props_dispmath_save_tpl_tl
+\tl_new:N \g__props_dispmath_save_cnt_tl
+
+\cs_new_protected:Nn \__props_display_start:
+  {
+    \int_compare:nNnT \g__props_level_int > { 0 }
+      {
+        %% Save current last-item data for the push.
+        \tl_gset_eq:NN \g__props_dispmath_save_tpl_tl \g__props_last_tpl_tl
+        \tl_gset_eq:NN \g__props_dispmath_save_cnt_tl \g__props_last_cnt_tl
+        %% Push onto parent stacks using the saved copies.
+        \seq_gpush:NV \g__props_parent_tpl_seq \g__props_dispmath_save_tpl_tl
+        \seq_gpush:NV \g__props_parent_cnt_seq \g__props_dispmath_save_cnt_tl
+        \int_gincr:N \g__props_level_int
+        \aftergroup \__props_display_end:
+      }
+  }
+
 \cs_new_protected:Nn \__props_display_end:
-  { \int_gdecr:N \g__props_level_int }
+  {
+    \int_gdecr:N \g__props_level_int
+    \seq_gpop:NN \g__props_parent_tpl_seq \l_tmpa_tl
+    \seq_gpop:NN \g__props_parent_cnt_seq \l_tmpb_tl
+  }
 
 \AtBeginDocument
   {
-    \tex_everydisplay:D \expandafter { \the \tex_everydisplay:D
-      \int_compare:nNnT \g__props_level_int > { 0 }
-        {
-          \int_gincr:N \g__props_level_int
-          \aftergroup \__props_display_end:
-        }
-    }
+    \tex_everydisplay:D \expandafter
+      { \tex_the:D \tex_everydisplay:D \__props_display_start: }
   }
 
 %<doc>%% ====================================================================
@@ -2474,25 +2517,10 @@
     default~ptag~type         .tl_set:N = \l__props_default_ptag_type_tl ,
     default~nameless~type     .tl_set:N = \l__props_default_nameless_type_tl ,
     default~ptag~nameless~type .tl_set:N = \l__props_default_ptag_nameless_type_tl ,
-    equation~format   .code:n      =
-      {
-        \bool_gset_true:N \g__props_eqhooks_bool
-        \cs_set:Npn \__props_eqdispfmt:n ##1 { #1 }
-        \cs_set:Npn \__props_eqreffmt:n  ##1 { #1 }
-      } ,
-    equation~display~format .code:n =
-      {
-        \bool_gset_true:N \g__props_eqhooks_bool
-        \cs_set:Npn \__props_eqdispfmt:n ##1 { #1 }
-      } ,
-    equation~ref~format     .code:n =
-      {
-        \bool_gset_true:N \g__props_eqhooks_bool
-        \cs_set:Npn \__props_eqreffmt:n  ##1 { #1 }
-      } ,
     equations         .code:n      =
       {
         \bool_gset_true:N \g__props_equations_bool
+        \bool_gset_true:N \g__props_eqhooks_bool
         \tl_set:Nn \l__props_default_nameless_type_tl { eqnum }
       } ,
     equations         .default:n   = { true } ,
@@ -2604,13 +2632,13 @@
     format      = (#1) ,
   }
 
-%% equation: uses the equation counter with equation tag formatting.
-%% Always defined; activated by the equations package option.
+%% equation: uses the equation counter.
+%% When the equations option is active, the equation hooks
+%% (\tagform@ and \p@equation) are synced from this type's formats.
 \SetItemType { equation }
   {
     counter        = equation ,
-    display~format = \__props_eqdispfmt:n{#1} ,
-    ref~format     = \__props_eqreffmt:n{#1} ,
+    format         = (#1) ,
   }
 
 %% numbered: dispatches to the level-appropriate type via live parent.

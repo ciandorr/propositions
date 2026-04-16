@@ -102,7 +102,7 @@ Ref to modified: \ref{myP3prime}.
 
 \section{References in item names}
 \begin{prop}
-    \pitem[type=thesis, Problems with \ref{myP3}]
+    \pitem[type=thesis, name={Problems with \ref{myP3}}]
     Some problem. \label{P3problem}
     \pitem[name={\oref[*]{myP3}}]
     A new version. \label{P3star}
@@ -128,9 +128,9 @@ Reference: \ref{autolabel}.
 
 Ref to shorthand item: \ref{lp} (should be (LP)).
 
-Ref to AT: \ref{at} (should be (AT)).
+Ref to AT: \ref{at} (should be \textbf{AT}).
 
-Ref to glossed: \ref{gp} (should be (Glossed Prop) --- gloss does not affect ref).
+Ref to glossed: \ref{gp} (should be \textbf{Glossed Prop} --- gloss does not affect ref).
 
 Ref to full: \ref{fe} (should be (FE) --- shorthand becomes ref).
 
@@ -147,7 +147,7 @@ Oref suffix on brackets: \oref[$'$]{brk} (should be [Brack$'$]).
 
 Nref on brackets: \nref{brk} (should be Brack).
 
-Oref suffix on textsc: \oref[$^*$]{thesis} (should be Thesis$^*$).
+Oref suffix on textsc: \oref[$^*$]{thesis} (should be \textsc{Thesis}$^*$).
 
 Nref on textsc: \nref{thesis} (should be Thesis).
 
@@ -209,7 +209,7 @@ Ref: \ref{eq:ptag1} (should be (P4)).
   F = ma \ptag[type=thesis, name={Newton's~Law}] \label{eq:newton}
 \end{equation}
 
-Ref: \ref{eq:newton} (should be \textsc{Newton's Law}).
+Ref: \ref{eq:newton} (should be \textsc{Newton's~Law}).
 
 \subsection{Ptag with shorthand}
 
@@ -217,7 +217,7 @@ Ref: \ref{eq:newton} (should be \textsc{Newton's Law}).
   x + y = z \ptag[name={Addition~Principle}, shorthand={AP}] \label{eq:ap}
 \end{equation}
 
-Ref: \ref{eq:ap} (should be (AP) since shorthand becomes ref).
+Ref: \ref{eq:ap} (should be \textbf{AP} since shorthand becomes ref).
 
 \subsection{Ptag in align}
 
@@ -320,12 +320,10 @@ Ref: \ref{eq:after} (should be (20), consecutive with ptag above, no gap).
 \begin{prop}
     \pitem
     Two of Maxwell's equations:
-    \begin{inlineprop}
-        \begin{align*}
-            \nabla \cdot \mathbf{E} = \frac{\rho}{\varepsilon_0} \ptag \label{eq:inner1} \\
-            \nabla \times \mathbf{B} = \mu_0 \mathbf{J} \ptag \label{eq:inner2}
-        \end{align*}
-    \end{inlineprop}
+    \begin{align*}
+        \nabla \cdot \mathbf{E} = \frac{\rho}{\varepsilon_0} \ptag \label{eq:inner1} \\
+        \nabla \times \mathbf{B} = \mu_0 \mathbf{J} \ptag \label{eq:inner2}
+    \end{align*}
 \end{prop}
 Ref: \ref{eq:inner1}, \ref{eq:inner2}.
 
@@ -468,12 +466,12 @@ A normal equation before the group:
 \begin{equation}
   F = ma \label{eq:before}
 \end{equation}
-Ref: \ref{eq:before} (should be (40), parenthesized).
+Ref: \ref{eq:before} (should be (44), parenthesized).
 
 %% Simulate an axiom section: bold display, plain ref, counter reset.
 \begingroup
-\propoptions{equation display format=\textbf{M#1},
-             equation ref format=M#1}
+\SetItemType{equation}{display format=\textbf{M#1},
+             ref format=M#1}
 \setcounter{equation}{0}
 
 First axiom:
@@ -495,7 +493,7 @@ A normal equation after the group (format should revert):
 \begin{equation}
   E = mc^2 \label{eq:aftergroup}
 \end{equation}
-Ref: \ref{eq:aftergroup} (should be (43), parenthesized, counter continues).
+Ref: \ref{eq:aftergroup} (should be (3), counter was reset globally by setcounter).
 
 Cross-refs from inside the group still work: \ref{ax:M1}, \ref{ax:M2}.
 
