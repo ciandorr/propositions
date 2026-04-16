@@ -514,6 +514,9 @@
           { \keys_set:nn { props / pitem } { name = {#1} } }
       }
 
+    %% --- Expand counter name ---
+    %% Resolve any \proplevelchoice in the counter name.
+    \tl_set:Nx \l__props_counter_tl { \l__props_counter_tl }
     %% --- Determine display text ---
     %% counter_tl is now the type's counter (or the user's override).
     %% "none" means this is a text item (no counter); anything else is
@@ -1471,7 +1474,7 @@
   { \keys_set:nn { props / global } { #1 } }
 
 
-\tl_set:Nn \l__props_default_type_tl { default }
+\tl_set:Nn \l__props_default_type_tl { proposition }
 \tl_set:Nn \l__props_default_nameless_type_tl { numbered }
 
 
@@ -1480,23 +1483,26 @@
 
 \SetItemType { plain }
   {
-    counter     = none ,
     format      = #1 ,
   }
 
-\SetItemType { default }
+\SetItemType { proposition }
   {
-    counter     = none ,
     format      = \textbf{#1} ,
   }
 
-\SetItemType { long }
+\SetItemType { thesis }
   {
+    format         = \textsc{#1} ,
     align          = flush ,
-    counter        = none ,
-    display~format = \textbf{#1} ,
-    ref~format     = #1 ,
-    macro          = \litem ,
+    macro          = \titem ,
+  }
+
+\SetItemType { vignette }
+  {
+    ref~format     = \textit{#1} ,
+    align          = flush ,
+    label~format   = \textit{#1:} ,
   }
 
 \SetItemType { bullet }
@@ -1596,6 +1602,29 @@
     counter        = numpropv ,
     display~format = (#1) ,
     ref~format     = \parentref{.#1} ,
+  }
+
+%% hierarchical: 1, 1.1, 1.1.1, ... numbering using \parentref.
+%% h-base handles level 1 (no parent); h-sub handles levels 2+.
+\SetItemType { h-base }
+  {
+    counter        = numpropi ,
+    counter~format = \arabic{#1} ,
+    format         = #1 ,
+  }
+
+\SetItemType { h-sub }
+  {
+    counter        = \proplevelchoice {
+                       numpropi , numpropii , numpropiii ,
+                       numpropiv , numpropv } ,
+    counter~format = \arabic{#1} ,
+    format         = \parentref{.#1} ,
+  }
+
+\SetItemType { hierarchical }
+  {
+    type = \proplevelchoice { h-base , h-sub } ,
   }
 
 %% 

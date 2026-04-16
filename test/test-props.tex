@@ -26,8 +26,8 @@ Cleveref test: \cref{propP} and \cref{propQ}.
 \subsection{Long items}
 
 \begin{prop}
-  \pitem[type=long, Physicalism] Everything is physical. \label{phys}
-  \pitem[type=long, Dualism] Mind and body are distinct. \label{dual}
+  \pitem[type=thesis, Physicalism] Everything is physical. \label{phys}
+  \pitem[type=thesis, Dualism] Mind and body are distinct. \label{dual}
 \end{prop}
 
 Reference test: \ref{phys} and \ref{dual}.
@@ -46,7 +46,7 @@ References: \ref{num1}, \ref{num2}, \ref{num3}.
 
 \begin{prop}
   \pitem[A] Short item A. \label{shortA}
-  \litem[Some Thesis] A long item. \label{longthesis}
+  \titem[Some Thesis] A long item. \label{longthesis}
   \pitem A numbered item. \label{numshort}
 \end{prop}
 
@@ -102,7 +102,7 @@ Ref to modified: \ref{myP3prime}.
 
 \section{References in item names}
 \begin{prop}
-    \pitem[type=long, Problems with \ref{myP3}]
+    \pitem[type=thesis, Problems with \ref{myP3}]
     Some problem. \label{P3problem}
     \pitem[name={\oref[*]{myP3}}]
     A new version. \label{P3star}
@@ -138,7 +138,7 @@ Ref to full: \ref{fe} (should be (FE) --- shorthand becomes ref).
 
 \begin{prop}
   \pitem[name={Brack}, ref format={[#1]}] A bracketed item. \label{brk}
-  \pitem[type=long, Thesis] A long-format item. \label{thesis}
+  \pitem[type=thesis, Thesis] A long-format item. \label{thesis}
 \end{prop}
 
 Ref to bracketed: \ref{brk} (should be [Brack]).
@@ -206,7 +206,7 @@ Ref: \ref{eq:ptag1} (should be (P4)).
 \subsection{Named long ptag}
 
 \begin{equation}
-  F = ma \ptag[type=long, name={Newton's~Law}] \label{eq:newton}
+  F = ma \ptag[type=thesis, name={Newton's~Law}] \label{eq:newton}
 \end{equation}
 
 Ref: \ref{eq:newton} (should be \textsc{Newton's Law}).

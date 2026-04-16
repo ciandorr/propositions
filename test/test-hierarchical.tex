@@ -1,0 +1,34 @@
+\documentclass{article}
+\usepackage{propositions}
+
+\begin{document}
+
+\section{Hierarchical numbering}
+
+\begin{prop}
+  \pitem[type=hierarchical] First top-level item.
+  \label{h:first}
+  \begin{prop}
+    \pitem[type=hierarchical] Sub-item.
+    \label{h:sub1}
+    \begin{prop}
+      \pitem[type=hierarchical] Sub-sub-item.
+      \label{h:subsub}
+    \end{prop}
+    \pitem[type=hierarchical] Another sub-item.
+    \label{h:sub2}
+  \end{prop}
+  \pitem[type=hierarchical] Second top-level item.
+  \label{h:second}
+  \begin{prop}
+    \pitem[type=hierarchical] Its sub-item.
+    \label{h:sub3}
+  \end{prop}
+\end{prop}
+
+References: \ref{h:first}, \ref{h:sub1}, \ref{h:subsub}, \ref{h:sub2},
+\ref{h:second}, \ref{h:sub3}.
+
+Expected: 1, 1.1, 1.1.1, 1.2, 2, 2.1.
+
+\end{document}
