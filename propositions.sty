@@ -138,7 +138,7 @@
       }
   }
 
-\NewExpandableDocumentCommand \nParentref { }
+\NewExpandableDocumentCommand \nparentref { }
   { \seq_item:Nn \g__props_parent_cnt_seq { 1 } }
 
 \NewExpandableDocumentCommand \lastref { o m }
@@ -156,7 +156,7 @@
       }
   }
 
-\NewExpandableDocumentCommand \nLastref { }
+\NewExpandableDocumentCommand \nlastref { }
   { \g__props_last_cnt_tl }
 
 
@@ -179,6 +179,12 @@
       { \lastref { #2 } }
     \group_end:
   }
+
+\NewDocumentCommand \nParentref { }
+  { \text_titlecase_first:n { \nparentref } }
+
+\NewDocumentCommand \nLastref { }
+  { \text_titlecase_first:n { \nlastref } }
 
 
 \cs_generate_variant:Nn \tl_gset_eq:NN { cN }
@@ -752,9 +758,11 @@
             \def \Nref #1{ \ref{#1} }
             \def \parentref #1{ }
             \def \Parentref #1{ }
+            \def \nparentref { }
             \def \nParentref { }
             \def \lastref #1{ }
             \def \Lastref #1{ }
+            \def \nlastref { }
             \def \nLastref { }
           }
       }

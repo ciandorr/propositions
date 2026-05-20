@@ -325,29 +325,17 @@
 %   For left-margin alignment, use \texttt{labelindent=0em} instead.
 % \end{docKey}
 %
-% \begin{docKey}{labelindent}{=\meta{length}}{no default, per-item}
-%   Positions the label's left edge at \meta{length} from the enclosing
-%   left margin.  For example, \texttt{labelindent=0em} aligns the label
-%   with the surrounding text.  When the label plus \cs{labelsep} would
-%   overflow into the item text, the first line is pushed right
-%   automatically (like the global \texttt{labelindent} key).
-%   Can be set per-item, per-type, or globally via \cs{propoptions}.
-% \end{docKey}
-%
-% \begin{docKey}{labelwidth}{=\meta{length}}{no default, per-item}
-%   Overrides the effective label box width for this item.  The label is
-%   repositioned as if \cs{labelwidth} were \meta{length}, without
-%   changing the actual list dimension.
-% \end{docKey}
-%
-% \begin{docKey}{labelsep}{=\meta{length}}{no default, per-item}
-%   Overrides the effective label-to-text gap for this item.
-% \end{docKey}
-%
-% \begin{docKey}{itemindent}{=\meta{length}}{no default, per-item}
-%   Overrides the effective first-line indent for this item.
-%   Only increases are fully supported; decreases are clamped to zero.
-% \end{docKey}
+% \begin{docKeys}[
+%     doc parameter = {=\meta{length}},
+%   ]
+%   {
+%     { doc name = labelsep },
+%     { doc name = itemindent },
+%     { doc name = listparindent },
+%     { doc name = labelindent },
+%   }
+% These keys override the settings of the corresponding list dimensions just for the relevant \cs{pitem}.  For the role of \texttt{labelindent} (which determines the distance from enclosing left margin to the left edge of the label box), see the corresponding package option.
+% \end{docKeys}
 %
 % \section{Item types}\label{sect:types}
 %
@@ -579,10 +567,10 @@
 %   ``Naked ref.''  Outputs the bare reference content with all formatting stripped.  If \cs{ref}\texttt{\{premise\}} produces~`(P1)', then \cs{nref}\texttt{\{premise\}} produces~`P1'.  The starred form suppresses the hyperlink.  \cs{Nref} is the titlecase variant: it uppercases the first letter of the bare content.
 % \end{docCommands}
 %
-% |\nref| is often useful in the argument of |\pitem|, when the 
+% |\nref| can be useful in the argument of |\pitem|, when the 
 % the name of one proposition should depend on that of another:
 % \begin{example}
-% \SetItemType{default}{format=(#1)}
+% \SetItemType{proposition}{format=(#1)}
 % \begin{prop}
 %   \pitem[Phys]
 %   Everything is physical.
@@ -590,8 +578,11 @@
 %   \pitem[\nref{phys2}*]
 %   Almost everything is physical.
 %   \label{newphys2}
-%   \pitem[\ref{premise}*]
-%   Note that the reference in the name of proposition \ref{newphys2} is made using |\nref|: using |\ref| instead would have produced two sets of parentheses, one from the reference and one applied by the display format.
+%   \pitem[\ref{phys2}*]
+%   This one has two sets of parentheses, 
+%   which is probably not desired.  
+%   \ref{newphys2} avoided this by using
+%   |\nref|.
 % \end{prop}
 % \end{example}
 % 
@@ -637,25 +628,31 @@
 %   { doc name = lastref,  doc parameter = \oarg{prefix}\marg{suffix} },
 %   { doc name = Lastref,  doc parameter = \oarg{prefix}\marg{suffix} },
 % }
-%   Formatted reference to the most recently processed \cs{pitem} or \cs{ptag}, even without a \cs{label}.  Useful for back-references in running text.  With one argument, \meta{suffix} is appended; with two, \meta{prefix} is also prepended.  Use \cs{lastref}\texttt{\{\}} for a plain reference.  \cs{Lastref} is the titlecase variant: it uppercases the first letter.
+%   Produces a reference (witth no hyperlink) to the most recently processed \cs{pitem} or \cs{ptag}, even without a \cs{label}.  Useful for back-references in running text.  With one argument, \meta{suffix} is appended; with two, \meta{prefix} is also prepended.  Use \cs{lastref}\texttt{\{\}} for a plain reference.  \cs{Lastref} is the titlecase variant.
 % \end{docCommands}
 %
-% \begin{docCommand}{nLastref}{}
-%   Like \cs{lastref}\texttt{\{\}} but returns the bare content without formatting.  Takes no arguments; simply output any desired suffix directly afterwards.
-% \end{docCommand}
+% \begin{docCommands}{
+%   { doc name = nlastref, doc parameter = {} },
+%   { doc name = nLastref, doc parameter = {} },
+% }
+%   Like \cs{lastref}\texttt{\{\}}, but returns the bare content without formatting.  \cs{nLastref} is the titlecase variant.
+% \end{docCommands}
 %
 % \begin{docCommands}{
 %   { doc name = parentref,  doc parameter = \oarg{prefix}\marg{suffix} },
 %   { doc name = Parentref,  doc parameter = \oarg{prefix}\marg{suffix} },
 % }
-%   Inside a nested \texttt{prop} (or \texttt{inlineprop}), produces a formatted reference to the most recent item of the enclosing level.  Same argument convention as \refCom{lastref}.  \cs{Parentref} is the titlecase variant: it uppercases the first letter.
+%   Inside a nested \texttt{prop} (or \texttt{inlineprop}), produces a formatted reference to the most recent item of the enclosing level.  Same argument convention as \refCom{lastref}.  \cs{Parentref} is the titlecase variant.
 % \end{docCommands}
 %
-% \begin{docCommand}{nParentref}{}
-%   Like \cs{parentref}\texttt{\{\}} but returns the bare content without formatting.  Takes no arguments; simply output any desired suffix directly afterwards.
-% \end{docCommand}
+% \begin{docCommands}{
+%   { doc name = nparentref, doc parameter = {} },
+%   { doc name = nParentref, doc parameter = {} },
+% }
+%   Like \cs{parentref}\texttt{\{\}} but returns the bare content without formatting.  Takes no arguments; simply output any desired suffix directly afterwards.  \cs{nParentref} is the titlecase variant.  
+% \end{docCommands}
 %
-% \refCom{parentref} and \refCom{nParentref} are useful for making subitems whose names derive from their parent's:
+% \refCom{parentref} and \refCom{nparentref} are useful for making subitems whose names derive from their parent's:
 % \begin{example}
 % \DeclareNumberedType{inner}[
 %   counter format=\alph{inner},
@@ -706,10 +703,8 @@
 %     \item In the preamble with \cs{usepackage}\texttt{[}\meta{options}\texttt{]\{propositions\}} (global).
 %   \end{itemize}
 % \end{docCommand}
-% 
-%   \emph{Exception 1:} keys containing \texttt{\#} (such as \texttt{equation format}) cannot be set in the optional argument of \cs{usepackage}, due to how \LaTeX{} handles \texttt{\#} in option values.
 %
-%   \emph{Exception 2:} \texttt{equations} is a global key; it cannot be used in the optional argument of \texttt{prop} or \texttt{inlineprop}.
+%   \emph{Exception:} \texttt{equations} is a global key; it cannot be used in the optional argument of \texttt{prop} or \texttt{inlineprop}.
 % 
 % \subsection{List dimensions}
 %
@@ -732,7 +727,7 @@
 % \end{docKeys}
 %
 % \begin{docKey}{labelindent}{=\meta{length / length list}}{no default}
-%   Positions label left edges at \meta{length} from the enclosing margin, adjusting \cs{labelsep} or \cs{itemindent} as needed.  Positive values move rightward, negative leftward.
+%   Positions the left edge of the label box at \meta{length} from the enclosing margin, adjusting \cs{labelwidth}, \cs{leftmargin}, \cs{labelsep}, or \cs{itemindent} as needed.  (Since the value of any one of these dimensions can be derived from those of the other four, it never makes sense to set all five.)
 % \end{docKey}
 %
 % \begin{docKey}{tightspacing}{}{no value}
@@ -744,13 +739,11 @@
 % \end{docKey}
 %
 % \begin{docKey}{continue}{=\meta{boolean}}{initially \texttt{true}}
-%   When \texttt{true} (the default), a \texttt{prop} environment that
+%   When \texttt{true}, a \texttt{prop} environment that
 %   immediately follows another \texttt{prop} (with no intervening
 %   paragraph text) replaces the normal \cs{topsep}-based inter-list
 %   space with \cs{itemsep}\,+\,\cs{parsep}, giving the visual
-%   appearance of a single continuous list.  This works at any nesting
-%   level.  Set to \texttt{false} to suppress this behaviour for a
-%   specific environment or globally via \refCom{propoptions}.
+%   appearance of a single continuous list.
 % \end{docKey}
 %
 % \subsection{Default types}
@@ -766,7 +759,7 @@
 % \end{docKey}
 %
 % \begin{docKey}{default nameless type}{=\meta{type}}{initially \texttt{numbered}}
-%   The type used when \cs{pitem} or \cs{ptag} has no optional argument (no name, counter, or type).  The built-in \texttt{numbered} type dispatches to \texttt{levelone}\ldots\texttt{levelfive} by nesting depth via \cs{proplevelchoice} (see \autoref{sect:builtin-types}).
+%   The type used when \cs{pitem} or \cs{ptag} has no optional argument (no name, counter, or type).
 % \end{docKey}
 %
 % \begin{docKey}{default ptag nameless type}{=\meta{type}}{initially empty}
@@ -776,19 +769,17 @@
 % \subsection{Equation numbering}
 %
 % \begin{docKey}{equations}{}{no value, \textbf{global only}}
-%   Sets \texttt{default nameless type\,=\,eqnum} and installs hooks so that standard displayed equations (\texttt{\string\begin\{equation\}}, etc.) use the same formatting as the \texttt{equation} item type.  Both \cs{tagform@} (display tags) and \cs{p@equation} (reference formatting) are synced from the \texttt{equation} type's \texttt{display format} and \texttt{ref format}.
-%
-%   To change the equation format, redefine the \texttt{equation} type:
+%   Sets \texttt{default nameless type\,=\,eqnum} and installs hooks so that the \LaTeX\ and \textsf{amstex} displayed equation environments (such as \texttt{equation} and \texttt{align}) use the same formatting as the \texttt{equation} item type.  The \texttt{equation} type's \texttt{display format} and \texttt{ref format} keys are used for generating equation numbers and cross-references to them.  Redefining the \texttt{equation} type, e.g.~ with
 %\begin{codebox}
 % \SetItemType{equation}{format = [#1]}
 %\end{codebox}
-%   This automatically updates \cs{tagform@} and \cs{ref} output for all equations.
+%   will automatically update the hooks.  
 % \end{docKey}
 %
 % \section{Compatibility}
 %
 % The \textsf{propositions} package is designed to work with \textsf{hyperref}, \textsf{cleveref}, and \textsf{amsmath}.
-% \textsf{amsmath} is required for |\ptag| and the |equations| option.  With \textsf{cleveref} loaded, all |\pitem|s are assigned to a default |proposition| reference type; the |crefname| key can override this.
+% \textsf{amsmath} is required for |\ptag| and the |equations| option.  With \textsf{cleveref} loaded, all |\pitem|s are assigned to a default |proposition| ``reference type''; the |crefname| key can override this.
 %
 % Recommended load order:
 % \begin{Verbatim}[gobble=2]
@@ -1005,7 +996,7 @@
       }
   }
 
-\NewExpandableDocumentCommand \nParentref { }
+\NewExpandableDocumentCommand \nparentref { }
   { \seq_item:Nn \g__props_parent_cnt_seq { 1 } }
 
 \NewExpandableDocumentCommand \lastref { o m }
@@ -1023,7 +1014,7 @@
       }
   }
 
-\NewExpandableDocumentCommand \nLastref { }
+\NewExpandableDocumentCommand \nlastref { }
   { \g__props_last_cnt_tl }
 
 %<doc>%% ====================================================================
@@ -1049,6 +1040,13 @@
       { \lastref { #2 } }
     \group_end:
   }
+
+%<doc>%% Titlecase variants of \cs{nparentref} and \cs{nlastref}.
+\NewDocumentCommand \nParentref { }
+  { \text_titlecase_first:n { \nparentref } }
+
+\NewDocumentCommand \nLastref { }
+  { \text_titlecase_first:n { \nlastref } }
 
 %<doc>%% ====================================================================
 %<doc>%% Variant generation
@@ -1695,9 +1693,11 @@
             \def \Nref #1{ \ref{#1} }
             \def \parentref #1{ }
             \def \Parentref #1{ }
+            \def \nparentref { }
             \def \nParentref { }
             \def \lastref #1{ }
             \def \Lastref #1{ }
+            \def \nlastref { }
             \def \nLastref { }
           }
       }

@@ -12,7 +12,7 @@
   \setcounter{equation}{0}%
   \begingroup
   \def\theequation{#1\arabic{equation}}%
-  \propoptions{equation format=#1}%
+  \SetItemType{equation}{format=#1}%
   \ignorespaces
 }{%
   \endgroup
@@ -99,7 +99,7 @@ Lastref: \lastref{} (expected: (\textbf{P4})).
 
 Lastref with suffix: \lastref{'} (expected: (\textbf{P4'})).
 
-nLastref: \nLastref{} (expected: P4).
+nLastref: \nlastref{} (expected: P4).
 
 \section{Backward compatibility: ref append key}
 
@@ -186,7 +186,7 @@ format), so \verb|\nref| returns the full hierarchical name.
 \DeclareNumberedType{newinner}[
   counter format=\alph{newinner},
   display format=#1.,
-  ref={\nParentref\thenewinner},
+  ref={\nparentref\thenewinner},
   ref format={(#1)}]
 \begin{prop}
   \pitem Outer item. \label{outer}
@@ -223,11 +223,11 @@ Ref outer: \ref{outer} (expected: (3)).
     \label{dsub2}
     This subitem will be referenced as \ref{dsub2}, or \nref{dsub2}.
     \pitem[type=inner,
-    name={\nParentref.\theinner}]
+    name={\nparentref.\theinner}]
     \label{dsub3}
     This subitem will be referenced as \ref{dsub3}, or \nref{dsub3}.
     \pitem[type=inner,
-    ref={\nParentref.\theinner}]
+    ref={\nparentref.\theinner}]
     \label{dsub4}
     This subitem will be referenced as \ref{dsub4}, or \nref{dsub4}.
   \end{prop}
