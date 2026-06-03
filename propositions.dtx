@@ -107,7 +107,7 @@
 % add parentheses or other formatting at every point of reference.  The standard |description| environment does not allow cross-referencing at all.
 %
 % The \textsf{propositions} package solves this by attaching formatting
-% information to each label.  A short item like |\pitem[P]| is displayed
+% information to each label.  A short item like |\item[P]| (inside \texttt{prop}) is displayed
 % as ``(P)'' and |\ref| automatically produces ``(P)'' as well---complete
 % with parentheses, hyperlinks, and \textsf{cleveref} support.  The full
 % key-value interface supports named items, numbered items, custom
@@ -128,12 +128,12 @@
 % \section{Basic usage}
 % Load the package with |\usepackage{propositions}| or |\usepackage|\oarg{options}|{propositions}| (see \autoref{sect:global} below for valid package options).
 %
-% The |prop| environment generates a list of propositions, each introduced by a |\pitem|.  |\pitem| with an optional argument gives a |description|-like label:
+% The |prop| environment generates a list of propositions, each introduced by |\item|.  |\item| with an optional argument gives a |description|-like label:
 % \begin{example}
 % \begin{prop}
-%   \pitem[Physicalism] Everything is
+%   \item[Physicalism] Everything is
 %   physical. \label{phys}
-%   \pitem[Idealism] Everything is
+%   \item[Idealism] Everything is
 %   mental. \label{ideal}
 % \end{prop}
 % \end{example}
@@ -142,16 +142,16 @@
 % \ref{phys} is more plausible
 % than \ref{ideal}.
 % \end{example}
-% With no optional argument, |\pitem| will by default generate numbered items similar to |enumerate|, but with numbering that persists across the document:
+% With no optional argument, |\item| will by default generate numbered items similar to |enumerate|, but with numbering that persists across the document:
 % \begin{example}
 % \begin{prop}
-%   \pitem Every atom is physical.
+%   \item Every atom is physical.
 %   \label{atoms}
 % \end{prop}
 % \ref{phys} follows from the
 % conjunction of \ref{atoms} and
 % \begin{prop}
-%   \pitem Everything is an atom.
+%   \item Everything is an atom.
 %   \label{atomism}
 % \end{prop}
 % \end{example}
@@ -160,11 +160,11 @@
 % nesting level:
 % \begin{example}
 % \begin{prop}
-%   \pitem \label{dual}
+%   \item \label{dual}
 %   \begin{prop}
-%     \pitem Some things are physical.
+%     \item Some things are physical.
 %     \label{some}
-%     \pitem Some things are not
+%     \item Some things are not
 %     physical. \label{notall}
 %   \end{prop}
 % \end{prop}
@@ -177,7 +177,7 @@
 % subsequent references, are both configurable using a key=value syntax (see \autoref{sect:keys} for the possible keys):
 % \begin{example}
 % \begin{prop}
-%   \pitem[No Overlap,
+%   \item[No Overlap,
 %     align=flush,
 %     display format=\textsc{#1},
 %     ref format=\textit{#1}]
@@ -187,10 +187,10 @@
 % Is \ref{incomp} consistent
 % with \ref{phys}?
 % \end{example}
-% Preset \emph{item types} can be declared and used instead of configuring the |\pitem|s one at a time:
+% Preset \emph{item types} can be declared and used instead of configuring the |\item|s one at a time:
 % \begin{example}
 % \begin{prop}
-%   \pitem[Nihilism,
+%   \item[Nihilism,
 %     type=thesis]
 %     There is nothing.
 %     \label{nihilism}
@@ -199,9 +199,9 @@
 % \ref{phys}, \ref{dual}, or
 % both?  Discuss.
 % \end{example}
-% Shortcut commands---e.g., |\titem[|\meta{keys}|]| for |\pitem[type=thesis, |\meta{keys}|]|---can also be defined.  The package loads with a range of predefined types.
+% Shortcut commands---e.g., |\titem[|\meta{keys}|]| for |\item[type=thesis, |\meta{keys}|]| (within \texttt{prop})---can also be defined.  The package loads with a range of predefined types.
 %
-% When the package is loaded with |\usepackage[equations]{propositions}|, first-level |\pitem|s use the same counter
+% When the package is loaded with |\usepackage[equations]{propositions}|, first-level |\item|s within \texttt{prop} use the same counter
 % as equations.  (This looks better with the |leqno|
 % option to |\documentclass|.)
 % \begin{example}
@@ -210,13 +210,13 @@
 %   \wedge \text{Physical}(x))
 % \end{equation}
 % \begin{prop}
-%   \pitem
+%   \item
 %   There is overlap between
 %   the mental and the physical.
 % \end{prop}
 % \end{example}
 % The |\ptag| command (requires \textsf{amsmath})
-% is an analogue of |\pitem| that works inside
+% is an analogue of |\item| (within \texttt{prop}) that works inside
 % displayed math environments.
 % \begin{example}
 % \begin{equation}
@@ -244,17 +244,20 @@
 %   Like \texttt{prop}, but does not create a list.  Allows \cs{pitem} to be used outside list environments, e.g.\ for generating numbers at the beginning of paragraphs.  Steps the \texttt{prop} counter and increments the nesting level.  Accepts the same optional \meta{keys} as \texttt{prop}.
 % \end{docEnvironment}
 %
-% \begin{docCommand}{pitem}{\oarg{keys}}
-%   Inside the \texttt{prop} and \texttt{inlineprop} environments, introduces a labelled proposition.  The optional argument is a comma-separated list of \meta{key}=\meta{value} pairs.
+% Within \texttt{prop} and \texttt{inlineprop}, \cs{item} is redefined to act as the proposition-item command.  Its optional argument is a comma-separated list of \meta{key}=\meta{value} pairs (the keys are described below).  A bare string without \texttt{=} is treated as a proposition name.
 %
-%   When used without an optional argument (or without setting \texttt{name}, \texttt{counter}, or \texttt{type}), the type is determined by the \texttt{default nameless type} key (\autoref{sect:global}).  By default this is \texttt{numbered}, which dispatches by nesting depth to \texttt{levelone}, \texttt{leveltwo}, \ldots\ via \cs{proplevelchoice}.
+% When used without an optional argument (or without setting \texttt{name}, \texttt{counter}, or \texttt{type}), the type is determined by the \texttt{default nameless type} key (\autoref{sect:global}).  By default this is \texttt{numbered}, which dispatches by nesting depth to \texttt{levelone}, \texttt{leveltwo}, \ldots\ via \cs{proplevelchoice}.
+%
+% \begin{docCommand}[doc description=deprecated]{pitem}{\oarg{keys}}
+%   Deprecated alias for \cs{item} within \texttt{prop} or \texttt{inlineprop}.
+%   Issues a warning on each use.  Replace with \cs{item}.
 % \end{docCommand}
-% 
+%
 % \begin{docCommand}{ptag}{\oarg{keys}}
-%   (Available only when \textsf{amsmath} is loaded.)  Works inside displayed math environments like \texttt{equation} and \texttt{align}.  Accepts the same keys as \refCom{pitem}, except that \texttt{align} has no effect (since positioning is controlled by the tag placement system).
+%   (Available only when \textsf{amsmath} is loaded.)  Works inside displayed math environments like \texttt{equation} and \texttt{align}.  Accepts the same keys as \cs{item} within \texttt{prop}, except that \texttt{align} has no effect (since positioning is controlled by the tag placement system).
 % \end{docCommand}
 %
-% The following keys can be used in the optional argument of |\pitem| or the argument of |\ptag|:
+% The following keys can be used in the optional argument of |\item| (within \texttt{prop} or \texttt{inlineprop}) or the argument of |\ptag|:
 %
 % \begin{docKey}{name}{=\meta{text}}{no default}
 %   The proposition's name.  A bare string (without \texttt{=}) in the key list is equivalent to \texttt{name=}\meta{text}.
@@ -392,9 +395,9 @@
 % \begin{example}
 % \DeclareNumberedType{P}
 % \begin{prop}
-%   \pitem[counter=P] First premise.
+%   \item[counter=P] First premise.
 %   \label{p1}
-%   \pitem[counter=P] Second premise.
+%   \item[counter=P] Second premise.
 %   \label{p2}
 % \end{prop}
 % From \ref{p1} and \ref{p2}\ldots
@@ -417,13 +420,13 @@
 % \begin{codebox}
 % \SetItemType{plain}{format = #1}
 % \end{codebox}
-% \begin{prop}\pitem[type=plain, name=Claim] An unformatted item.\end{prop}
+% \begin{prop}\item[type=plain, name=Claim] An unformatted item.\end{prop}
 %
-% \item[\texttt{proposition}] Bold text label.  Auto-selected when |\pitem| has a name but no \texttt{type}.
+% \item[\texttt{proposition}] Bold text label.  Auto-selected when |\item| has a name but no \texttt{type}.
 % \begin{codebox}
 % \SetItemType{proposition}{format = \textbf{#1}}
 % \end{codebox}
-% \begin{prop}\pitem[Thesis] A bold-formatted item.\end{prop}
+% \begin{prop}\item[Thesis] A bold-formatted item.\end{prop}
 %
 % \item[\texttt{thesis}] Small-caps name at the text margin (\texttt{flush} alignment).  Shortcut: |\titem|.
 % \begin{codebox}
@@ -437,7 +440,7 @@
 % \SetItemType{vignette}{ref format = \textit{#1},
 %   align = flush, label format = \textit{#1:}}
 % \end{codebox}
-% \begin{prop}\pitem[type=vignette, name=Example] A vignette item.\end{prop}
+% \begin{prop}\item[type=vignette, name=Example] A vignette item.\end{prop}
 %
 % \item[\texttt{bullet}] Bullet symbol varying by depth (like |\itemize|).  Shortcut: |\bitem|.
 % \begin{codebox}
@@ -472,8 +475,8 @@
 %
 % These types are used by the \texttt{numbered} and \texttt{eqnum}
 % dispatcher types (below).  They share the counters
-% |numpropi|\,--\,|numpropv|, which reset automatically when a
-% |\pitem| at the next lower level is processed.
+% |numpropi|\,--\,|numpropv|, which reset automatically when an
+% |\item| at the next lower level is processed.
 %
 % \begin{description}
 % \item[\texttt{levelone}] Level-1 numbered items: arabic in parentheses.
@@ -550,7 +553,7 @@
 %
 % \section{Cross-referencing}\label{sect:xref}
 %
-% Labels placed after |\pitem| items work with the standard
+% Labels placed after |\item| items (within \texttt{prop}) work with the standard
 % |\label|/|\ref| mechanism.  The key difference from ordinary
 % \LaTeX{} references is that |\ref| produces \emph{formatted}
 % output: for example, |\textbf| might be applied to the name, or the number might be wrapped in parentheses.  The formatting is controlled by the |format| key (or separately by |display format| and |ref format|).
@@ -576,20 +579,20 @@
 %   ``Naked ref.''  Outputs the bare reference content with all formatting stripped.  If \cs{ref}\texttt{\{premise\}} produces~`(P1)', then \cs{nref}\texttt{\{premise\}} produces~`P1'.  The starred form suppresses the hyperlink.  \cs{Nref} is the titlecase variant: it uppercases the first letter of the bare content.
 % \end{docCommands}
 %
-% |\nref| can be useful in the argument of |\pitem|, when the 
+% |\nref| can be useful in the argument of |\item|, when the
 % the name of one proposition should depend on that of another:
 % \begin{example}
 % \SetItemType{proposition}{format=(#1)}
 % \begin{prop}
-%   \pitem[Phys]
+%   \item[Phys]
 %   Everything is physical.
 %   \label{phys2}
-%   \pitem[\nref{phys2}*]
+%   \item[\nref{phys2}*]
 %   Almost everything is physical.
 %   \label{newphys2}
-%   \pitem[\ref{phys2}*]
-%   This one has two sets of parentheses, 
-%   which is probably not desired.  
+%   \item[\ref{phys2}*]
+%   This one has two sets of parentheses,
+%   which is probably not desired.
 %   \ref{newphys2} avoided this by using
 %   |\nref|.
 % \end{prop}
@@ -612,14 +615,14 @@
 % \cs{Oref} is the titlecase variant; the starred forms suppress the hyperlink.
 % \end{docCommands}
 % 
-% |\oref| can also be useful in the name of |\pitem|s, if 
+% |\oref| can also be useful in the name of |\item|s, if
 % one wants the display format for the modified item
 % to depend on that originally used
 % \begin{example}
 % \begin{prop}
 %   \label{premise}
-%   \pitem[type=plain,name=\oref[*]{phys2}]
-%   This will use boldface and 
+%   \item[type=plain,name=\oref[*]{phys2}]
+%   This will use boldface and
 %   parentheses because the original
 %   referenced item did.
 % \end{prop}
@@ -667,15 +670,15 @@
 %   counter format=\alph{inner},
 %   display format=#1.]
 % \begin{prop}
-%   \pitem[OI] Outer item.
+%   \item[OI] Outer item.
 %   \label{outer2}
 %   \begin{prop}
-%     \pitem[type=inner,
+%     \item[type=inner,
 %       format=\parentref{.#1}]
 %     \label{dsub1}
 %     Ref: \ref{dsub1},
 %     naked: \nref{dsub1}.
-%     \pitem[type=inner,
+%     \item[type=inner,
 %       display format=#1.,
 %       ref format=\parentref{.#1}]
 %     \label{dsub2}
@@ -788,7 +791,7 @@
 % \section{Compatibility}
 %
 % The \textsf{propositions} package is designed to work with \textsf{hyperref}, \textsf{cleveref}, and \textsf{amsmath}.
-% \textsf{amsmath} is required for |\ptag| and the |equations| option.  With \textsf{cleveref} loaded, all |\pitem|s are assigned to a default |proposition| ``reference type''; the |crefname| key can override this.
+% \textsf{amsmath} is required for |\ptag| and the |equations| option.  With \textsf{cleveref} loaded, all proposition items are assigned to a default |proposition| ``reference type''; the |crefname| key can override this.
 %
 % Recommended load order:
 % \begin{Verbatim}[gobble=2]
@@ -883,7 +886,7 @@
 \tl_new:N   \l__props_item_output_tl     %% formatted display (displayfmt + shorthand + gloss)
 \bool_new:N \l__props_ptag_bool          %% true during \ptag processing
 \bool_new:N \l__props_titlecase_bool    %% true when \Ref etc. want titlecasing
-\bool_new:N \l__props_reset_bool        %% true (default) = reset sub-level counter on \pitem
+\bool_new:N \l__props_reset_bool        %% true (default) = reset sub-level counter on \item
 
 %<doc>%% --- Parent-ref stacks and last-item storage ---
 %<doc>%% Two global seq stacks hold the template/content of the parent item.
@@ -1127,12 +1130,13 @@
 \msg_new:nnn { props } { unknown-counter }
   { Counter~ '#1'~ not~ defined.~
     Use~ \token_to_str:N \DeclareNumberedType \{ #1 \} ~ in~ preamble. }
-\msg_new:nnn { props } { pitem-outside-env }
-  { \token_to_str:N \pitem \ can~ only~ be~ used~
-    inside~ prop~ or~ inlineprop~ environments. }
-\msg_new:nnn { props } { pitem-in-math }
-  { \token_to_str:N \pitem \ cannot~ be~ used~ in~ math~ mode.~
+\msg_new:nnn { props } { item-in-math }
+  { Proposition~ items~ cannot~ be~ used~ in~ math~ mode.~
     Use~ \token_to_str:N \ptag \ instead. }
+\msg_new:nnn { props } { pitem-deprecated }
+  { \token_to_str:N \pitem \ is~ deprecated.~
+    Use~ \token_to_str:N \item \ inside~
+    prop~ or~ inlineprop~ instead. }
 \msg_new:nnn { props } { global-only-keys }
   { Key(s)~ '#1'~ ignored~ in~ prop~ optional~ argument~
     (use~ \token_to_str:N \propoptions \ instead). }
@@ -1191,10 +1195,10 @@
             %% If the argument has no =, treat it as a bare name
             %% so catcodes (e.g. $math$) are preserved.
             \tl_if_in:nnTF { ##1 } { = }
-              { \pitem [ type=#2, ##1 ] }
-              { \pitem [ type=#2, name={##1} ] }
+              { \item [ type=#2, ##1 ] }
+              { \item [ type=#2, name={##1} ] }
           }
-          { \pitem [ type=#2 ] }
+          { \item [ type=#2 ] }
       }
   }
 
@@ -1337,7 +1341,7 @@
   }
 
 %<doc>%% ====================================================================
-%<doc>%% l3keys: keys for \pitem
+%<doc>%% l3keys: keys for \item (within prop/inlineprop)
 %<doc>%% ====================================================================
 
 \keys_define:nn { props / pitem }
@@ -1386,7 +1390,7 @@
     reset       .default:n  = { true } ,
     unknown     .code:n =
       {
-        %% The key NAME is the proposition name (e.g., \pitem[P] -> key "P")
+        %% The key NAME is the proposition name (e.g., \item[P] -> key "P")
         \tl_set:NV \l__props_name_tl \l_keys_key_str
       } ,
   }
@@ -1560,25 +1564,23 @@
   }
 
 %<doc>%% ====================================================================
-%<doc>%% Ref-append helpers (shared by \pitem and \ptag)
+%<doc>%% Ref-append helpers (shared by \item and \ptag)
 %<doc>%% ====================================================================
 
 %<doc>%% ====================================================================
-%<doc>%% \pitem — the main item command
+%<doc>%% Core proposition-item logic (called by the local \item in prop/inlineprop)
 %<doc>%% ====================================================================
 
-\NewDocumentCommand \pitem { o }
+%<doc>%% \__props_pitem_body:n {<key string>}
+%<doc>%% Shared body: resolve keys, optionally reset sub-counter, output item.
+\cs_new_protected:Nn \__props_pitem_body:n
   {
-    \int_compare:nNnF { \g__props_level_int } > { 0 }
-      { \msg_error:nn { props } { pitem-outside-env } }
     \mode_if_math:T
-      { \msg_error:nn { props } { pitem-in-math } }
-    \IfValueTF { #1 }
-      { \__props_resolve_item:n { #1 } }
-      { \__props_resolve_item:n { } }
+      { \msg_error:nn { props } { item-in-math } }
+    \__props_resolve_item:n { #1 }
     %% Reset the sub-level counter one level below the current level.
-    %% Skipped when reset=false (or by a plain \item), enabling intertext
-    %% between sub-items or continuation numbering across parent items.
+    %% Skipped when reset=false, enabling intertext between sub-items or
+    %% continuation numbering across parent items.
     \bool_if:NT \l__props_reset_bool
       {
         \int_compare:nNnT { \g__props_level_int } = { 1 }
@@ -1594,6 +1596,29 @@
     \__props_set_ref:
     \tl_if_empty:NF \l__props_label_tl
       { \exp_args:NV \label \l__props_label_tl }
+  }
+
+%<doc>%% The proposition \item command used inside prop and inlineprop.
+%<doc>%% Defined with xparse so the optional-argument parser correctly handles
+%<doc>%% nested brackets (e.g. \item[name=\oref[*]{foo}]).  Assigned to \item
+%<doc>%% locally via \cs_set_eq:NN in each environment's begin code.
+\NewDocumentCommand \__props_item_cmd: { o }
+  {
+    \IfValueTF { #1 }
+      { \__props_pitem_body:n { #1 } }
+      { \__props_pitem_body:n { } }
+  }
+
+%<doc>%% ====================================================================
+%<doc>%% \pitem — deprecated alias for \item within prop/inlineprop
+%<doc>%% ====================================================================
+
+\NewDocumentCommand \pitem { o }
+  {
+    \msg_warning:nn { props } { pitem-deprecated }
+    \IfValueTF { #1 }
+      { \item[#1] }
+      { \item }
   }
 
 %<doc>%% ====================================================================
@@ -1909,6 +1934,11 @@
 %<doc>%% Item output
 %<doc>%% ====================================================================
 
+%<doc>%% Save the standard \item at package-load time for use inside the
+%<doc>%% output functions.  The local \item redefinition inside prop/inlineprop
+%<doc>%% must not affect these internal calls.
+\cs_new_eq:NN \__props_list_item: \item
+
 \cs_new_protected:Nn \__props_output_item:
   {
     \bool_if:NTF \g__props_display_mode_bool
@@ -2044,8 +2074,8 @@
               { \dim_sub:Nn \labelwidth { \l_tmpb_dim } }
           }
       }
-    %% Emit \item with resolved dimensions.
-    \item [ \l__props_item_output_tl ]
+    %% Emit list item with resolved dimensions.
+    \__props_list_item: [ \l__props_item_output_tl ]
     %% Restore original dimensions.
     \setlength { \labelwidth } { \l__props_save_labelwidth_dim }
     \setlength { \labelsep }   { \l__props_save_labelsep_dim }
@@ -2058,7 +2088,7 @@
     \str_if_eq:VnTF \l__props_alignment_tl { flush }
       {
         %% Push label past the label area so it sits at the text margin
-        \item [ \hspace{\labelwidth} \hspace{\labelsep}
+        \__props_list_item: [ \hspace{\labelwidth} \hspace{\labelsep}
                 \l__props_item_output_tl \hspace{\labelsep} ]
       }
       {
@@ -2068,7 +2098,7 @@
             %% the label starts at that distance from the enclosing margin.
             %% Otherwise, the label starts at the standard label position
             %% (which already reflects any global labelindent setting).
-            \item []
+            \__props_list_item: []
             { \tl_if_empty:NTF \l__props_pi_labelindent_tl
                 { \leftskip = \dimexpr \itemindent
                     - \labelwidth - \labelsep \relax }
@@ -2081,9 +2111,9 @@
         \str_if_eq:VnTF \l__props_alignment_tl { flush-nextline }
           {
             %% Label on own line(s), starting at the text margin.
-            %% Blank \item, label as ordinary paragraph text,
+            %% Blank list item, label as ordinary paragraph text,
             %% then cancel the inter-paragraph space.
-            \item []
+            \__props_list_item: []
             \l__props_item_output_tl \par
             \vspace { -\parsep } \noindent \ignorespaces
           }
@@ -2092,7 +2122,7 @@
           {
             %% Center in label box (\hss absorbs space on both sides)
             \cs_set:Nn \__props_display_label:n { \hss \mbox{##1} \hss }
-            \item [ \l__props_item_output_tl ]
+            \__props_list_item: [ \l__props_item_output_tl ]
             \cs_set:Nn \__props_display_label:n { \mbox{##1} \hfill }
           }
           {
@@ -2100,10 +2130,10 @@
           {
             %% Right-align in label box (like standard enumerate)
             \cs_set:Nn \__props_display_label:n { \hss \mbox{##1} }
-            \item [ \l__props_item_output_tl ]
+            \__props_list_item: [ \l__props_item_output_tl ]
             \cs_set:Nn \__props_display_label:n { \mbox{##1} \hfill }
           }
-          { \item [ \l__props_item_output_tl ] }
+          { \__props_list_item: [ \l__props_item_output_tl ] }
           }
           }
           }
@@ -2342,6 +2372,9 @@
         \@topsepadd = \g__props_natural_topsepadd_skip
         \bool_gset_false:N \g__props_suppress_topsep_bool
       }
+    %% Locally redefine \item as the proposition-item command.
+    %% Local to the list group; undone automatically by \end{list}.
+    \cs_set_eq:NN \item \__props_item_cmd:
   }
   {
     %% Save this list's \itemsep+\parsep as the TARGET spacing for the
@@ -2398,6 +2431,8 @@
         \msg_warning:nnx { props } { global-only-keys }
           { \l_tmpa_tl }
       }
+    %% Locally redefine \item as the proposition-item command.
+    \cs_set_eq:NN \item \__props_item_cmd:
   }
   {
     %% Pop parent stacks (same restore logic as prop environment)

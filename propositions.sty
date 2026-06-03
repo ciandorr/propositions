@@ -80,7 +80,7 @@
 \tl_new:N   \l__props_item_output_tl     %% formatted display (displayfmt + shorthand + gloss)
 \bool_new:N \l__props_ptag_bool          %% true during \ptag processing
 \bool_new:N \l__props_titlecase_bool    %% true when \Ref etc. want titlecasing
-\bool_new:N \l__props_reset_bool        %% true (default) = reset sub-level counter on \pitem
+\bool_new:N \l__props_reset_bool        %% true (default) = reset sub-level counter on \item
 
 \seq_new:N \g__props_parent_tpl_seq
 \seq_new:N \g__props_parent_cnt_seq
@@ -237,12 +237,13 @@
 \msg_new:nnn { props } { unknown-counter }
   { Counter~ '#1'~ not~ defined.~
     Use~ \token_to_str:N \DeclareNumberedType \{ #1 \} ~ in~ preamble. }
-\msg_new:nnn { props } { pitem-outside-env }
-  { \token_to_str:N \pitem \ can~ only~ be~ used~
-    inside~ prop~ or~ inlineprop~ environments. }
-\msg_new:nnn { props } { pitem-in-math }
-  { \token_to_str:N \pitem \ cannot~ be~ used~ in~ math~ mode.~
+\msg_new:nnn { props } { item-in-math }
+  { Proposition~ items~ cannot~ be~ used~ in~ math~ mode.~
     Use~ \token_to_str:N \ptag \ instead. }
+\msg_new:nnn { props } { pitem-deprecated }
+  { \token_to_str:N \pitem \ is~ deprecated.~
+    Use~ \token_to_str:N \item \ inside~
+    prop~ or~ inlineprop~ instead. }
 \msg_new:nnn { props } { global-only-keys }
   { Key(s)~ '#1'~ ignored~ in~ prop~ optional~ argument~
     (use~ \token_to_str:N \propoptions \ instead). }
@@ -295,10 +296,10 @@
             %% If the argument has no =, treat it as a bare name
             %% so catcodes (e.g. $math$) are preserved.
             \tl_if_in:nnTF { ##1 } { = }
-              { \pitem [ type=#2, ##1 ] }
-              { \pitem [ type=#2, name={##1} ] }
+              { \item [ type=#2, ##1 ] }
+              { \item [ type=#2, name={##1} ] }
           }
-          { \pitem [ type=#2 ] }
+          { \item [ type=#2 ] }
       }
   }
 
@@ -466,7 +467,7 @@
     reset       .default:n  = { true } ,
     unknown     .code:n =
       {
-        %% The key NAME is the proposition name (e.g., \pitem[P] -> key "P")
+        %% The key NAME is the proposition name (e.g., \item[P] -> key "P")
         \tl_set:NV \l__props_name_tl \l_keys_key_str
       } ,
   }
@@ -638,18 +639,14 @@
 
 
 
-\NewDocumentCommand \pitem { o }
+\cs_new_protected:Nn \__props_pitem_body:n
   {
-    \int_compare:nNnF { \g__props_level_int } > { 0 }
-      { \msg_error:nn { props } { pitem-outside-env } }
     \mode_if_math:T
-      { \msg_error:nn { props } { pitem-in-math } }
-    \IfValueTF { #1 }
-      { \__props_resolve_item:n { #1 } }
-      { \__props_resolve_item:n { } }
+      { \msg_error:nn { props } { item-in-math } }
+    \__props_resolve_item:n { #1 }
     %% Reset the sub-level counter one level below the current level.
-    %% Skipped when reset=false (or by a plain \item), enabling intertext
-    %% between sub-items or continuation numbering across parent items.
+    %% Skipped when reset=false, enabling intertext between sub-items or
+    %% continuation numbering across parent items.
     \bool_if:NT \l__props_reset_bool
       {
         \int_compare:nNnT { \g__props_level_int } = { 1 }
@@ -665,6 +662,22 @@
     \__props_set_ref:
     \tl_if_empty:NF \l__props_label_tl
       { \exp_args:NV \label \l__props_label_tl }
+  }
+
+\NewDocumentCommand \__props_item_cmd: { o }
+  {
+    \IfValueTF { #1 }
+      { \__props_pitem_body:n { #1 } }
+      { \__props_pitem_body:n { } }
+  }
+
+
+\NewDocumentCommand \pitem { o }
+  {
+    \msg_warning:nn { props } { pitem-deprecated }
+    \IfValueTF { #1 }
+      { \item[#1] }
+      { \item }
   }
 
 
@@ -923,6 +936,8 @@
   }
 
 
+\cs_new_eq:NN \__props_list_item: \item
+
 \cs_new_protected:Nn \__props_output_item:
   {
     \bool_if:NTF \g__props_display_mode_bool
@@ -1037,8 +1052,8 @@
               { \dim_sub:Nn \labelwidth { \l_tmpb_dim } }
           }
       }
-    %% Emit \item with resolved dimensions.
-    \item [ \l__props_item_output_tl ]
+    %% Emit list item with resolved dimensions.
+    \__props_list_item: [ \l__props_item_output_tl ]
     %% Restore original dimensions.
     \setlength { \labelwidth } { \l__props_save_labelwidth_dim }
     \setlength { \labelsep }   { \l__props_save_labelsep_dim }
@@ -1050,7 +1065,7 @@
     \str_if_eq:VnTF \l__props_alignment_tl { flush }
       {
         %% Push label past the label area so it sits at the text margin
-        \item [ \hspace{\labelwidth} \hspace{\labelsep}
+        \__props_list_item: [ \hspace{\labelwidth} \hspace{\labelsep}
                 \l__props_item_output_tl \hspace{\labelsep} ]
       }
       {
@@ -1060,7 +1075,7 @@
             %% the label starts at that distance from the enclosing margin.
             %% Otherwise, the label starts at the standard label position
             %% (which already reflects any global labelindent setting).
-            \item []
+            \__props_list_item: []
             { \tl_if_empty:NTF \l__props_pi_labelindent_tl
                 { \leftskip = \dimexpr \itemindent
                     - \labelwidth - \labelsep \relax }
@@ -1073,9 +1088,9 @@
         \str_if_eq:VnTF \l__props_alignment_tl { flush-nextline }
           {
             %% Label on own line(s), starting at the text margin.
-            %% Blank \item, label as ordinary paragraph text,
+            %% Blank list item, label as ordinary paragraph text,
             %% then cancel the inter-paragraph space.
-            \item []
+            \__props_list_item: []
             \l__props_item_output_tl \par
             \vspace { -\parsep } \noindent \ignorespaces
           }
@@ -1084,7 +1099,7 @@
           {
             %% Center in label box (\hss absorbs space on both sides)
             \cs_set:Nn \__props_display_label:n { \hss \mbox{##1} \hss }
-            \item [ \l__props_item_output_tl ]
+            \__props_list_item: [ \l__props_item_output_tl ]
             \cs_set:Nn \__props_display_label:n { \mbox{##1} \hfill }
           }
           {
@@ -1092,10 +1107,10 @@
           {
             %% Right-align in label box (like standard enumerate)
             \cs_set:Nn \__props_display_label:n { \hss \mbox{##1} }
-            \item [ \l__props_item_output_tl ]
+            \__props_list_item: [ \l__props_item_output_tl ]
             \cs_set:Nn \__props_display_label:n { \mbox{##1} \hfill }
           }
-          { \item [ \l__props_item_output_tl ] }
+          { \__props_list_item: [ \l__props_item_output_tl ] }
           }
           }
           }
@@ -1308,6 +1323,9 @@
         \@topsepadd = \g__props_natural_topsepadd_skip
         \bool_gset_false:N \g__props_suppress_topsep_bool
       }
+    %% Locally redefine \item as the proposition-item command.
+    %% Local to the list group; undone automatically by \end{list}.
+    \cs_set_eq:NN \item \__props_item_cmd:
   }
   {
     %% Save this list's \itemsep+\parsep as the TARGET spacing for the
@@ -1361,6 +1379,8 @@
         \msg_warning:nnx { props } { global-only-keys }
           { \l_tmpa_tl }
       }
+    %% Locally redefine \item as the proposition-item command.
+    \cs_set_eq:NN \item \__props_item_cmd:
   }
   {
     %% Pop parent stacks (same restore logic as prop environment)
