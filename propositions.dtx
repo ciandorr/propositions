@@ -187,11 +187,11 @@
 % Is \ref{incomp} consistent
 % with \ref{phys}?
 % \end{example}
-% Preset \emph{item types} can be declared and used instead of configuring the |\item|s one at a time:
+% Preset \emph{prop styles} can be declared and used instead of configuring the |\item|s one at a time:
 % \begin{example}
 % \begin{prop}
 %   \item[Nihilism,
-%     type=thesis]
+%     style=thesis]
 %     There is nothing.
 %     \label{nihilism}
 % \end{prop}
@@ -199,7 +199,7 @@
 % \ref{phys}, \ref{dual}, or
 % both?  Discuss.
 % \end{example}
-% Shortcut commands---e.g., |\titem[|\meta{keys}|]| for |\item[type=thesis, |\meta{keys}|]| (within \texttt{prop})---can also be defined.  The package loads with a range of predefined types.
+% Shortcut commands---e.g., |\titem[|\meta{keys}|]| for |\item[style=thesis, |\meta{keys}|]| (within \texttt{prop})---can also be defined.  The package loads with a range of predefined styles.
 %
 % When the package is loaded with |\usepackage[equations]{propositions}|, first-level |\item|s within \texttt{prop} use the same counter
 % as equations.  (This looks better with the |leqno|
@@ -246,7 +246,7 @@
 %
 % Within \texttt{prop} and \texttt{inlineprop}, \cs{item} is redefined to act as the proposition-item command.  Its optional argument is a comma-separated list of \meta{key}=\meta{value} pairs (the keys are described below).  A bare string without \texttt{=} is treated as a proposition name.
 %
-% When used without an optional argument (or without setting \texttt{name}, \texttt{counter}, or \texttt{type}), the type is determined by the \texttt{default nameless type} key (\autoref{sect:global}).  By default this is \texttt{numbered}, which dispatches by nesting depth to \texttt{levelone}, \texttt{leveltwo}, \ldots\ via \cs{proplevelchoice}.
+% When used without an optional argument (or without setting \texttt{name}, \texttt{counter}, or \texttt{style}), the style is determined by the \texttt{nameless style} key (\autoref{sect:global}).  By default this is \texttt{numbered}, which dispatches by nesting depth to \texttt{levelone}, \texttt{leveltwo}, \ldots\ via \cs{proplevelchoice}.
 %
 % \begin{docCommand}[doc description=deprecated]{pitem}{\oarg{keys}}
 %   Deprecated alias for \cs{item} within \texttt{prop} or \texttt{inlineprop}.
@@ -263,8 +263,8 @@
 %   The proposition's name.  A bare string (without \texttt{=}) in the key list is equivalent to \texttt{name=}\meta{text}.
 % \end{docKey}
 %
-% \begin{docKey}{type}{=\meta{type}}{no default}
-%   An item type, equivalent to a preset collection of keys.  Types can be declared using \refCom{SetItemType} or \refCom{DeclareNumberedType}, and several come predefined (\autoref{sect:types}).
+% \begin{docKey}{style}{=\meta{style}}{no default}
+%   A prop style, equivalent to a preset collection of keys.  Styles can be declared using \refCom{SetPropStyle} or \refCom{DeclareNumberedStyle}, and several come predefined (\autoref{sect:styles}).
 % \end{docKey}
 %
 % \begin{docKey}{counter}{=\meta{name}}{no default}
@@ -327,8 +327,8 @@
 %   sub-level counter one nesting depth below the current level
 %   (e.g.\ \texttt{numpropii} at level~1).  Set \texttt{reset=false} to
 %   suppress this reset, so that sub-item numbering continues from where it
-%   left off across consecutive parent items.  Can also be set in a type
-%   definition via \refCom{SetItemType}.
+%   left off across consecutive parent items.  Can also be set in a style
+%   definition via \refCom{SetPropStyle}.
 % \end{docKey}
 %
 % % \begin{docKey}{align}{=\meta{type}}{no default}
@@ -349,30 +349,32 @@
 % These keys override the settings of the corresponding list dimensions just for the relevant \cs{pitem}.  For the role of \texttt{labelindent} (which determines the distance from enclosing left margin to the left edge of the label box), see the corresponding package option.
 % \end{docKeys}
 %
-% \section{Item types}\label{sect:types}
+% \section{Prop styles}\label{sect:styles}
 %
-% \begin{docCommand}{SetItemType}{\marg{name}\marg{keys}}
-%   Defines or modifies an item type for use with the \texttt{type} key.  All \refCom{pitem} keys are accepted, plus the following:
+% \begin{docCommand}{SetPropStyle}{\marg{name}\marg{keys}}
+%   Defines or modifies a prop style for use with the \texttt{style} key.  All \refCom{pitem} keys are accepted, plus the following:
 % \end{docCommand}
 %
-% \begin{docKey}[][doc label=setitemtype/type]{type}{=\meta{parent}}{no default}
-%   Inherit from a parent type.  When an item is created, the parent's settings are loaded first (recursively, if the parent itself has a parent), then this type's own keys are applied on top.  
+% \begin{docKey}[][doc label=setpropstyle/style]{style}{=\meta{parent}}{no default}
+%   Inherit from a parent style.  When an item is created, the parent's settings are loaded first (recursively, if the parent itself has a parent), then this style's own keys are applied on top.
 %
-%   The argument may be a macro which is expanded when the item is created: for example, a type with \texttt{type=}\cs{\proplevelchoice}\texttt{{\marg{type1},\marg{type2},\marg{type3}}} will resolve to \marg{type1}, \marg{type2}, \marg{type2} depending on the nesting depth.  The built-in \texttt{numbered} and \texttt{eqnum} types use this mechanism.  
+%   The argument may be a macro which is expanded when the item is created: for example, a style with \texttt{style=}\cs{\proplevelchoice}\texttt{{\marg{style1},\marg{style2},\marg{style3}}} will resolve to \marg{style1}, \marg{style2}, \marg{style2} depending on the nesting depth.  The built-in \texttt{numbered} and \texttt{eqnum} styles use this mechanism.
 % \end{docKey}
 %
 % \begin{docKey}{macro}{=\meta{command}}{no default}
-%   A new user macro, equivalent to \cs{pitem}\texttt{[type=}\meta{name}\texttt{]}.  Any further keys given to the macro are passed to \cs{pitem}.
+%   A new user macro, equivalent to \cs{pitem}\texttt{[style=}\meta{name}\texttt{]}.  Any further keys given to the macro are passed to \cs{pitem}.
 % \end{docKey}
 %
-% If the type \meta{name} already exists, |\SetItemType| modifies or adds keys.  For example, |\SetItemType{proposition}{align=flush}| changes the alignment of the built-in |proposition| type while preserving its other settings.
+% If the style \meta{name} already exists, |\SetPropStyle| modifies or adds keys.  For example, |\SetPropStyle{proposition}{align=flush}| changes the alignment of the built-in |proposition| style while preserving its other settings.
+%
+% Styles can also be created with a \textsf{pgfkeys}-like syntax via \refCom{propoptions}: \cs{propoptions}\texttt{\{}\meta{name}\texttt{/.style=\{}\meta{keys}\texttt{\}\}} is equivalent to \cs{SetPropStyle}\texttt{\{}\meta{name}\texttt{\}\{}\meta{keys}\texttt{\}}.
 %
 % \begin{example}
-% \SetItemType{angle}{
+% \SetPropStyle{angle}{
 %   labelindent = 0em,
 %   display format =
 %     \textbf{$\langle$#1$\rangle$},
-%   ref format     = 
+%   ref format     =
 %     $\langle$#1$\rangle$,
 %   macro = \angitem
 % }
@@ -380,12 +382,12 @@
 %   \angitem[Angle thesis]
 %   Everything is angular.
 % \end{prop}
-% No further discussion of 
+% No further discussion of
 % \lastref{} is needed.
 % \end{example}
 %
-% \begin{docCommand}{DeclareNumberedType}{\marg{name}\oarg{keys}}
-%   Creates a new \LaTeX{} counter named \meta{name} and a matching item type with \texttt{counter=}\meta{name}.  All \refCom{SetItemType} keys are accepted, plus:
+% \begin{docCommand}{DeclareNumberedStyle}{\marg{name}\oarg{keys}}
+%   Creates a new \LaTeX{} counter named \meta{name} and a matching prop style with \texttt{counter=}\meta{name}.  All \refCom{SetPropStyle} keys are accepted, plus:
 % \end{docCommand}
 %
 % \begin{docKey}{parent}{=\meta{counter}}{no default}
@@ -393,7 +395,7 @@
 % \end{docKey}
 %
 % \begin{example}
-% \DeclareNumberedType{P}
+% \DeclareNumberedStyle{P}
 % \begin{prop}
 %   \item[counter=P] First premise.
 %   \label{p1}
@@ -402,49 +404,49 @@
 % \end{prop}
 % From \ref{p1} and \ref{p2}\ldots
 % \end{example}
-% 
+%
 % \begin{docCommand}{proplevelchoice}{\marg{item1, item2, \ldots}}
-%   Picks the entry at the current nesting depth (1-indexed, clamped to the list length).  At depth~0 (outside any \texttt{prop} environment), returns the first entry.  This macro is fully expandable and can be used in the \texttt{name}, \texttt{format}, and \texttt{type} keys of \cs{SetItemType} to create depth-dependent types.
+%   Picks the entry at the current nesting depth (1-indexed, clamped to the list length).  At depth~0 (outside any \texttt{prop} environment), returns the first entry.  This macro is fully expandable and can be used in the \texttt{name}, \texttt{format}, and \texttt{style} keys of \cs{SetPropStyle} to create depth-dependent styles.
 % \end{docCommand}
 %
-% \subsection{Built-in types}\label{sect:builtin-types}
+% \subsection{Built-in styles}\label{sect:builtin-styles}
 %
-% The following item types are predefined.
+% The following prop styles are predefined.
 % Each entry shows the defining code (using user-facing commands)
-% and a live example.  All types can be modified with \refCom{SetItemType}.
+% and a live example.  All styles can be modified with \refCom{SetPropStyle}.
 %
-% \subsubsection*{Text types}
+% \subsubsection*{Text styles}
 %
 % \begin{description}
 % \item[\texttt{plain}] Unformatted text label.
 % \begin{codebox}
-% \SetItemType{plain}{format = #1}
+% \SetPropStyle{plain}{format = #1}
 % \end{codebox}
-% \begin{prop}\item[type=plain, name=Claim] An unformatted item.\end{prop}
+% \begin{prop}\item[style=plain, name=Claim] An unformatted item.\end{prop}
 %
-% \item[\texttt{proposition}] Bold text label.  Auto-selected when |\item| has a name but no \texttt{type}.
+% \item[\texttt{proposition}] Bold text label.  Auto-selected when |\item| has a name but no \texttt{style}.
 % \begin{codebox}
-% \SetItemType{proposition}{format = \textbf{#1}}
+% \SetPropStyle{proposition}{format = \textbf{#1}}
 % \end{codebox}
 % \begin{prop}\item[Thesis] A bold-formatted item.\end{prop}
 %
 % \item[\texttt{thesis}] Small-caps name at the text margin (\texttt{flush} alignment).  Shortcut: |\titem|.
 % \begin{codebox}
-% \SetItemType{thesis}{format = \textsc{#1},
+% \SetPropStyle{thesis}{format = \textsc{#1},
 %   align = flush, macro = \titem}
 % \end{codebox}
 % \begin{prop}\titem[Hypothesis] A flush-aligned item.\end{prop}
 %
 % \item[\texttt{vignette}] Italic name at the text margin with a colon in the label.
 % \begin{codebox}
-% \SetItemType{vignette}{ref format = \textit{#1},
+% \SetPropStyle{vignette}{ref format = \textit{#1},
 %   align = flush, label format = \textit{#1:}}
 % \end{codebox}
-% \begin{prop}\item[type=vignette, name=Example] A vignette item.\end{prop}
+% \begin{prop}\item[style=vignette, name=Example] A vignette item.\end{prop}
 %
 % \item[\texttt{bullet}] Bullet symbol varying by depth (like |\itemize|).  Shortcut: |\bitem|.
 % \begin{codebox}
-% \SetItemType{bullet}{align = center,
+% \SetPropStyle{bullet}{align = center,
 %   name = \proplevelchoice{\textbullet,
 %     {\normalfont\textendash}, \textasteriskcentered,
 %     \textperiodcentered},
@@ -453,100 +455,100 @@
 % \begin{prop}\bitem A bullet item.\end{prop}
 % \end{description}
 %
-% \subsubsection*{Numbered types with dedicated counters}
+% \subsubsection*{Numbered styles with dedicated counters}
 %
 % \begin{description}
 % \item[\texttt{roman}] Roman-numeral counter, resets per section.  Shortcut: |\ritem|.
 % \begin{codebox}
-% \DeclareNumberedType{roman}[parent = section,
+% \DeclareNumberedStyle{roman}[parent = section,
 %   counter format = \roman{#1}, format = (#1), macro = \ritem]
 % \end{codebox}
 % \begin{prop}\ritem A roman-numbered item.\end{prop}
 %
 % \item[\texttt{alph}] Alphabetic counter, resets per section.  Shortcut: |\aitem|.
 % \begin{codebox}
-% \DeclareNumberedType{alph}[parent = section,
+% \DeclareNumberedStyle{alph}[parent = section,
 %   counter format = \alph{#1}, format = (#1), macro = \aitem]
 % \end{codebox}
 % \begin{prop}\aitem An alphabetic item.\end{prop}
 % \end{description}
 %
-% \subsubsection*{Level-specific types}
+% \subsubsection*{Level-specific styles}
 %
-% These types are used by the \texttt{numbered} and \texttt{eqnum}
-% dispatcher types (below).  They share the counters
+% These styles are used by the \texttt{numbered} and \texttt{eqnum}
+% dispatcher styles (below).  They share the counters
 % |numpropi|\,--\,|numpropv|, which reset automatically when an
 % |\item| at the next lower level is processed.
 %
 % \begin{description}
 % \item[\texttt{levelone}] Level-1 numbered items: arabic in parentheses.
 % \begin{codebox}
-% \SetItemType{levelone}{counter = numpropi, format = (#1)}
+% \SetPropStyle{levelone}{counter = numpropi, format = (#1)}
 % \end{codebox}
 %
 % \item[\texttt{leveltwo}] Level-2: lowercase alphabetic with dot.
 % \begin{codebox}
-% \SetItemType{leveltwo}{counter = numpropii,
+% \SetPropStyle{leveltwo}{counter = numpropii,
 %   display format = #1., ref format = \parentref{#1}}
 % \end{codebox}
 %
 % \item[\texttt{levelthree}] Level-3: lowercase roman in parentheses.
 % \begin{codebox}
-% \SetItemType{levelthree}{counter = numpropiii,
+% \SetPropStyle{levelthree}{counter = numpropiii,
 %   display format = (#1), ref format = \parentref{.#1}}
 % \end{codebox}
 %
 % \item[\texttt{levelfour}] Level-4: uppercase alphabetic with dot.
 % \begin{codebox}
-% \SetItemType{levelfour}{counter = numpropiv,
+% \SetPropStyle{levelfour}{counter = numpropiv,
 %   display format = #1., ref format = \parentref{#1}}
 % \end{codebox}
 %
 % \item[\texttt{levelfive}] Level-5: uppercase roman in parentheses.
 % \begin{codebox}
-% \SetItemType{levelfive}{counter = numpropv,
+% \SetPropStyle{levelfive}{counter = numpropv,
 %   display format = (#1), ref format = \parentref{.#1}}
 % \end{codebox}
 %
-% \item[\texttt{equation}] Uses the |equation| counter.  When the |equations| option is active, \cs{SetItemType}\texttt{\{equation\}\{...\}} automatically updates the \cs{tagform@} and \cs{ref} hooks for all equations.
+% \item[\texttt{equation}] Uses the |equation| counter.  When the |equations| option is active, \cs{SetPropStyle}\texttt{\{equation\}\{...\}} automatically updates the \cs{tagform@} and \cs{ref} hooks for all equations.
 % \begin{codebox}
-% \SetItemType{equation}{counter = equation, format = (#1)}
+% \SetPropStyle{equation}{counter = equation, format = (#1)}
 % \end{codebox}
 % \end{description}
 %
-% \subsubsection*{Dispatcher types}
+% \subsubsection*{Dispatcher styles}
 %
-% These types use |type| with \cs{proplevelchoice} to dispatch to a
-% level-specific type at resolution time.
+% These styles use |style| with \cs{proplevelchoice} to dispatch to a
+% level-specific style at resolution time.
 %
 % \begin{description}
-% \item[\texttt{numbered}] The default nameless type.  Dispatches to
+% \item[\texttt{numbered}] The default nameless style.  Dispatches to
 %   |levelone|\,--\,|levelfive| by nesting depth.
 % \begin{codebox}
-% \SetItemType{numbered}{type = \proplevelchoice{
+% \SetPropStyle{numbered}{style = \proplevelchoice{
 %   levelone, leveltwo, levelthree, levelfour, levelfive}}
 % \end{codebox}
 %
 % \item[\texttt{eqnum}] Like |numbered|, but uses |equation| at level~1.
 %   Activated by the |equations| package option (which sets
-%   |default nameless type = eqnum|).
+%   |nameless style = eqnum|).
 % \begin{codebox}
-% \SetItemType{eqnum}{type = \proplevelchoice{
+% \SetPropStyle{eqnum}{style = \proplevelchoice{
 %   equation, leveltwo, levelthree, levelfour, levelfive}}
 % \end{codebox}
 %
 % \item[\texttt{hierarchical}] Produces 1, 1.1, 1.1.1\,\ldots\
 %   numbering using \cs{parentref} and \texttt{counter format}.
-%   Defined via two helper types:
+%   Defined via two helper styles:
 % \begin{codebox}
-% \SetItemType{h-base}{counter = numpropi,
+% \SetPropStyle{h-base}{counter = numpropi,
 %   counter format = \arabic{#1}, format = #1}
-% \SetItemType{h-sub}{
+% \SetPropStyle{h-sub}{
 %   counter = \proplevelchoice{numpropi, numpropii,
 %     numpropiii, numpropiv, numpropv},
 %   counter format = \arabic{#1},
 %   format = \parentref{.#1}}
-% \SetItemType{hierarchical}{type = \proplevelchoice{
+% \SetPropStyle{hierarchical}{style = \proplevelchoice{
 %   h-base, h-sub}}
 % \end{codebox}
 % \end{description}
@@ -582,7 +584,7 @@
 % |\nref| can be useful in the argument of |\item|, when the
 % the name of one proposition should depend on that of another:
 % \begin{example}
-% \SetItemType{proposition}{format=(#1)}
+% \SetPropStyle{proposition}{format=(#1)}
 % \begin{prop}
 %   \item[Phys]
 %   Everything is physical.
@@ -621,7 +623,7 @@
 % \begin{example}
 % \begin{prop}
 %   \label{premise}
-%   \item[type=plain,name=\oref[*]{phys2}]
+%   \item[style=plain,name=\oref[*]{phys2}]
 %   This will use boldface and
 %   parentheses because the original
 %   referenced item did.
@@ -666,19 +668,19 @@
 %
 % \refCom{parentref} and \refCom{nparentref} are useful for making subitems whose names derive from their parent's:
 % \begin{example}
-% \DeclareNumberedType{inner}[
+% \DeclareNumberedStyle{inner}[
 %   counter format=\alph{inner},
 %   display format=#1.]
 % \begin{prop}
 %   \item[OI] Outer item.
 %   \label{outer2}
 %   \begin{prop}
-%     \item[type=inner,
+%     \item[style=inner,
 %       format=\parentref{.#1}]
 %     \label{dsub1}
 %     Ref: \ref{dsub1},
 %     naked: \nref{dsub1}.
-%     \item[type=inner,
+%     \item[style=inner,
 %       display format=#1.,
 %       ref format=\parentref{.#1}]
 %     \label{dsub2}
@@ -688,7 +690,7 @@
 % \end{prop}
 % \end{example}
 %
-% The built-in |leveltwo| and |levelthree| types have
+% The built-in |leveltwo| and |levelthree| styles have
 % |ref format=\parentref{#1}| and |ref format=\parentref{.#1}|,
 % respectively, so that if the parent references
 % as~`(\textbf{P1})', a |leveltwo| sub-item references
@@ -758,34 +760,48 @@
 %   appearance of a single continuous list.
 % \end{docKey}
 %
-% \subsection{Default types}
+% \subsection{Default styles}
 %
-% When \cs{pitem} or \cs{ptag} is used without an explicit \texttt{type}, one of the following defaults is selected based on whether a name/counter was given and whether ptag mode is active.
+% When \cs{pitem} or \cs{ptag} is used without an explicit \texttt{style}, one of the following defaults is selected based on whether a name/counter was given and whether ptag mode is active.
 %
-% \begin{docKey}{default type}{=\meta{type}}{initially \texttt{proposition}}
-%   The type used when a \texttt{name} or \texttt{counter} is given but no explicit \texttt{type}.
+% \begin{docKey}{named style}{=\meta{style}}{initially \texttt{proposition}}
+%   The style used when a \texttt{name} or \texttt{counter} is given but no explicit \texttt{style}.
 % \end{docKey}
 %
-% \begin{docKey}{default ptag type}{=\meta{type}}{initially empty}
-%   If set, overrides \texttt{default type} for \cs{ptag} items only.
+% \begin{docKey}{named ptag style}{=\meta{style}}{initially empty}
+%   If set, overrides \texttt{named style} for \cs{ptag} items only.
 % \end{docKey}
 %
-% \begin{docKey}{default nameless type}{=\meta{type}}{initially \texttt{numbered}}
-%   The type used when \cs{pitem} or \cs{ptag} has no optional argument (no name, counter, or type).
+% \begin{docKey}{nameless style}{=\meta{style}}{initially \texttt{numbered}}
+%   The style used when \cs{pitem} or \cs{ptag} has no optional argument (no name, counter, or style).
 % \end{docKey}
 %
-% \begin{docKey}{default ptag nameless type}{=\meta{type}}{initially empty}
-%   If set, overrides \texttt{default nameless type} for \cs{ptag} items only.
+% \begin{docKey}{nameless ptag style}{=\meta{style}}{initially empty}
+%   If set, overrides \texttt{nameless style} for \cs{ptag} items only.
 % \end{docKey}
+%
+% \subsection{Environment-level style and item defaults}
+%
+% \begin{docKey}{style}{=\meta{style}}{no default}
+%   Sets a default style for all \cs{item}s in this environment.  The style's list-dimension keys (|leftmargin|, |labelwidth|, etc.) take effect immediately for the whole list; item-level keys are applied as defaults for each \cs{item}.  An explicit |style=| on an individual \cs{item} overrides this default.
+% \end{docKey}
+%
+% \begin{docKey}{items}{=\meta{n}}{initially \texttt{1}}
+%   Indicates that approximately \meta{n} items are expected.  Used only to compute \refCom{propformlabel}: the preview label is formatted as if \meta{n}~items had already appeared.  Has no effect on actual item processing.
+% \end{docKey}
+%
+% \begin{docCommand}{propformlabel}{}
+%   Expands to the formatted label of the first (or \texttt{items}-th) item expected in this environment, computed at |\begin{prop}|.  Useful for setting list dimensions that depend on label width, e.g.\ \texttt{leftmargin=\cs{widthof}\{\cs{propformlabel}\}}.  Updated after each \cs{item} to reflect the most recently output label.
+% \end{docCommand}
 %
 % \subsection{Equation numbering}
 %
 % \begin{docKey}{equations}{}{no value, \textbf{global only}}
-%   Sets \texttt{default nameless type\,=\,eqnum} and installs hooks so that the \LaTeX\ and \textsf{amstex} displayed equation environments (such as \texttt{equation} and \texttt{align}) use the same formatting as the \texttt{equation} item type.  The \texttt{equation} type's \texttt{display format} and \texttt{ref format} keys are used for generating equation numbers and cross-references to them.  Redefining the \texttt{equation} type, e.g.~ with
+%   Sets \texttt{nameless style\,=\,eqnum} and installs hooks so that the \LaTeX\ and \textsf{amstex} displayed equation environments (such as \texttt{equation} and \texttt{align}) use the same formatting as the \texttt{equation} prop style.  The \texttt{equation} style's \texttt{display format} and \texttt{ref format} keys are used for generating equation numbers and cross-references to them.  Redefining the \texttt{equation} style, e.g.~with
 %\begin{codebox}
-% \SetItemType{equation}{format = [#1]}
+% \SetPropStyle{equation}{format = [#1]}
 %\end{codebox}
-%   will automatically update the hooks.  
+%   will automatically update the hooks.
 % \end{docKey}
 %
 % \section{Compatibility}
@@ -835,10 +851,10 @@
 
 %<doc>%% --- Per-item state (set during \pitem / \ptag processing) ---
 %<doc>%% These are cleared at the start of \__props_resolve_item:n and then
-%<doc>%% populated by key parsing and type loading.  Emptiness of a tl
+%<doc>%% populated by key parsing and style loading.  Emptiness of a tl
 %<doc>%% indicates the key was not set (no separate boolean tracking needed).
 \tl_new:N   \l__props_name_tl
-\tl_new:N   \l__props_type_tl
+\tl_new:N   \l__props_style_tl
 \tl_new:N   \l__props_counter_tl
 \tl_new:N   \l__props_alignment_tl
 \tl_new:N   \l__props_pi_labelwidth_tl
@@ -853,7 +869,7 @@
 \tl_new:N   \l__props_shorthand_tl
 \tl_new:N   \l__props_gloss_tl
 
-%<doc>%% Format functions (one-argument macros set by keys / type loading).
+%<doc>%% Format functions (one-argument macros set by keys / style loading).
 %<doc>%% These always have a definition (defaulting to identity or a standard format),
 %<doc>%% so unlike the tl variables above, their "was set" status cannot be inferred
 %<doc>%% from their value.
@@ -871,10 +887,10 @@
 \bool_new:N \g__props_display_mode_bool
 
 %<doc>%% --- Global settings ---
-\tl_new:N   \l__props_default_type_tl              %% default type for named items
-\tl_new:N   \l__props_default_ptag_type_tl         %% ptag override for named items; empty = fall back
-\tl_new:N   \l__props_default_nameless_type_tl     %% default type for nameless items
-\tl_new:N   \l__props_default_ptag_nameless_type_tl %% ptag override for nameless; empty = fall back
+\tl_new:N   \l__props_named_style_tl             %% default style for named items
+\tl_new:N   \l__props_named_ptag_style_tl        %% ptag override for named items; empty = fall back
+\tl_new:N   \l__props_nameless_style_tl          %% default style for nameless items
+\tl_new:N   \l__props_nameless_ptag_style_tl     %% ptag override for nameless; empty = fall back
 \bool_new:N \g__props_equations_bool         %% true if equations package option is set
 \bool_new:N \g__props_eqhooks_bool           %% true if equation format hooks should be installed
 \cs_new:Npn \__props_eqdispfmt:n #1 { (#1) } %% display format for equation tags
@@ -887,6 +903,11 @@
 \bool_new:N \l__props_ptag_bool          %% true during \ptag processing
 \bool_new:N \l__props_titlecase_bool    %% true when \Ref etc. want titlecasing
 \bool_new:N \l__props_reset_bool        %% true (default) = reset sub-level counter on \item
+\tl_new:N  \l__props_env_item_keys_tl   %% non-style item-level keys from env arg (env defaults)
+\tl_new:N  \l__props_env_style_tl       %% style= key from env arg (env default style)
+\int_new:N \l__props_env_items_int      %% items=n key (default 1; used by preview computation)
+\int_set:Nn \l__props_env_items_int { 1 }
+\tl_new:N  \g__props_env_preview_label_tl %% preview label built at env open for \propformlabel
 
 %<doc>%% --- Parent-ref stacks and last-item storage ---
 %<doc>%% Two global seq stacks hold the template/content of the parent item.
@@ -1071,65 +1092,65 @@
 \cs_generate_variant:Nn \seq_gpush:Nn  { NV }
 
 %<doc>%% ====================================================================
-%<doc>%% Type preset storage (live-parent model)
+%<doc>%% Style preset storage (live-parent model)
 %<doc>%% ====================================================================
-%<doc>%% For each declared type \meta{T}, we store two token lists:
-%<doc>%%   \cs{g__props_type_\meta{T}_parent_tl}    — parent type expression
+%<doc>%% For each declared style \meta{S}, we store two token lists:
+%<doc>%%   \cs{g__props_style_\meta{S}_parent_tl}   — parent style expression
 %<doc>%%     (possibly containing \cs{proplevelchoice}; empty = no parent)
-%<doc>%%   \cs{g__props_type_\meta{T}_overrides_tl}  — raw key-value pairs
-%<doc>%%     (the settings from \cs{SetItemType}, minus \texttt{type=}
+%<doc>%%   \cs{g__props_style_\meta{S}_overrides_tl} — raw key-value pairs
+%<doc>%%     (the settings from \cs{SetPropStyle}, minus \texttt{style=}
 %<doc>%%     and \texttt{macro=})
 %<doc>%%
 %<doc>%% At resolution time, the parent chain is walked recursively:
 %<doc>%% the innermost parent's overrides are applied first,
-%<doc>%% then each outer type's overrides on top.
+%<doc>%% then each outer style's overrides on top.
 
-\seq_new:N \l__props_type_stack_seq   %% recursion stack for type loading
+\seq_new:N \l__props_style_stack_seq   %% recursion stack for style loading
 
-\cs_new_protected:Nn \__props_type_ensure:n
+\cs_new_protected:Nn \__props_style_ensure:n
   {
-    \tl_if_exist:cF { g__props_type_ #1 _parent_tl }
+    \tl_if_exist:cF { g__props_style_ #1 _parent_tl }
       {
-        \tl_new:c { g__props_type_ #1 _parent_tl }
-        \tl_new:c { g__props_type_ #1 _overrides_tl }
+        \tl_new:c { g__props_style_ #1 _parent_tl }
+        \tl_new:c { g__props_style_ #1 _overrides_tl }
       }
   }
 
-%<doc>%% Load a type's preset into the local variables.
-%<doc>%% If the type has a parent, the parent is loaded first (recursively),
-%<doc>%% then this type's overrides are applied on top.
-\cs_new_protected:Nn \__props_type_load:
+%<doc>%% Load a style's preset into the local item variables.
+%<doc>%% If the style has a parent, the parent is loaded first (recursively),
+%<doc>%% then this style's overrides are applied on top.
+\cs_new_protected:Nn \__props_style_load:
   {
-    \tl_if_exist:cTF { g__props_type_ \l__props_type_tl _parent_tl }
+    \tl_if_exist:cTF { g__props_style_ \l__props_style_tl _parent_tl }
       {
-        %% Save this type's name on the stack (recursive calls clobber it).
-        \seq_push:NV \l__props_type_stack_seq \l__props_type_tl
+        %% Save this style's name on the stack (recursive calls clobber it).
+        \seq_push:NV \l__props_style_stack_seq \l__props_style_tl
         %% Load parent chain first (if any).
-        \tl_if_empty:cF { g__props_type_ \l__props_type_tl _parent_tl }
+        \tl_if_empty:cF { g__props_style_ \l__props_style_tl _parent_tl }
           {
-            \tl_set_eq:Nc \l__props_type_tl
-              { g__props_type_ \l__props_type_tl _parent_tl }
+            \tl_set_eq:Nc \l__props_style_tl
+              { g__props_style_ \l__props_style_tl _parent_tl }
             %% x-expand resolves \proplevelchoice at the current level.
-            \tl_set:Nx \l__props_type_tl { \l__props_type_tl }
-            \__props_type_load:
+            \tl_set:Nx \l__props_style_tl { \l__props_style_tl }
+            \__props_style_load:
           }
-        %% Restore this type's name and apply its overrides.
-        \seq_pop:NN \l__props_type_stack_seq \l__props_type_tl
+        %% Restore this style's name and apply its overrides.
+        \seq_pop:NN \l__props_style_stack_seq \l__props_style_tl
         \tl_set_eq:Nc \l_tmpa_tl
-          { g__props_type_ \l__props_type_tl _overrides_tl }
+          { g__props_style_ \l__props_style_tl _overrides_tl }
         \tl_if_empty:NF \l_tmpa_tl
-          { \exp_args:NnV \keys_set:nn { props / declare-type } \l_tmpa_tl }
+          { \exp_args:NnV \keys_set:nn { props / declare-style } \l_tmpa_tl }
       }
       {
-        \msg_error:nnx { props } { unknown-type } { \l__props_type_tl }
+        \msg_error:nnx { props } { unknown-style } { \l__props_style_tl }
       }
   }
 
-\msg_new:nnn { props } { unknown-type }
-  { Unknown~ item~ type~ '#1'. }
+\msg_new:nnn { props } { unknown-style }
+  { Unknown~ prop~ style~ '#1'. }
 \msg_new:nnn { props } { unknown-counter }
   { Counter~ '#1'~ not~ defined.~
-    Use~ \token_to_str:N \DeclareNumberedType \{ #1 \} ~ in~ preamble. }
+    Use~ \token_to_str:N \DeclareNumberedStyle \{ #1 \} ~ in~ preamble. }
 \msg_new:nnn { props } { item-in-math }
   { Proposition~ items~ cannot~ be~ used~ in~ math~ mode.~
     Use~ \token_to_str:N \ptag \ instead. }
@@ -1142,10 +1163,14 @@
     (use~ \token_to_str:N \propoptions \ instead). }
 
 %<doc>%% ====================================================================
-%<doc>%% l3keys: keys for \SetItemType
+%<doc>%% l3keys: keys for \SetPropStyle / style application at item level
 %<doc>%% ====================================================================
+%<doc>%% Applied by \__props_style_load: when resolving an item.
+%<doc>%% Keys that are global-only (list dimensions, tightspacing, etc.)
+%<doc>%% are silently ignored via the unknown handler when a style is
+%<doc>%% applied at item level; they take effect only via props/global.
 
-\keys_define:nn { props / declare-type }
+\keys_define:nn { props / declare-style }
   {
     name            .tl_set:N  = \l__props_name_tl ,
     align           .tl_set:N  = \l__props_alignment_tl ,
@@ -1179,15 +1204,18 @@
     reset           .bool_set:N = \l__props_reset_bool ,
     reset           .default:n  = { true } ,
     macro           .tl_set:N  = \l__props_decl_macro_tl ,
+    %% Global-only keys (list dims, spacing, etc.) are silently ignored
+    %% when a style is applied at item level.
+    unknown         .code:n    = {} ,
   }
 
 %<doc>%% ====================================================================
-%<doc>%% Helper: define a macro command for a type
+%<doc>%% Helper: define a macro command for a style
 %<doc>%% ====================================================================
 
 \cs_new_protected:Nn \__props_define_macro:Nn
   {
-    %% #1 = control sequence (e.g. \litem), #2 = type name
+    %% #1 = control sequence (e.g. \litem), #2 = style name
     \DeclareDocumentCommand #1 { o }
       {
         \IfValueTF { ##1 }
@@ -1195,34 +1223,34 @@
             %% If the argument has no =, treat it as a bare name
             %% so catcodes (e.g. $math$) are preserved.
             \tl_if_in:nnTF { ##1 } { = }
-              { \item [ type=#2, ##1 ] }
-              { \item [ type=#2, name={##1} ] }
+              { \item [ style=#2, ##1 ] }
+              { \item [ style=#2, name={##1} ] }
           }
-          { \item [ type=#2 ] }
+          { \item [ style=#2 ] }
       }
   }
 
 %<doc>%% ====================================================================
-%<doc>%% Helper: store type preset (parent + overrides)
+%<doc>%% Helper: store style preset (parent + overrides)
 %<doc>%% ====================================================================
 
-\cs_new_protected:Nn \__props_store_type:n
+\cs_new_protected:Nn \__props_store_style:n
   {
-    %% #1 = type name.
+    %% #1 = style name.
     %% Reads parent from \l__props_decl_parent_tl and
     %% overrides from \l__props_decl_overrides_tl (not passed
     %% through arguments, to preserve # tokens in format keys).
-    \__props_type_ensure:n { #1 }
-    \tl_set_eq:cN { g__props_type_ #1 _parent_tl }    \l__props_decl_parent_tl
-    \tl_set_eq:cN { g__props_type_ #1 _overrides_tl } \l__props_decl_overrides_tl
+    \__props_style_ensure:n { #1 }
+    \tl_set_eq:cN { g__props_style_ #1 _parent_tl }    \l__props_decl_parent_tl
+    \tl_set_eq:cN { g__props_style_ #1 _overrides_tl } \l__props_decl_overrides_tl
   }
 
 %<doc>%% ====================================================================
-%<doc>%% Helper: reset local state to defaults for type resolution
+%<doc>%% Helper: reset local state to defaults for style resolution
 %<doc>%% ====================================================================
 
 %<doc>%% Set all per-item locals to their defaults.  Called at the start
-%<doc>%% of item resolution, before the type chain is loaded.
+%<doc>%% of item resolution, before the style chain is loaded.
 \cs_new_protected:Nn \__props_decl_reset:
   {
     \tl_set:Nn  \l__props_alignment_tl { left }
@@ -1247,41 +1275,41 @@
   }
 
 %<doc>%% ====================================================================
-%<doc>%% Special-keys keyspace: extracts \texttt{type=} and \texttt{macro=}
+%<doc>%% Special-keys keyspace: extracts \texttt{style=} and \texttt{macro=}
 %<doc>%% from the key-value input, leaving the rest as overrides.
 %<doc>%% ====================================================================
 
 \tl_new:N   \l__props_decl_parent_tl
 \tl_new:N   \l__props_decl_overrides_tl
 
-\keys_define:nn { props / declare-type-special }
+\keys_define:nn { props / declare-style-special }
   {
-    type   .tl_set:N = \l__props_decl_parent_tl ,
+    style  .tl_set:N = \l__props_decl_parent_tl ,
     macro  .tl_set:N = \l__props_decl_macro_tl ,
   }
 
 %<doc>%% ====================================================================
-%<doc>%% \cs{SetItemType}\marg{name}\marg{key=value}
+%<doc>%% \cs{SetPropStyle}\marg{name}\marg{key=value}
 %<doc>%% ====================================================================
 
-\NewDocumentCommand \SetItemType { m m }
+\NewDocumentCommand \SetPropStyle { m m }
   {
-    %% Separate type= and macro= from the rest.
+    %% Separate style= and macro= from the rest.
     \tl_clear:N \l__props_decl_parent_tl
     \tl_clear:N \l__props_decl_macro_tl
-    \keys_set_known:nnN { props / declare-type-special }
+    \keys_set_known:nnN { props / declare-style-special }
       { #2 } \l__props_decl_overrides_tl
-    %% If the type already exists and no new parent was given,
+    %% If the style already exists and no new parent was given,
     %% preserve existing parent and prepend existing overrides
     %% so that unspecified keys keep their previous values.
-    \tl_if_exist:cT { g__props_type_ #1 _parent_tl }
+    \tl_if_exist:cT { g__props_style_ #1 _parent_tl }
       {
         \tl_if_empty:NT \l__props_decl_parent_tl
           {
             \tl_set_eq:Nc \l__props_decl_parent_tl
-              { g__props_type_ #1 _parent_tl }
+              { g__props_style_ #1 _parent_tl }
           }
-        \tl_set_eq:Nc \l_tmpa_tl { g__props_type_ #1 _overrides_tl }
+        \tl_set_eq:Nc \l_tmpa_tl { g__props_style_ #1 _overrides_tl }
         \tl_if_empty:NF \l_tmpa_tl
           {
             \tl_put_left:Nn \l__props_decl_overrides_tl { , }
@@ -1289,17 +1317,17 @@
           }
       }
     %% Store parent + merged overrides.
-    \__props_store_type:n { #1 }
+    \__props_store_style:n { #1 }
     %% Create macro command if specified.
     \tl_if_empty:NF \l__props_decl_macro_tl
       { \exp_args:NV \__props_define_macro:Nn \l__props_decl_macro_tl { #1 } }
-    %% If this is the equation type and hooks are active, sync them.
+    %% If this is the equation style and hooks are active, sync them.
     \str_if_eq:nnT { #1 } { equation }
       { \bool_if:NT \g__props_eqhooks_bool { \__props_sync_equation_hooks: } }
   }
 
 %<doc>%% ====================================================================
-%<doc>%% l3keys: special keys for \cs{DeclareNumberedType}
+%<doc>%% l3keys: special keys for \cs{DeclareNumberedStyle}
 %<doc>%% ====================================================================
 
 \tl_new:N \l__props_numdecl_parent_tl
@@ -1311,10 +1339,10 @@
   }
 
 %<doc>%% ====================================================================
-%<doc>%% \cs{DeclareNumberedType}\marg{name}\oarg{keys}
+%<doc>%% \cs{DeclareNumberedStyle}\marg{name}\oarg{keys}
 %<doc>%% ====================================================================
 
-\NewDocumentCommand \DeclareNumberedType { m O{} }
+\NewDocumentCommand \DeclareNumberedStyle { m O{} }
   {
     %% Separate side-effect keys (parent, macro) from overrides.
     \tl_clear:N \l__props_numdecl_parent_tl
@@ -1326,15 +1354,15 @@
     %% Set parent counter
     \tl_if_empty:NF \l__props_numdecl_parent_tl
       { \exp_args:NnV \@addtoreset { #1 } \l__props_numdecl_parent_tl }
-    %% Define \the<counter> (default: typename + arabic)
+    %% Define \the<counter> (default: stylename + arabic)
     \cs_gset:cpn { the#1 } { #1 \arabic{#1} }
-    %% Register as item type.
+    %% Register as a style.
     %% Prepend format=(#1) as default (user keys override it).
-    %% Append counter=<name> so it always wins (the counter IS the type name).
+    %% Append counter=<name> so it always wins (the counter IS the style name).
     \tl_clear:N \l__props_decl_parent_tl
     \tl_put_left:Nn \l__props_decl_overrides_tl { format=(##1), }
     \tl_put_right:Nn \l__props_decl_overrides_tl { , counter=#1 }
-    \__props_store_type:n { #1 }
+    \__props_store_style:n { #1 }
     %% Define macro command if specified
     \tl_if_empty:NF \l__props_decl_macro_tl
       { \exp_args:NV \__props_define_macro:Nn \l__props_decl_macro_tl { #1 } }
@@ -1347,7 +1375,7 @@
 \keys_define:nn { props / pitem }
   {
     name        .tl_set:N = \l__props_name_tl ,
-    type        .tl_set:N = \l__props_type_tl ,
+    style       .tl_set:N = \l__props_style_tl ,
     counter     .tl_set:N = \l__props_counter_tl ,
     counter~format .code:n =
       {
@@ -1396,16 +1424,15 @@
   }
 
 %<doc>%% ====================================================================
-%<doc>%% Shared item resolution (used by both \pitem and \ptag)
+%<doc>%% Shared item resolution (used by both \item within prop and \ptag)
 %<doc>%% ====================================================================
 
 \cs_new_protected:Nn \__props_resolve_item:n
   {
-    %% --- Reset per-item state ---
-    %% Phase 0: clear fields used by type resolution to empty.
-    %% The type/name/counter must be empty so the resolver can
-    %% distinguish "user set" from "default".
-    \tl_clear:N   \l__props_type_tl
+    %% --- Phase 0: clear sentinel fields ---
+    %% style/name/counter must be empty so the resolver can
+    %% distinguish "user-set" from "inherited default".
+    \tl_clear:N   \l__props_style_tl
     \tl_clear:N   \l__props_name_tl
     \tl_clear:N   \l__props_counter_tl
     \tl_clear:N   \l__props_label_tl
@@ -1421,45 +1448,59 @@
           { \keys_set:nn { props / pitem } { name = {#1} } }
       }
 
-    %% --- Resolve type ---
-    %% If the user didn't specify type=, infer it:
-    %%   - name or counter given -> use default type (or ptag type)
-    %%   - nothing given -> use default nameless type (or ptag nameless type)
-    \tl_if_empty:NT \l__props_type_tl
+    %% --- Resolve style ---
+    %% If the user didn't specify style=, infer it:
+    %%   - name or counter given -> use named style (or ptag named style)
+    %%   - nothing given -> use nameless style (or ptag nameless style)
+    %% Env-level style (\l__props_env_style_tl) takes precedence over
+    %% the global named/nameless defaults, but not over explicit user style=.
+    \tl_if_empty:NT \l__props_style_tl
       {
         \bool_lazy_or:nnTF
           { ! \tl_if_empty_p:N \l__props_name_tl }
           { ! \tl_if_empty_p:N \l__props_counter_tl }
           {
-            %% Name or counter given -> default type.
+            %% Name or counter given -> named style.
             \bool_lazy_and:nnTF
               { \l__props_ptag_bool }
-              { ! \tl_if_empty_p:N \l__props_default_ptag_type_tl }
-              { \tl_set_eq:NN \l__props_type_tl \l__props_default_ptag_type_tl }
-              { \tl_set_eq:NN \l__props_type_tl \l__props_default_type_tl }
+              { ! \tl_if_empty_p:N \l__props_named_ptag_style_tl }
+              { \tl_set_eq:NN \l__props_style_tl \l__props_named_ptag_style_tl }
+              {
+                \tl_if_empty:NTF \l__props_env_style_tl
+                  { \tl_set_eq:NN \l__props_style_tl \l__props_named_style_tl }
+                  { \tl_set_eq:NN \l__props_style_tl \l__props_env_style_tl }
+              }
           }
           {
-            %% Nothing specified -> default nameless type.
+            %% Nothing specified -> nameless style.
             \bool_lazy_and:nnTF
               { \l__props_ptag_bool }
-              { ! \tl_if_empty_p:N \l__props_default_ptag_nameless_type_tl }
-              { \tl_set_eq:NN \l__props_type_tl \l__props_default_ptag_nameless_type_tl }
-              { \tl_set_eq:NN \l__props_type_tl \l__props_default_nameless_type_tl }
+              { ! \tl_if_empty_p:N \l__props_nameless_ptag_style_tl }
+              { \tl_set_eq:NN \l__props_style_tl \l__props_nameless_ptag_style_tl }
+              {
+                \tl_if_empty:NTF \l__props_env_style_tl
+                  { \tl_set_eq:NN \l__props_style_tl \l__props_nameless_style_tl }
+                  { \tl_set_eq:NN \l__props_style_tl \l__props_env_style_tl }
+              }
           }
       }
 
-    %% --- Phase 2: load type preset (sets counter, formats, etc.) ---
-    %% Set all locals to defaults BEFORE loading the type chain.
-    %% The chain's overrides will overwrite only the fields they set.
+    %% --- Phase 2: load style preset (sets counter, formats, etc.) ---
+    %% Reset all item locals to structural defaults first.
     \__props_decl_reset:
-    %% x-expand resolves \proplevelchoice in the type name (or in
-    %% a live parent stored in the default nameless type variable).
-    \tl_set:Nx \l__props_type_tl { \l__props_type_tl }
-    \__props_type_load:
+
+    %% --- Phase 2.5: apply env-level item-key defaults ---
+    %% These sit between decl_reset (structural defaults) and style_load
+    %% (style preset), so the style preset overrides them.
+    \tl_if_empty:NF \l__props_env_item_keys_tl
+      { \exp_args:NnV \keys_set:nn { props / pitem } \l__props_env_item_keys_tl }
+
+    %% x-expand resolves \proplevelchoice in the style name.
+    \tl_set:Nx \l__props_style_tl { \l__props_style_tl }
+    \__props_style_load:
 
     %% --- Phase 3: re-apply user keys on top of preset ---
-    %% This lets explicit keys like counter= or ref format= override
-    %% the values inherited from the type.
+    %% Explicit keys like counter= or ref format= override the style.
     \tl_if_empty:nF { #1 }
       {
         \tl_if_in:nnTF { #1 } { = }
@@ -1468,30 +1509,22 @@
       }
 
     %% --- Expand counter name ---
-    %% Resolve any \proplevelchoice in the counter name.
     \tl_set:Nx \l__props_counter_tl { \l__props_counter_tl }
+
     %% --- Determine display text ---
-    %% counter_tl is now the type's counter (or the user's override).
-    %% "none" means this is a text item (no counter); anything else is
-    %% the name of a LaTeX counter to step and display.
+    %% "none" = text item (no counter); otherwise step and display.
     \tl_if_eq:NnTF \l__props_counter_tl { none }
       {
-        %% Text item: display text = name
         \tl_set_eq:NN \l__props_display_text_tl \l__props_name_tl
       }
       {
-        %% Numbered item: step counter and display \the<counter>,
-        %% but only when no explicit name was given.
         \cs_if_exist:cTF { c@ \l__props_counter_tl }
           {
             \tl_if_empty:NTF \l__props_name_tl
               {
-                %% No explicit name — step the counter and use its value.
-                %% In ptag mode inside an equation (not align/gather), the
-                %% environment already stepped the equation counter via
-                %% \incr@eqnum.  We skip our step to avoid a gap.
-                %% In align/gather, no per-row step happens, so we step.
-                %% For non-equation counters (e.g. P), always step.
+                %% No explicit name — step the counter and format its value.
+                %% In ptag mode inside a plain equation (not align/gather), the
+                %% environment already stepped the counter; skip our step.
                 \bool_if:NTF \l__props_ptag_bool
                   {
                     \tl_if_eq:NnTF \l__props_counter_tl { equation }
@@ -1505,21 +1538,10 @@
                       { \stepcounter { \l__props_counter_tl } }
                   }
                   { \stepcounter { \l__props_counter_tl } }
-                \bool_if:NTF \l__props_has_counter_format_bool
-                  {
-                    \protected@edef \l__props_name_tl
-                      { \l__props_counterfmt:n { \l__props_counter_tl } }
-                  }
-                  {
-                    \protected@edef \l__props_name_tl
-                      { \use:c { the \l__props_counter_tl } }
-                  }
+                \__props_format_label_from_counter:
               }
-              {
-                %% Explicit name — skip the counter step entirely.
-              }
-            \protected@edef \l__props_display_text_tl
-              { \l__props_name_tl }
+              { }  %% Explicit name — skip counter step entirely.
+            \protected@edef \l__props_display_text_tl { \l__props_name_tl }
           }
           {
             \msg_error:nnx { props } { unknown-counter }
@@ -1538,34 +1560,52 @@
       }
       { \tl_set_eq:NN \l__props_ref_text_tl \l__props_ref_tl }
 
-    %% --- Apply display format to display text ---
+    %% --- Build item_output_tl (display label) ---
+    \__props_build_item_output:
+  }
+
+%<doc>%% ====================================================================
+%<doc>%% Helpers for label formatting (shared between resolve and preview)
+%<doc>%% ====================================================================
+
+%<doc>%% Format \cs{l__props_name_tl} from the current counter value.
+%<doc>%% Called after counter stepping and after manual counter adjustment
+%<doc>%% in preview computation.  Assumes all format functions are set.
+\cs_new_protected:Nn \__props_format_label_from_counter:
+  {
+    \bool_if:NTF \l__props_has_counter_format_bool
+      {
+        \protected@edef \l__props_name_tl
+          { \l__props_counterfmt:n { \l__props_counter_tl } }
+      }
+      {
+        \protected@edef \l__props_name_tl
+          { \use:c { the \l__props_counter_tl } }
+      }
+  }
+
+%<doc>%% Build \cs{l__props_item_output_tl} from the already-computed
+%<doc>%% \cs{l__props_display_text_tl}, applying display format, shorthand,
+%<doc>%% gloss, and label format.  Shared between resolve and preview.
+\cs_new_protected:Nn \__props_build_item_output:
+  {
     \protected@edef \l__props_item_output_tl
       { \l__props_displayfmt:n { \l__props_display_text_tl } }
-
-    %% --- Append shorthand to display if present ---
     \tl_if_empty:NF \l__props_shorthand_tl
       {
         \protected@edef \l_tmpa_tl
           { \l__props_shorthandfmt:n { \l__props_shorthand_tl } }
         \tl_put_right:NV \l__props_item_output_tl \l_tmpa_tl
       }
-
-    %% --- Append gloss to display if present ---
     \tl_if_empty:NF \l__props_gloss_tl
       {
         \protected@edef \l_tmpa_tl
           { \l__props_glossfmt:n { \l__props_gloss_tl } }
         \tl_put_right:NV \l__props_item_output_tl \l_tmpa_tl
       }
-
-    %% --- Apply label format to the assembled label ---
     \protected@edef \l__props_item_output_tl
       { \l__props_labelfmt:n { \l__props_item_output_tl } }
   }
-
-%<doc>%% ====================================================================
-%<doc>%% Ref-append helpers (shared by \item and \ptag)
-%<doc>%% ====================================================================
 
 %<doc>%% ====================================================================
 %<doc>%% Core proposition-item logic (called by the local \item in prop/inlineprop)
@@ -1593,6 +1633,8 @@
           { \setcounter { numpropv } { 0 } }
       }
     \__props_output_item:
+    %% Update \propformlabel to reflect the label just produced.
+    \protected@edef \propformlabel { \l__props_item_output_tl }
     \__props_set_ref:
     \tl_if_empty:NF \l__props_label_tl
       { \exp_args:NV \label \l__props_label_tl }
@@ -1772,14 +1814,14 @@
 %<doc>%% ====================================================================
 
 %<doc>%% Sync the equation hooks (\cs{tagform@} and \cs{p@equation}) with the
-%<doc>%% current definition of the \texttt{equation} item type.
-%<doc>%% Called automatically when \cs{SetItemType}\texttt{\{equation\}\{...\}}
+%<doc>%% current definition of the \texttt{equation} prop style.
+%<doc>%% Called automatically when \cs{SetPropStyle}\texttt{\{equation\}\{...\}}
 %<doc>%% is used while the hooks are active.
 \cs_new_protected:Nn \__props_sync_equation_hooks:
   {
     \__props_decl_reset:
-    \tl_set:Nn \l__props_type_tl { equation }
-    \__props_type_load:
+    \tl_set:Nn \l__props_style_tl { equation }
+    \__props_style_load:
     \cs_set_eq:NN \__props_eqdispfmt:n \l__props_displayfmt:n
     \cs_set_eq:NN \__props_eqreffmt:n  \l__props_reffmt:n
   }
@@ -2145,6 +2187,79 @@
   { \l__props_item_output_tl }
 
 %<doc>%% ====================================================================
+%<doc>%% \propformlabel — formatted preview label, set at \begin{prop} and
+%<doc>%% after each \item.  Expand it in list-dimension expressions, e.g.
+%<doc>%% leftmargin=\widthof{\propformlabel}.
+%<doc>%% ====================================================================
+
+\NewDocumentCommand \propformlabel { } { }
+
+%<doc>%% ====================================================================
+%<doc>%% \__props_style_apply_global:n — walk a style's parent chain and
+%<doc>%% apply its overrides through props/global.  Known global keys (list
+%<doc>%% dimensions, tightspacing, etc.) are set directly; unknown keys
+%<doc>%% (item-level keys) are collected by the props/global unknown handler
+%<doc>%% into \l__props_env_item_keys_tl.
+%<doc>%% ====================================================================
+
+\cs_new_protected:Nn \__props_style_apply_global:n
+  {
+    \tl_if_exist:cT { g__props_style_ #1 _parent_tl }
+      {
+        %% Apply parent chain first.
+        \tl_set_eq:Nc \l_tmpa_tl { g__props_style_ #1 _parent_tl }
+        \tl_if_empty:NF \l_tmpa_tl
+          {
+            \tl_set:Nx \l_tmpa_tl { \l_tmpa_tl }
+            \exp_args:NV \__props_style_apply_global:n \l_tmpa_tl
+          }
+        %% Then apply this style's overrides through props/global.
+        \tl_set_eq:Nc \l_tmpa_tl { g__props_style_ #1 _overrides_tl }
+        \tl_if_empty:NF \l_tmpa_tl
+          { \exp_args:NnV \keys_set:nn { props / global } \l_tmpa_tl }
+      }
+  }
+
+%<doc>%% ====================================================================
+%<doc>%% \__props_compute_env_preview: — compute \propformlabel at env open.
+%<doc>%% Resolves what a bare \item would produce with the current env defaults,
+%<doc>%% accounting for items=n (preview shows the n-th item label so that
+%<doc>%% e.g. leftmargin=\widthof{\propformlabel} is wide enough for all items).
+%<doc>%% Counter steps are undone; only \propformlabel is affected.
+%<doc>%% ====================================================================
+
+\cs_new_protected:Nn \__props_compute_env_preview:
+  {
+    \group_begin:
+      %% Resolve a bare item with env defaults applied.
+      %% This steps the relevant counter (globally); we undo it below.
+      \__props_resolve_item:n { }
+      %% Adjust for items > 1: advance counter by (items-1) and reformat.
+      \tl_if_eq:NnF \l__props_style_tl { none }  %% skip for text-only styles
+        {
+          \tl_if_eq:NnF \l__props_counter_tl { none }
+            {
+              \int_compare:nNnF { \l__props_env_items_int } = { 1 }
+                {
+                  \exp_args:Nxx \addtocounter { \l__props_counter_tl }
+                    { \int_eval:n { \l__props_env_items_int - 1 } }
+                  \__props_format_label_from_counter:
+                  \protected@edef \l__props_display_text_tl { \l__props_name_tl }
+                  \__props_build_item_output:
+                }
+              %% Undo all counter steps (total: items steps).
+              \exp_args:Nxx \addtocounter { \l__props_counter_tl }
+                { \int_eval:n { -\l__props_env_items_int } }
+            }
+        }
+      %% Save preview label globally so it survives group end.
+      \tl_gset_eq:NN \g__props_env_preview_label_tl \l__props_item_output_tl
+    \group_end:
+    %% Define \propformlabel to expand to the computed label.
+    \protected@edef \propformlabel { \g__props_env_preview_label_tl }
+  }
+
+%<doc>%% ====================================================================
 %<doc>%% The prop environment
 %<doc>%% ====================================================================
 
@@ -2219,7 +2334,14 @@
     \seq_gpush:NV \g__props_parent_tpl_seq \g__props_last_tpl_tl
     \seq_gpush:NV \g__props_parent_cnt_seq \g__props_last_cnt_tl
     \bool_gset_true:N \g__props_display_mode_bool
-    %% Apply per-environment overrides; reject global-only keys.
+    %% Clear env-level item defaults before processing env arg.
+    \tl_clear:N  \l__props_env_item_keys_tl
+    \tl_clear:N  \l__props_env_style_tl
+    \int_set:Nn  \l__props_env_items_int { 1 }
+    %% Apply per-environment overrides.  Known global keys are processed
+    %% normally; unknown item-level keys are collected by the unknown
+    %% handler into \l__props_env_item_keys_tl.  Global-only keys
+    %% (equations) are filtered out with a warning.
     \keys_set_filter:nnnN { props / global } { global-only }
       { #1 } \l_tmpa_tl
     \tl_if_empty:NF \l_tmpa_tl
@@ -2227,6 +2349,8 @@
         \msg_warning:nnx { props } { global-only-keys }
           { \l_tmpa_tl }
       }
+    %% Compute the preview label for \propformlabel (used in list dims).
+    \__props_compute_env_preview:
     %% Consecutive-list joining: if the previous environment was a prop
     %% with continue=true, and this one also has continue=true, and no
     %% paragraph text has intervened (flag still set), cancel the
@@ -2423,7 +2547,11 @@
     %% Push last item's template/content onto parent stacks
     \seq_gpush:NV \g__props_parent_tpl_seq \g__props_last_tpl_tl
     \seq_gpush:NV \g__props_parent_cnt_seq \g__props_last_cnt_tl
-    %% Apply per-environment overrides; reject global-only keys.
+    %% Clear env-level item defaults before processing env arg.
+    \tl_clear:N  \l__props_env_item_keys_tl
+    \tl_clear:N  \l__props_env_style_tl
+    \int_set:Nn  \l__props_env_items_int { 1 }
+    %% Apply per-environment overrides (same routing as prop).
     \keys_set_filter:nnnN { props / global } { global-only }
       { #1 } \l_tmpa_tl
     \tl_if_empty:NF \l_tmpa_tl
@@ -2431,6 +2559,8 @@
         \msg_warning:nnx { props } { global-only-keys }
           { \l_tmpa_tl }
       }
+    %% Compute the preview label for \propformlabel.
+    \__props_compute_env_preview:
     %% Locally redefine \item as the proposition-item command.
     \cs_set_eq:NN \item \__props_item_cmd:
   }
@@ -2566,18 +2696,24 @@
 
 \keys_define:nn { props / global }
   {
-    default~type              .tl_set:N = \l__props_default_type_tl ,
-    default~ptag~type         .tl_set:N = \l__props_default_ptag_type_tl ,
-    default~nameless~type     .tl_set:N = \l__props_default_nameless_type_tl ,
-    default~ptag~nameless~type .tl_set:N = \l__props_default_ptag_nameless_type_tl ,
+    named~style               .tl_set:N = \l__props_named_style_tl ,
+    named~ptag~style          .tl_set:N = \l__props_named_ptag_style_tl ,
+    nameless~style            .tl_set:N = \l__props_nameless_style_tl ,
+    nameless~ptag~style       .tl_set:N = \l__props_nameless_ptag_style_tl ,
     equations         .code:n      =
       {
         \bool_gset_true:N \g__props_equations_bool
         \bool_gset_true:N \g__props_eqhooks_bool
-        \tl_set:Nn \l__props_default_nameless_type_tl { eqnum }
+        \tl_set:Nn \l__props_nameless_style_tl { eqnum }
       } ,
     equations         .default:n   = { true } ,
     equations         .groups:n    = { global-only } ,
+    style             .code:n      =
+      {
+        \tl_set:Nn \l__props_env_style_tl { #1 }
+        \__props_style_apply_global:n { #1 }
+      } ,
+    items             .int_set:N   = \l__props_env_items_int ,
     tightspacing      .code:n      =
       {
         \tl_set:Nn \l__props_topsep_tl     { 2\p@ \@plus\p@ \@minus\p@ }
@@ -2605,13 +2741,33 @@
     itemindent        .tl_set:N    = \l__props_itemindent_tl ,
     listparindent     .tl_set:N    = \l__props_listparindent_tl ,
     labelindent       .tl_set:N    = \l__props_labelindent_tl ,
+    %% Item-level keys and /.style suffix — handled by unknown handler.
+    unknown           .code:n      =
+      {
+        %% /.style is 7 chars: /, ., s, t, y, l, e
+        \str_if_eq:eeTF
+          { \str_range:Nnn \l_keys_key_str { -7 } { -1 } } { /.style }
+          {
+            %% pgfkeys-like: propoptions{foo/.style={...}} -> \SetPropStyle{foo}{...}
+            \tl_set:Nx \l_tmpa_tl
+              { \str_range:Nnn \l_keys_key_str { 1 } { -8 } }
+            \exp_args:NV \SetPropStyle \l_tmpa_tl { #1 }
+          }
+          {
+            %% Collect as env-level item-key default for this environment.
+            \tl_if_empty:NF \l__props_env_item_keys_tl
+              { \tl_put_right:Nn \l__props_env_item_keys_tl { , } }
+            \tl_put_right:Nx \l__props_env_item_keys_tl
+              { \str_use:N \l_keys_key_str = { \exp_not:n { #1 } } }
+          }
+      } ,
   }
 
 %<doc>%% \cs{proplevelchoice}\marg{item1,item2,\ldots}
 %<doc>%% picks the entry at position \cs{g__props_level_int}
 %<doc>%% (the current \texttt{prop}/\texttt{inlineprop} nesting depth).
 %<doc>%% If the depth exceeds the list length, the last entry is used.
-%<doc>%% Useful in the \texttt{name} key of item types that should vary
+%<doc>%% Useful in the \texttt{name} key of prop styles that should vary
 %<doc>%% their symbol with nesting depth.
 \NewExpandableDocumentCommand \proplevelchoice { m }
   {
@@ -2627,8 +2783,8 @@
 %<doc>%% Default global settings (set before options so user options override)
 %<doc>%% ====================================================================
 
-\tl_set:Nn \l__props_default_type_tl { proposition }
-\tl_set:Nn \l__props_default_nameless_type_tl { numbered }
+\tl_set:Nn \l__props_named_style_tl { proposition }
+\tl_set:Nn \l__props_nameless_style_tl { numbered }
 
 %<doc>%% ====================================================================
 %<doc>%% Package options (processed via l3keys)
@@ -2640,31 +2796,31 @@
 %<doc>%% Default type declarations
 %<doc>%% ====================================================================
 
-\SetItemType { plain }
+\SetPropStyle { plain }
   {
     format      = #1 ,
   }
 
-\SetItemType { proposition }
+\SetPropStyle { proposition }
   {
     format      = \textbf{#1} ,
   }
 
-\SetItemType { thesis }
+\SetPropStyle { thesis }
   {
     format         = \textsc{#1} ,
     align          = flush ,
     macro          = \titem ,
   }
 
-\SetItemType { vignette }
+\SetPropStyle { vignette }
   {
     ref~format     = \textit{#1} ,
     align          = flush ,
     label~format   = \textit{#1:} ,
   }
 
-\SetItemType { bullet }
+\SetPropStyle { bullet }
   {
     align          = center ,
     name           = \proplevelchoice {
@@ -2677,9 +2833,9 @@
     macro          = \bitem ,
   }
 
-%% levelone: the standard level-1 numbered type.
+%% levelone: the standard level-1 numbered style.
 \newcounter { numpropi }
-\SetItemType { levelone }
+\SetPropStyle { levelone }
   {
     counter     = numpropi ,
     format      = (#1) ,
@@ -2687,32 +2843,32 @@
 
 %% equation: uses the equation counter.
 %% When the equations option is active, the equation hooks
-%% (\tagform@ and \p@equation) are synced from this type's formats.
-\SetItemType { equation }
+%% (\tagform@ and \p@equation) are synced from this style's formats.
+\SetPropStyle { equation }
   {
     counter        = equation ,
     format         = (#1) ,
   }
 
-%% numbered: dispatches to the level-appropriate type via live parent.
-\SetItemType { numbered }
+%% numbered: dispatches to the level-appropriate style via live parent.
+\SetPropStyle { numbered }
   {
-    type = \proplevelchoice {
-             levelone , leveltwo , levelthree , levelfour , levelfive } ,
+    style = \proplevelchoice {
+              levelone , leveltwo , levelthree , levelfour , levelfive } ,
   }
 
 %% eqnum: like numbered, but uses equation counter at level 1.
-\SetItemType { eqnum }
+\SetPropStyle { eqnum }
   {
-    type = \proplevelchoice {
-             equation , leveltwo , levelthree , levelfour , levelfive } ,
+    style = \proplevelchoice {
+              equation , leveltwo , levelthree , levelfour , levelfive } ,
   }
 
 %<doc>%% ====================================================================
-%<doc>%% Default numbered types
+%<doc>%% Default numbered styles
 %<doc>%% ====================================================================
 
-\DeclareNumberedType { roman }
+\DeclareNumberedStyle { roman }
   [
     parent         = section ,
     counter~format = \roman{#1} ,
@@ -2721,7 +2877,7 @@
   ]
 \cs_gset:Npn \theroman { \roman { roman } }
 
-\DeclareNumberedType { alph }
+\DeclareNumberedStyle { alph }
   [
     parent         = section ,
     counter~format = \alph{#1} ,
@@ -2732,7 +2888,7 @@
 
 \newcounter { numpropii }
 \cs_gset:Npn \thenumpropii { \alph { numpropii } }
-\SetItemType { leveltwo }
+\SetPropStyle { leveltwo }
   {
     counter        = numpropii ,
     display~format = #1. ,
@@ -2741,7 +2897,7 @@
 
 \newcounter { numpropiii }
 \cs_gset:Npn \thenumpropiii { \roman { numpropiii } }
-\SetItemType { levelthree }
+\SetPropStyle { levelthree }
   {
     counter        = numpropiii ,
     display~format = (#1) ,
@@ -2750,7 +2906,7 @@
 
 \newcounter { numpropiv }
 \cs_gset:Npn \thenumpropiv { \Alph { numpropiv } }
-\SetItemType { levelfour }
+\SetPropStyle { levelfour }
   {
     counter        = numpropiv ,
     display~format = #1. ,
@@ -2759,7 +2915,7 @@
 
 \newcounter { numpropv }
 \cs_gset:Npn \thenumpropv { \Roman { numpropv } }
-\SetItemType { levelfive }
+\SetPropStyle { levelfive }
   {
     counter        = numpropv ,
     display~format = (#1) ,
@@ -2768,14 +2924,14 @@
 
 %% hierarchical: 1, 1.1, 1.1.1, ... numbering using \parentref.
 %% h-base handles level 1 (no parent); h-sub handles levels 2+.
-\SetItemType { h-base }
+\SetPropStyle { h-base }
   {
     counter        = numpropi ,
     counter~format = \arabic{#1} ,
     format         = #1 ,
   }
 
-\SetItemType { h-sub }
+\SetPropStyle { h-sub }
   {
     counter        = \proplevelchoice {
                        numpropi , numpropii , numpropiii ,
@@ -2784,9 +2940,9 @@
     format         = \parentref{.#1} ,
   }
 
-\SetItemType { hierarchical }
+\SetPropStyle { hierarchical }
   {
-    type = \proplevelchoice { h-base , h-sub } ,
+    style = \proplevelchoice { h-base , h-sub } ,
   }
 
 %    \end{macrocode}

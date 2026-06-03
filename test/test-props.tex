@@ -6,7 +6,7 @@
 
 \newtheorem{theorem}{Theorem}
 
-\DeclareNumberedType{P}
+\DeclareNumberedStyle{P}
 
 \begin{document}
 
@@ -26,8 +26,8 @@ Cleveref test: \cref{propP} and \cref{propQ}.
 \subsection{Long items}
 
 \begin{prop}
-  \pitem[type=thesis, Physicalism] Everything is physical. \label{phys}
-  \pitem[type=thesis, Dualism] Mind and body are distinct. \label{dual}
+  \pitem[style=thesis, Physicalism] Everything is physical. \label{phys}
+  \pitem[style=thesis, Dualism] Mind and body are distinct. \label{dual}
 \end{prop}
 
 Reference test: \ref{phys} and \ref{dual}.
@@ -102,7 +102,7 @@ Ref to modified: \ref{myP3prime}.
 
 \section{References in item names}
 \begin{prop}
-    \pitem[type=thesis, name={Problems with \ref{myP3}}]
+    \pitem[style=thesis, name={Problems with \ref{myP3}}]
     Some problem. \label{P3problem}
     \pitem[name={\oref[*]{myP3}}]
     A new version. \label{P3star}
@@ -138,7 +138,7 @@ Ref to full: \ref{fe} (should be (FE) --- shorthand becomes ref).
 
 \begin{prop}
   \pitem[name={Brack}, ref format={[#1]}] A bracketed item. \label{brk}
-  \pitem[type=thesis, Thesis] A long-format item. \label{thesis}
+  \pitem[style=thesis, Thesis] A long-format item. \label{thesis}
 \end{prop}
 
 Ref to bracketed: \ref{brk} (should be [Brack]).
@@ -206,7 +206,7 @@ Ref: \ref{eq:ptag1} (should be (P4)).
 \subsection{Named long ptag}
 
 \begin{equation}
-  F = ma \ptag[type=thesis, name={Newton's~Law}] \label{eq:newton}
+  F = ma \ptag[style=thesis, name={Newton's~Law}] \label{eq:newton}
 \end{equation}
 
 Ref: \ref{eq:newton} (should be \textsc{Newton's~Law}).
@@ -470,7 +470,7 @@ Ref: \ref{eq:before} (should be (44), parenthesized).
 
 %% Simulate an axiom section: bold display, plain ref, counter reset.
 \begingroup
-\SetItemType{equation}{display format=\textbf{M#1},
+\SetPropStyle{equation}{display format=\textbf{M#1},
              ref format=M#1}
 \setcounter{equation}{0}
 
