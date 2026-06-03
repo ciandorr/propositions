@@ -80,6 +80,7 @@
 \tl_new:N   \l__props_item_output_tl     %% formatted display (displayfmt + shorthand + gloss)
 \bool_new:N \l__props_ptag_bool          %% true during \ptag processing
 \bool_new:N \l__props_titlecase_bool    %% true when \Ref etc. want titlecasing
+\bool_new:N \l__props_reset_bool        %% true (default) = reset sub-level counter on \pitem
 
 \seq_new:N \g__props_parent_tpl_seq
 \seq_new:N \g__props_parent_cnt_seq
@@ -278,6 +279,8 @@
     gloss           .tl_set:N  = \l__props_gloss_tl ,
     gloss~format    .cs_set:Np = \l__props_glossfmt:n #1 ,
     crefname        .tl_set:N  = \l__props_crefname_tl ,
+    reset           .bool_set:N = \l__props_reset_bool ,
+    reset           .default:n  = { true } ,
     macro           .tl_set:N  = \l__props_decl_macro_tl ,
   }
 
@@ -332,6 +335,7 @@
     \tl_clear:N \l__props_shorthand_tl
     \tl_clear:N \l__props_gloss_tl
     \tl_clear:N \l__props_crefname_tl
+    \bool_set_true:N \l__props_reset_bool
   }
 
 
@@ -458,6 +462,8 @@
     gloss~format    .cs_set:Np = \l__props_glossfmt:n #1 ,
     crefname        .tl_set:N = \l__props_crefname_tl ,
     label           .tl_set:N = \l__props_label_tl ,
+    reset       .bool_set:N = \l__props_reset_bool ,
+    reset       .default:n  = { true } ,
     unknown     .code:n =
       {
         %% The key NAME is the proposition name (e.g., \pitem[P] -> key "P")
@@ -638,20 +644,23 @@
       { \msg_error:nn { props } { pitem-outside-env } }
     \mode_if_math:T
       { \msg_error:nn { props } { pitem-in-math } }
-    %% Reset the sub-level counter one level below the current level.
-    %% This is done in \pitem (not \begin{prop}) so that a plain \item
-    %% can skip the reset, enabling intertext between sub-items.
-    \int_compare:nNnT { \g__props_level_int } = { 1 }
-      { \setcounter { numpropii } { 0 } }
-    \int_compare:nNnT { \g__props_level_int } = { 2 }
-      { \setcounter { numpropiii } { 0 } }
-    \int_compare:nNnT { \g__props_level_int } = { 3 }
-      { \setcounter { numpropiv } { 0 } }
-    \int_compare:nNnT { \g__props_level_int } = { 4 }
-      { \setcounter { numpropv } { 0 } }
     \IfValueTF { #1 }
       { \__props_resolve_item:n { #1 } }
       { \__props_resolve_item:n { } }
+    %% Reset the sub-level counter one level below the current level.
+    %% Skipped when reset=false (or by a plain \item), enabling intertext
+    %% between sub-items or continuation numbering across parent items.
+    \bool_if:NT \l__props_reset_bool
+      {
+        \int_compare:nNnT { \g__props_level_int } = { 1 }
+          { \setcounter { numpropii } { 0 } }
+        \int_compare:nNnT { \g__props_level_int } = { 2 }
+          { \setcounter { numpropiii } { 0 } }
+        \int_compare:nNnT { \g__props_level_int } = { 3 }
+          { \setcounter { numpropiv } { 0 } }
+        \int_compare:nNnT { \g__props_level_int } = { 4 }
+          { \setcounter { numpropv } { 0 } }
+      }
     \__props_output_item:
     \__props_set_ref:
     \tl_if_empty:NF \l__props_label_tl

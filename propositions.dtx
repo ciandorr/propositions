@@ -318,7 +318,16 @@
 % \begin{docKey}{crefname}{=\meta{type}}{no default}
 %   When \textsf{cleveref} is loaded, assigns an arbitrary reference type to this proposition.  For example, \texttt{crefname=lemma} causes \cs{cref} to use the names defined by \cs{crefname}\texttt{\{lemma\}\{...\}\{...\}} instead of the default \texttt{proposition} type.  The \meta{type} must be known to \textsf{cleveref}; new types can be declared with \cs{crefname}.
 % \end{docKey}
-% 
+%
+% \begin{docKey}{reset}{=\meta{boolean}}{initially \texttt{true}}
+%   When \texttt{true} (the default), processing this \cs{pitem} resets the
+%   sub-level counter one nesting depth below the current level
+%   (e.g.\ \texttt{numpropii} at level~1).  Set \texttt{reset=false} to
+%   suppress this reset, so that sub-item numbering continues from where it
+%   left off across consecutive parent items.  Can also be set in a type
+%   definition via \refCom{SetItemType}.
+% \end{docKey}
+%
 % % \begin{docKey}{align}{=\meta{type}}{no default}
 %   How the label should be positioned.  Possible values: \texttt{left} (standard left-aligned label, offset controlled by \cs{labelwidth} and \cs{labelsep}), \texttt{right} (right-aligned, like \texttt{enumerate}), \texttt{center} (centered within the label box), \texttt{flush} (aligned with left margin of item text), \texttt{nextline} (label on its own line), and \texttt{flush-nextline}.
 %   Has no effect inside \texttt{inlineprop} or \cs{ptag}.
@@ -874,6 +883,7 @@
 \tl_new:N   \l__props_item_output_tl     %% formatted display (displayfmt + shorthand + gloss)
 \bool_new:N \l__props_ptag_bool          %% true during \ptag processing
 \bool_new:N \l__props_titlecase_bool    %% true when \Ref etc. want titlecasing
+\bool_new:N \l__props_reset_bool        %% true (default) = reset sub-level counter on \pitem
 
 %<doc>%% --- Parent-ref stacks and last-item storage ---
 %<doc>%% Two global seq stacks hold the template/content of the parent item.
@@ -1162,6 +1172,8 @@
     gloss           .tl_set:N  = \l__props_gloss_tl ,
     gloss~format    .cs_set:Np = \l__props_glossfmt:n #1 ,
     crefname        .tl_set:N  = \l__props_crefname_tl ,
+    reset           .bool_set:N = \l__props_reset_bool ,
+    reset           .default:n  = { true } ,
     macro           .tl_set:N  = \l__props_decl_macro_tl ,
   }
 
@@ -1227,6 +1239,7 @@
     \tl_clear:N \l__props_shorthand_tl
     \tl_clear:N \l__props_gloss_tl
     \tl_clear:N \l__props_crefname_tl
+    \bool_set_true:N \l__props_reset_bool
   }
 
 %<doc>%% ====================================================================
@@ -1369,6 +1382,8 @@
     gloss~format    .cs_set:Np = \l__props_glossfmt:n #1 ,
     crefname        .tl_set:N = \l__props_crefname_tl ,
     label           .tl_set:N = \l__props_label_tl ,
+    reset       .bool_set:N = \l__props_reset_bool ,
+    reset       .default:n  = { true } ,
     unknown     .code:n =
       {
         %% The key NAME is the proposition name (e.g., \pitem[P] -> key "P")
@@ -1558,20 +1573,23 @@
       { \msg_error:nn { props } { pitem-outside-env } }
     \mode_if_math:T
       { \msg_error:nn { props } { pitem-in-math } }
-    %% Reset the sub-level counter one level below the current level.
-    %% This is done in \pitem (not \begin{prop}) so that a plain \item
-    %% can skip the reset, enabling intertext between sub-items.
-    \int_compare:nNnT { \g__props_level_int } = { 1 }
-      { \setcounter { numpropii } { 0 } }
-    \int_compare:nNnT { \g__props_level_int } = { 2 }
-      { \setcounter { numpropiii } { 0 } }
-    \int_compare:nNnT { \g__props_level_int } = { 3 }
-      { \setcounter { numpropiv } { 0 } }
-    \int_compare:nNnT { \g__props_level_int } = { 4 }
-      { \setcounter { numpropv } { 0 } }
     \IfValueTF { #1 }
       { \__props_resolve_item:n { #1 } }
       { \__props_resolve_item:n { } }
+    %% Reset the sub-level counter one level below the current level.
+    %% Skipped when reset=false (or by a plain \item), enabling intertext
+    %% between sub-items or continuation numbering across parent items.
+    \bool_if:NT \l__props_reset_bool
+      {
+        \int_compare:nNnT { \g__props_level_int } = { 1 }
+          { \setcounter { numpropii } { 0 } }
+        \int_compare:nNnT { \g__props_level_int } = { 2 }
+          { \setcounter { numpropiii } { 0 } }
+        \int_compare:nNnT { \g__props_level_int } = { 3 }
+          { \setcounter { numpropiv } { 0 } }
+        \int_compare:nNnT { \g__props_level_int } = { 4 }
+          { \setcounter { numpropv } { 0 } }
+      }
     \__props_output_item:
     \__props_set_ref:
     \tl_if_empty:NF \l__props_label_tl
