@@ -1,0 +1,253 @@
+\documentclass{article}
+\usepackage{hyperref}
+\usepackage{amsmath}
+\usepackage{calc}           % for \widthof in dimension expressions
+\usepackage{propositions}
+
+\DeclareNumberedStyle{P}
+
+% A wide-label style for propformlabel demos
+\SetPropStyle{widelevelone}{
+  counter     = numpropi,
+  format      = Item~(#1),
+}
+
+\begin{document}
+
+% ============================================================
+\section{Env-level \texttt{style=}}
+% ============================================================
+
+% style= at env level sets \l__props_env_style_tl.  This is used in the
+% style-resolution step for every \item that doesn't give its own style=.
+
+\subsection{All items thesis style}
+
+% The two lists below should look identical.
+
+Via env-level \texttt{style=thesis}:
+\begin{prop}[style=thesis]
+  \item[Hypothesis A] First. \label{ea:A}
+  \item[Hypothesis B] Second. \label{ea:B}
+\end{prop}
+
+Via per-item \texttt{style=thesis}:
+\begin{prop}
+  \item[style=thesis, Hypothesis A] First.
+  \item[style=thesis, Hypothesis B] Second.
+\end{prop}
+
+Refs: \ref{ea:A}, \ref{ea:B}.
+
+\subsection{Env style for nameless items}
+
+% style= at env level is used whether or not a name is given.
+% Here all nameless items use the widelevelone style instead of
+% the usual levelone.
+
+\begin{prop}[style=widelevelone]
+  \item First (should be ``Item~(1)'').     \label{eb:1}
+  \item Second (should be ``Item~(2)'').    \label{eb:2}
+\end{prop}
+
+Refs: \ref{eb:1}, \ref{eb:2}.
+
+\subsection{Per-item \texttt{style=} overrides env style}
+
+\begin{prop}[style=thesis]
+  \item[Hypothesis C] Thesis style (from env).
+  \item[style=proposition, Override] Proposition style (per item overrides env).
+\end{prop}
+
+% ============================================================
+\section{Env-level item-key defaults}
+% ============================================================
+
+% Non-style keys in the env arg are collected into \l__props_env_item_keys_tl
+% and applied in phase 2.5 (BEFORE style_load).  This means the style can
+% override them.  Keys that the style does not set survive to display time.
+
+\subsection{Important ordering note}
+
+% The style resolution step only sees keys set in phase 1 (the item's own
+% optional arg), not the env defaults (phase 2.5).  So:
+%
+%   \begin{prop}[name=foo]\item bar
+%
+% resolves to the NAMELESS style (because name is empty in phase 1), then
+% applies name=foo in phase 2.5.  Result: name "foo" formatted as "(foo)"
+% by the levelone style.  The counter is NOT stepped (name non-empty).
+%
+%   \begin{prop}\item[name=foo] bar
+%
+% resolves to the NAMED style (proposition, bold) because name is set in
+% phase 1.  Result: \textbf{foo}.
+%
+% These are different!  To get the same result as item-level name=foo,
+% combine with an explicit env-level style=:
+
+``\verb|\begin{prop}[name=foo]|'' (nameless style chosen; counter not stepped):
+\begin{prop}[name=foo]
+  \item bar
+\end{prop}
+
+``\verb|\begin{prop}\item[name=foo]|'' (named style; proposition bold):
+\begin{prop}
+  \item[name=foo] bar
+\end{prop}
+
+``\verb|\begin{prop}[style=proposition, name=foo]|'' (same as item-level):
+\begin{prop}[style=proposition, name=foo]
+  \item bar
+\end{prop}
+
+\subsection{counter= as env default (combined with style=)}
+
+% counter= as an env default survives style load when the style does not
+% set counter.  Use style=proposition (which sets only format, not counter).
+
+Via env-level \texttt{counter=P} and \texttt{style=proposition}:
+\begin{prop}[style=proposition, counter=P]
+  \item \label{ec:P1}  % steps P, displays bold P-number
+  \item \label{ec:P2}
+\end{prop}
+
+Via per-item \texttt{counter=P}:
+\begin{prop}
+  \item[counter=P] \label{ec:P3}
+  \item[counter=P] \label{ec:P4}
+\end{prop}
+
+Refs: \ref{ec:P1}, \ref{ec:P2}, \ref{ec:P3}, \ref{ec:P4}.
+
+\subsection{Per-item key overrides env default}
+
+\begin{prop}[style=proposition, counter=P]
+  \item First P. \label{ec2:first}
+  \item[counter=numpropi] This item uses numpropi instead. \label{ec2:np}
+  \item Back to P. \label{ec2:back}
+\end{prop}
+
+Refs: \ref{ec2:first} (P), \ref{ec2:np} (numpropi), \ref{ec2:back} (P).
+
+% ============================================================
+\section{\texttt{propformlabel} and \texttt{items=}}
+% ============================================================
+
+% \propformlabel is computed at \begin{prop} (and \begin{inlineprop})
+% from a preview item resolution with the current env settings.
+% It is updated after each \item to reflect the most recently output label.
+%
+% The items= key says how many items to advance the counter before
+% computing the preview label, so propformlabel reflects the label
+% that will appear after approximately that many items.
+%
+% Because \propformlabel is set before the list dimensions are applied,
+% it can be used directly in leftmargin, labelwidth, etc.
+
+\subsection{Basic use: leftmargin from first label}
+
+% With a numbered style, propformlabel at open is the label for item 1.
+% leftmargin=\widthof{\propformlabel}+0.5em sizes the margin to that label.
+
+Preview label is ``\propformlabel'' (before any prop).
+
+\begin{prop}[leftmargin=\widthof{\propformlabel}+0.5em]
+  \item At open, label previewed as ``\propformlabel''. \label{pfl:1}
+  \item After first item, \texttt{\string\propformlabel} = ``\propformlabel''. \label{pfl:2}
+  \item After second item, \texttt{\string\propformlabel} = ``\propformlabel''. \label{pfl:3}
+\end{prop}
+
+\subsection{items= for a longer list: size for last expected label}
+
+% When items=20, the preview label is what would appear as the 20th item:
+% e.g. "(20)".  This gives enough left margin for the widest label.
+
+\begin{prop}[items=20, leftmargin=\widthof{\propformlabel}+0.5em]
+  \item Margin is sized for ``\propformlabel'' (shown at open). \label{pfl:long1}
+  \item Second item. \label{pfl:long2}
+  \item Third item. \label{pfl:long3}
+\end{prop}
+
+After the list the counter has advanced by 3 (not 20).
+
+\subsection{propformlabel with a named style}
+
+% propformlabel also works with named styles that use counters.
+
+\begin{prop}[style=proposition, counter=P, items=5,
+             leftmargin=\widthof{\propformlabel}+0.5em]
+  \item First P with sized margin.   \label{pfl:P1}
+  \item Second P with sized margin.  \label{pfl:P2}
+\end{prop}
+
+Refs: \ref{pfl:P1}, \ref{pfl:P2}.
+
+\subsection{propformlabel with widelevelone}
+
+% Shows that propformlabel adapts to the style's format.
+% With widelevelone, the label is ``Item (n)''; items=9 previews ``Item (9)''.
+
+\begin{prop}[style=widelevelone, items=9,
+             leftmargin=\widthof{\propformlabel}+0.5em]
+  \item First (margin sized for ``Item~(9)''). \label{pfl:w1}
+  \item Second. \label{pfl:w2}
+\end{prop}
+
+\subsection{Using propformlabel with labelindent}
+
+% labelindent places the left edge of the label at a given distance
+% from the enclosing margin.  Here we size it to zero and let leftmargin
+% be determined by the label width.
+
+\begin{prop}[style=widelevelone, items=5,
+             labelindent=0em,
+             leftmargin=\widthof{\propformlabel}+\labelsep]
+  \item First (flush label, margin = label width + labelsep). \label{pfl:li1}
+  \item Second. \label{pfl:li2}
+\end{prop}
+
+% ============================================================
+\section{pgfkeys-like \texttt{/.style} syntax}
+% ============================================================
+
+% New styles can be created via \propoptions{name/.style={keys}},
+% equivalent to \SetPropStyle{name}{keys}.
+
+\propoptions{angle/.style={
+  display format = \textbf{$\langle$#1$\rangle$},
+  ref format     = $\langle$#1$\rangle$
+}}
+
+\begin{prop}
+  \item[style=angle, Obtuse] An angle item. \label{angle:obtuse}
+  \item[style=angle, Acute]  Another. \label{angle:acute}
+\end{prop}
+
+Refs: \ref{angle:obtuse}, \ref{angle:acute}.
+
+% Same style, via env-level style=:
+\begin{prop}[style=angle]
+  \item[Right]  Right angle. \label{angle:right}
+  \item[Reflex] Reflex angle. \label{angle:reflex}
+\end{prop}
+
+Refs: \ref{angle:right}, \ref{angle:reflex}.
+
+% ============================================================
+\section{Global default style changes}
+% ============================================================
+
+% named style= changes which style is used for items with a given name
+% (but no explicit style=).
+
+\propoptions{named style=thesis}
+\begin{prop}
+  \item[First Claim] Should now be thesis style (small-caps, flush). \label{gs:A}
+  \item[Second Claim] Also thesis. \label{gs:B}
+\end{prop}
+\propoptions{named style=proposition}   % restore default
+
+Refs: \ref{gs:A}, \ref{gs:B}.
+
+\end{document}
