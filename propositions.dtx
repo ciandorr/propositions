@@ -228,25 +228,24 @@
 % \end{example}
 %
 % \section{The \texttt{prop} environment and \cs{pitem}}
-% \label{sect:keys}
 %
 % \begin{docEnvironment}{prop}{\oarg{keys}}
-%   Creates a displayed list of propositions.  It is a standard \LaTeX{} list, so by default its formatting will depend on the standard length parameters like \cs{itemsep} and \cs{topsep}, although these can be overridden by setting package keys.
+%   Creates a displayed list of propositions.  It is a standard \LaTeX{} list, so by default its formatting will depend on the standard length parameters like \cs{itemsep} and \cs{topsep}, although these can be overridden by setting keys.
 %
 %   Within \texttt{prop}, \cs{pitem} (see below) creates labelled items.  The ordinary \cs{item} command is still available for unlabelled items.
 %
 %   Any display math environment (|\equation|, |align|, etc.) used inside \texttt{prop} or \texttt{inlineprop} automatically increments the nesting level for its duration, so that \cs{ptag} inside such an environment behaves as if it were one level deeper.
 %
-%   The optional \meta{keys} argument accepts the same keys as \refCom{propoptions} (\autoref{sect:global}), with effects local to this environment.
+%   The optional \meta{keys} argument accepts the same keys as \refCom{propoptions} (\autoref{sect:keys}), with effects local to this environment.
 % \end{docEnvironment}
 %
 % \begin{docEnvironment}{inlineprop}{\oarg{keys}}
 %   Like \texttt{prop}, but does not create a list.  Allows \cs{pitem} to be used outside list environments, e.g.\ for generating numbers at the beginning of paragraphs.  Steps the \texttt{prop} counter and increments the nesting level.  Accepts the same optional \meta{keys} as \texttt{prop}.
 % \end{docEnvironment}
 %
-% Within \texttt{prop} and \texttt{inlineprop}, \cs{item} is redefined to act as the proposition-item command.  Its optional argument is a comma-separated list of \meta{key}=\meta{value} pairs (the keys are described below).  A bare string without \texttt{=} is treated as a proposition name.
+% Within \texttt{prop} and \texttt{inlineprop}, \cs{item} is redefined to act as the proposition-item command.  Its optional argument is a comma-separated list of \meta{key}=\meta{value} pairs (see \autoref{sect:keys}).  A bare string without \texttt{=} is treated as a proposition name.
 %
-% When used without an optional argument (or without setting \texttt{name}, \texttt{counter}, or \texttt{style}), the style is determined by the \texttt{nameless style} key (\autoref{sect:global}).  By default this is \texttt{numbered}, which dispatches by nesting depth to \texttt{levelone}, \texttt{leveltwo}, \ldots\ via \cs{proplevelchoice}.
+% When used without an optional argument (or without setting \texttt{name}, \texttt{counter}, or \texttt{style}), the style is determined by the \texttt{nameless style} key (\autoref{sect:keys}).  By default this is \texttt{numbered}, which dispatches by nesting depth to \texttt{levelone}, \texttt{leveltwo}, \ldots\ via \cs{proplevelchoice}.
 %
 % \begin{docCommand}[doc description=deprecated]{pitem}{\oarg{keys}}
 %   Deprecated alias for \cs{item} within \texttt{prop} or \texttt{inlineprop}.
@@ -257,7 +256,17 @@
 %   (Available only when \textsf{amsmath} is loaded.)  Works inside displayed math environments like \texttt{equation} and \texttt{align}.  Accepts the same keys as \cs{item} within \texttt{prop}, except that \texttt{align} has no effect (since positioning is controlled by the tag placement system).
 % \end{docCommand}
 %
-% The following keys can be used in the optional argument of |\item| (within \texttt{prop} or \texttt{inlineprop}) or the argument of |\ptag|:
+% \section{Keys}\label{sect:keys}
+%
+% Most keys are available in three contexts:
+% \begin{itemize}
+%   \item In the optional argument of |\item| or |\ptag|: the key applies to that item only.
+%   \item In the optional argument of \texttt{prop} or \texttt{inlineprop}: list-dimension keys (\autoref{sect:keys-dims}) take effect immediately for the whole list; other keys act as per-item defaults, applied before each item's own explicit keys.
+%   \item Via \refCom{propoptions} or as a \cs{usepackage} option: the key applies globally.
+% \end{itemize}
+% Keys in \autoref{sect:keys-item} are meaningful only at item level.  The \texttt{equations} key is global only (\autoref{sect:keys-equations}).
+%
+% \subsection{Item-level keys}\label{sect:keys-item}
 %
 % \begin{docKey}{name}{=\meta{text}}{no default}
 %   The proposition's name.  A bare string (without \texttt{=}) in the key list is equivalent to \texttt{name=}\meta{text}.
@@ -331,23 +340,97 @@
 %   definition via \refCom{SetPropStyle}.
 % \end{docKey}
 %
-% % \begin{docKey}{align}{=\meta{type}}{no default}
+% \begin{docKey}{align}{=\meta{value}}{no default}
 %   How the label should be positioned.  Possible values: \texttt{left} (standard left-aligned label, offset controlled by \cs{labelwidth} and \cs{labelsep}), \texttt{right} (right-aligned, like \texttt{enumerate}), \texttt{center} (centered within the label box), \texttt{flush} (aligned with left margin of item text), \texttt{nextline} (label on its own line), and \texttt{flush-nextline}.
 %   Has no effect inside \texttt{inlineprop} or \cs{ptag}.
 %   For left-margin alignment, use \texttt{labelindent=0em} instead.
 % \end{docKey}
 %
+% \subsection{List dimensions}\label{sect:keys-dims}
+%
+% These keys are effective in all three contexts.  At item level, a dimension key applies only to the label of that specific item; at environment and global level it applies to the whole list.
+%
 % \begin{docKeys}[
-%     doc parameter = {=\meta{length}},
+%     doc parameter = {=\meta{length / length list}},
 %   ]
 %   {
+%     { doc name = topsep },
+%     { doc name = partopsep },
+%     { doc name = itemsep },
+%     { doc name = parsep },
+%     { doc name = leftmargin },
+%     { doc name = rightmargin },
+%     { doc name = labelwidth },
 %     { doc name = labelsep },
 %     { doc name = itemindent },
 %     { doc name = listparindent },
-%     { doc name = labelindent },
 %   }
-% These keys override the settings of the corresponding list dimensions just for the relevant \cs{pitem}.  For the role of \texttt{labelindent} (which determines the distance from enclosing left margin to the left edge of the label box), see the corresponding package option.
+%   Override the standard \LaTeX{} list dimensions.  Accept the same values as \cs{setlength}, including rubber lengths (e.g.\ \texttt{itemsep=4pt plus 2pt}).  Each key may also take a comma-separated list of per-level values: e.g.\ \texttt{leftmargin=\{2.5em, 0em\}}.  The first value applies at level~1, the second at level~2, etc.  Gaps in the list (e.g.\ \texttt{leftmargin=\{, 0em\}}) cause the class default to be used for that level.
 % \end{docKeys}
+%
+% \begin{docKey}{labelindent}{=\meta{length / length list}}{no default}
+%   Positions the left edge of the label box at \meta{length} from the enclosing margin, adjusting \cs{labelwidth}, \cs{leftmargin}, \cs{labelsep}, or \cs{itemindent} as needed.  (Since the value of any one of these dimensions can be derived from those of the other four, it never makes sense to set all five.)
+% \end{docKey}
+%
+% \begin{docKey}{tightspacing}{}{no value}
+%   Sets all vertical spacing to the compact defaults that the standard document classes use for level-three lists (\texttt{topsep} and \texttt{itemsep} to \texttt{2pt} with stretch/shrink, \texttt{parsep} to \texttt{0pt}, \texttt{partopsep} to \texttt{1pt}).  Individual dimension keys set afterward override.
+% \end{docKey}
+%
+% \begin{docKey}{nosep}{}{no value}
+%   Sets \cs{topsep}, \cs{itemsep}, and \cs{parsep} all to zero.
+% \end{docKey}
+%
+% \begin{docKey}{continue}{=\meta{boolean}}{initially \texttt{true}}
+%   When \texttt{true}, a \texttt{prop} environment that
+%   immediately follows another \texttt{prop} (with no intervening
+%   paragraph text) replaces the normal \cs{topsep}-based inter-list
+%   space with \cs{itemsep}\,+\,\cs{parsep}, giving the visual
+%   appearance of a single continuous list.
+% \end{docKey}
+%
+% \subsection{Default styles}\label{sect:keys-defaults}
+%
+% When \cs{pitem} or \cs{ptag} is used without an explicit \texttt{style}, one of the following defaults is selected based on whether a name/counter was given and whether ptag mode is active.
+%
+% \begin{docKey}{named style}{=\meta{style}}{initially \texttt{proposition}}
+%   The style used when a \texttt{name} or \texttt{counter} is given but no explicit \texttt{style}.
+% \end{docKey}
+%
+% \begin{docKey}{named ptag style}{=\meta{style}}{initially empty}
+%   If set, overrides \texttt{named style} for \cs{ptag} items only.
+% \end{docKey}
+%
+% \begin{docKey}{nameless style}{=\meta{style}}{initially \texttt{numbered}}
+%   The style used when \cs{pitem} or \cs{ptag} has no optional argument (no name, counter, or style).
+% \end{docKey}
+%
+% \begin{docKey}{nameless ptag style}{=\meta{style}}{initially empty}
+%   If set, overrides \texttt{nameless style} for \cs{ptag} items only.
+% \end{docKey}
+%
+% \subsection{Environment-level style and item defaults}\label{sect:keys-env}
+%
+% \begin{docKey}{style}{=\meta{style}}{no default}
+%   Sets a default style for all \cs{item}s in this environment.  The style's list-dimension keys (|leftmargin|, |labelwidth|, etc.) take effect immediately for the whole list; item-level keys are applied as defaults for each \cs{item}.  An explicit |style=| on an individual \cs{item} overrides this default.
+% \end{docKey}
+%
+% \begin{docKey}{items}{=\meta{n}}{initially \texttt{1}}
+%   Indicates that approximately \meta{n} items are expected.  Used only to compute \refCom{propformlabel}: the preview label is formatted as if \meta{n}~items had already appeared.  Has no effect on actual item processing.
+% \end{docKey}
+%
+% \begin{docCommand}{propformlabel}{}
+%   Expands to the formatted label of the first (or \texttt{items}-th) item expected in this environment, computed at |\begin{prop}|.  Useful for setting list dimensions that depend on label width, e.g.\ \texttt{leftmargin=\cs{widthof}\{\cs{propformlabel}\}}.  Updated after each \cs{item} to reflect the most recently output label.
+% \end{docCommand}
+%
+% \subsection{Equation numbering}\label{sect:keys-equations}
+%
+% \begin{docKey}{equations}{}{no value, \textbf{global only}}
+%   Sets \texttt{nameless style\,=\,eqnum} and installs hooks so that the \LaTeX\ and \textsf{amstex} displayed equation environments (such as \texttt{equation} and \texttt{align}) use the same formatting as the \texttt{equation} prop style.  The \texttt{equation} style's \texttt{display format} and \texttt{ref format} keys are used for generating equation numbers and cross-references to them.  Redefining the \texttt{equation} style, e.g.~with
+%\begin{codebox}
+% \SetPropStyle{equation}{format = [#1]}
+%\end{codebox}
+%   will automatically update the hooks.
+% \end{docKey}
 %
 % \section{Prop styles}\label{sect:styles}
 %
@@ -711,98 +794,8 @@
 % \section{Package options}\label{sect:global}
 %
 % \begin{docCommand}{propoptions}{\marg{keys}}
-%   Sets package-level keys.  These can also be set:
-%   \begin{itemize}
-%     \item In the optional argument of \texttt{prop} and \texttt{inlineprop} (local to that environment).
-%     \item In the preamble with \cs{usepackage}\texttt{[}\meta{options}\texttt{]\{propositions\}} (global).
-%   \end{itemize}
+%   Sets package-level keys (see \autoref{sect:keys}).  These can also be set in the optional argument of \texttt{prop} or \texttt{inlineprop} (local to that environment), or as options to \cs{usepackage} (global).
 % \end{docCommand}
-%
-%   \emph{Exception:} \texttt{equations} is a global key; it cannot be used in the optional argument of \texttt{prop} or \texttt{inlineprop}.
-% 
-% \subsection{List dimensions}
-%
-% \begin{docKeys}[
-%     doc parameter = {=\meta{length / length list}},
-%   ]
-%   {
-%     { doc name = topsep },
-%     { doc name = partopsep },
-%     { doc name = itemsep },
-%     { doc name = parsep },
-%     { doc name = leftmargin },
-%     { doc name = rightmargin },
-%     { doc name = labelwidth },
-%     { doc name = labelsep },
-%     { doc name = itemindent },
-%     { doc name = listparindent },
-%   }
-%   Override the standard \LaTeX{} list dimensions.  Accept the same values as \cs{setlength}, including rubber lengths (e.g.\ \texttt{itemsep=4pt plus 2pt}).  Each key may also take a comma-separated list of per-level values: e.g.\ \texttt{leftmargin=\{2.5em, 0em\}}.  The first value applies at level~1, the second at level~2, etc.  Gaps in the list (e.g.\ \texttt{leftmargin=\{, 0em\}}) cause the class default to be used for that level.
-% \end{docKeys}
-%
-% \begin{docKey}{labelindent}{=\meta{length / length list}}{no default}
-%   Positions the left edge of the label box at \meta{length} from the enclosing margin, adjusting \cs{labelwidth}, \cs{leftmargin}, \cs{labelsep}, or \cs{itemindent} as needed.  (Since the value of any one of these dimensions can be derived from those of the other four, it never makes sense to set all five.)
-% \end{docKey}
-%
-% \begin{docKey}{tightspacing}{}{no value}
-%   Sets all vertical spacing to the compact defaults that the standard document classes use for level-three lists (\texttt{topsep} and \texttt{itemsep} to \texttt{2pt} with stretch/shrink, \texttt{parsep} to \texttt{0pt}, \texttt{partopsep} to \texttt{1pt}).  Individual dimension keys set afterward override.
-% \end{docKey}
-%
-% \begin{docKey}{nosep}{}{no value}
-%   Sets \cs{topsep}, \cs{itemsep}, and \cs{parsep} all to zero.
-% \end{docKey}
-%
-% \begin{docKey}{continue}{=\meta{boolean}}{initially \texttt{true}}
-%   When \texttt{true}, a \texttt{prop} environment that
-%   immediately follows another \texttt{prop} (with no intervening
-%   paragraph text) replaces the normal \cs{topsep}-based inter-list
-%   space with \cs{itemsep}\,+\,\cs{parsep}, giving the visual
-%   appearance of a single continuous list.
-% \end{docKey}
-%
-% \subsection{Default styles}
-%
-% When \cs{pitem} or \cs{ptag} is used without an explicit \texttt{style}, one of the following defaults is selected based on whether a name/counter was given and whether ptag mode is active.
-%
-% \begin{docKey}{named style}{=\meta{style}}{initially \texttt{proposition}}
-%   The style used when a \texttt{name} or \texttt{counter} is given but no explicit \texttt{style}.
-% \end{docKey}
-%
-% \begin{docKey}{named ptag style}{=\meta{style}}{initially empty}
-%   If set, overrides \texttt{named style} for \cs{ptag} items only.
-% \end{docKey}
-%
-% \begin{docKey}{nameless style}{=\meta{style}}{initially \texttt{numbered}}
-%   The style used when \cs{pitem} or \cs{ptag} has no optional argument (no name, counter, or style).
-% \end{docKey}
-%
-% \begin{docKey}{nameless ptag style}{=\meta{style}}{initially empty}
-%   If set, overrides \texttt{nameless style} for \cs{ptag} items only.
-% \end{docKey}
-%
-% \subsection{Environment-level style and item defaults}
-%
-% \begin{docKey}{style}{=\meta{style}}{no default}
-%   Sets a default style for all \cs{item}s in this environment.  The style's list-dimension keys (|leftmargin|, |labelwidth|, etc.) take effect immediately for the whole list; item-level keys are applied as defaults for each \cs{item}.  An explicit |style=| on an individual \cs{item} overrides this default.
-% \end{docKey}
-%
-% \begin{docKey}{items}{=\meta{n}}{initially \texttt{1}}
-%   Indicates that approximately \meta{n} items are expected.  Used only to compute \refCom{propformlabel}: the preview label is formatted as if \meta{n}~items had already appeared.  Has no effect on actual item processing.
-% \end{docKey}
-%
-% \begin{docCommand}{propformlabel}{}
-%   Expands to the formatted label of the first (or \texttt{items}-th) item expected in this environment, computed at |\begin{prop}|.  Useful for setting list dimensions that depend on label width, e.g.\ \texttt{leftmargin=\cs{widthof}\{\cs{propformlabel}\}}.  Updated after each \cs{item} to reflect the most recently output label.
-% \end{docCommand}
-%
-% \subsection{Equation numbering}
-%
-% \begin{docKey}{equations}{}{no value, \textbf{global only}}
-%   Sets \texttt{nameless style\,=\,eqnum} and installs hooks so that the \LaTeX\ and \textsf{amstex} displayed equation environments (such as \texttt{equation} and \texttt{align}) use the same formatting as the \texttt{equation} prop style.  The \texttt{equation} style's \texttt{display format} and \texttt{ref format} keys are used for generating equation numbers and cross-references to them.  Redefining the \texttt{equation} style, e.g.~with
-%\begin{codebox}
-% \SetPropStyle{equation}{format = [#1]}
-%\end{codebox}
-%   will automatically update the hooks.
-% \end{docKey}
 %
 % \section{Compatibility}
 %
