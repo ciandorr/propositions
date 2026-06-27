@@ -462,7 +462,6 @@
 %
 % If the style \meta{name} already exists, |\SetPropStyle| modifies or adds keys.  For example, |\SetPropStyle{proposition}{align=flush}| changes the alignment of the built-in |proposition| style while preserving its other settings.
 %
-% Styles can also be created with a \textsf{pgfkeys}-like syntax via \refCom{propoptions}: \cs{propoptions}\texttt{\{}\meta{name}\texttt{/.style=\{}\meta{keys}\texttt{\}\}} is equivalent to \cs{SetPropStyle}\texttt{\{}\meta{name}\texttt{\}\{}\meta{keys}\texttt{\}}.
 %
 % \begin{example}
 % \SetPropStyle{angle}{
@@ -913,10 +912,6 @@
 \int_new:N \l__props_env_items_int      %% items=n key (default 1; used by preview computation)
 \int_set:Nn \l__props_env_items_int { 1 }
 \tl_new:N  \g__props_env_preview_label_tl %% preview label built at env open for \propformlabel
-\tl_new:N  \l__props_propoptions_name_tl      %% working var for /.style preprocessing
-\tl_new:N  \l__props_propoptions_tmp_tl       %% working var for /.style preprocessing
-\tl_new:N  \l__props_propoptions_remaining_tl %% non-/.style keys accumulated for keys_set
-\bool_new:N \l__props_propoptions_has_remaining_bool
 
 %<doc>%% --- Parent-ref stacks and last-item storage ---
 %<doc>%% Two global seq stacks hold the template/content of the parent item.
@@ -2773,67 +2768,8 @@
         { \int_min:nn { \g__props_level_int } { \clist_count:n { #1 } } } }
   }
 
-%<doc>%% \cs{__props_propoptions:n} scans the key list before passing it to
-%<doc>%% \cs{keys_set:nn}.  l3keys treats \texttt{/} as a sub-namespace separator,
-%<doc>%% so \texttt{name/.style=\{keys\}} would navigate to a non-existent
-%<doc>%% \texttt{props/global/name} namespace.  We intercept those entries first.
-\cs_new_protected:Nn \__props_propoptions:n
-  {
-    \tl_clear:N \l__props_propoptions_remaining_tl
-    \bool_set_false:N \l__props_propoptions_has_remaining_bool
-    \clist_map_inline:nn { #1 }
-      {
-        \str_set:Nn \l_tmpa_str { ##1 }
-        \str_if_in:NnTF \l_tmpa_str { /.style }
-          { \__props_propoptions_style:n { ##1 } }
-          { \__props_propoptions_rest:n  { ##1 } }
-      }
-    \bool_if:NT \l__props_propoptions_has_remaining_bool
-      { \exp_args:NnV \keys_set:nn { props / global }
-          \l__props_propoptions_remaining_tl }
-  }
-
-\cs_new_protected:Nn \__props_propoptions_rest:n
-  {
-    \bool_if:NTF \l__props_propoptions_has_remaining_bool
-      { \tl_put_right:Nn \l__props_propoptions_remaining_tl { , } }
-      { \bool_set_true:N \l__props_propoptions_has_remaining_bool }
-    \tl_put_right:Nn \l__props_propoptions_remaining_tl { #1 }
-  }
-
-\cs_new_protected:Nn \__props_propoptions_style:n
-  {
-    %% #1 = "name/.style = {keys}"; extract name then strip the prefix.
-    \tl_set:Nn \l__props_propoptions_tmp_tl { #1 }
-    \regex_extract_once:nnNTF { \A \s* ([^\s/]+) } { #1 } \l_tmpa_seq
-      {
-        \tl_set:Nx \l__props_propoptions_name_tl
-          { \seq_item:Nn \l_tmpa_seq { 2 } }
-        \regex_replace_once:nnN
-          { \A \s* [^\s/]+ \s* /\.style \s* = \s* }
-          { }
-          \l__props_propoptions_tmp_tl
-        \exp_args:NV \__props_propoptions_apply_style:n
-          \l__props_propoptions_name_tl
-      }
-      { \__props_propoptions_rest:n { #1 } }
-  }
-
-%% V-expand name_tl → {name} → #1 = name.
-\cs_new_protected:Nn \__props_propoptions_apply_style:n
-  {
-    \exp_args:NnV \__props_propoptions_call_set_style:nn { #1 }
-      \l__props_propoptions_tmp_tl
-  }
-
-%% #1 = name,  #2 = {value} tokens from V-expansion (with outer catcode-1/2 braces).
-%% Writing \SetPropStyle { #1 } #2 — without extra {..} — lets the catcode-1 brace
-%% in #2 act as the m-type argument delimiter, stripping exactly one brace layer.
-\cs_new_protected:Nn \__props_propoptions_call_set_style:nn
-  { \SetPropStyle { #1 } #2 }
-
 \NewDocumentCommand \propoptions { m }
-  { \__props_propoptions:n { #1 } }
+  { \keys_set:nn { props / global } { #1 } }
 
 %<doc>%% ====================================================================
 %<doc>%% Default global settings (set before options so user options override)

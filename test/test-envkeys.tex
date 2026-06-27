@@ -208,33 +208,6 @@ Refs: \ref{pfl:P1}, \ref{pfl:P2}.
 \end{prop}
 
 % ============================================================
-\section{pgfkeys-like \texttt{/.style} syntax}
-% ============================================================
-
-% New styles can be created via \propoptions{name/.style={keys}},
-% equivalent to \SetPropStyle{name}{keys}.
-
-\propoptions{angle/.style={
-  display format = \textbf{$\langle$#1$\rangle$},
-  ref format     = $\langle$#1$\rangle$
-}}
-
-\begin{prop}
-  \item[style=angle, Obtuse] An angle item. \label{angle:obtuse}
-  \item[style=angle, Acute]  Another. \label{angle:acute}
-\end{prop}
-
-Refs: \ref{angle:obtuse}, \ref{angle:acute}.
-
-% Same style, via env-level style=:
-\begin{prop}[style=angle]
-  \item[Right]  Right angle. \label{angle:right}
-  \item[Reflex] Reflex angle. \label{angle:reflex}
-\end{prop}
-
-Refs: \ref{angle:right}, \ref{angle:reflex}.
-
-% ============================================================
 \section{Global default style changes}
 % ============================================================
 
