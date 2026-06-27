@@ -264,7 +264,7 @@
 %   \item In the optional argument of \texttt{prop} or \texttt{inlineprop}: list-dimension keys (\autoref{sect:keys-dims}) take effect immediately for the whole list; other keys act as per-item defaults, applied before each item's own explicit keys.
 %   \item Via \refCom{propoptions} or as a \cs{usepackage} option: the key applies globally.
 % \end{itemize}
-% Keys in \autoref{sect:keys-item} are meaningful only at item level.  The \texttt{equations} key is global only (\autoref{sect:keys-equations}).
+% Keys in \autoref{sect:keys-item} can also be used in the environment arg as per-item defaults (see the second bullet above), but are \emph{not} effective via \refCom{propoptions} (they are reset at each \verb|\begin{prop}|).  The \texttt{equations} key is global only (\autoref{sect:keys-equations}).
 %
 % \subsection{Item-level keys}\label{sect:keys-item}
 %
@@ -429,6 +429,18 @@
 % \end{docKey}
 %
 % \subsection{Environment-level style and item defaults}\label{sect:keys-env}
+%
+% Any key from \autoref{sect:keys-item} may appear in the optional argument of \texttt{prop} or
+% \texttt{inlineprop}.  It is then applied as a default before each \cs{item} that does not set
+% that key explicitly.  An item-level key always overrides the environment default.
+%
+% \textbf{Important ordering note.}
+% Style selection (which decides whether an item is ``named'' or ``nameless'') is based solely on
+% the item's \emph{own} optional argument, before environment defaults are applied.  Consequently,
+% \verb|\begin{prop}[name=foo]\item bar| produces a \emph{nameless}-style item with label
+% \texttt{(foo)}: the environment default \texttt{name=foo} is not seen during style resolution.
+% To get the equivalent of \verb|\item[name=foo]| (named style, bold), use
+% \verb|\begin{prop}[style=proposition, name=foo]\item bar|.
 %
 % \begin{docKey}{style}{=\meta{style}}{no default}
 %   Sets a default style for all \cs{item}s in this environment.  The style's list-dimension keys (|leftmargin|, |labelwidth|, etc.) take effect immediately for the whole list; item-level keys are applied as defaults for each \cs{item}.  An explicit |style=| on an individual \cs{item} overrides this default.
