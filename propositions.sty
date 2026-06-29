@@ -82,6 +82,8 @@
 \bool_new:N \l__props_titlecase_bool    %% true when \Ref etc. want titlecasing
 \bool_new:N \l__props_reset_bool        %% true (default) = reset sub-level counter on \item
 \tl_new:N  \l__props_env_item_keys_tl   %% non-style item-level keys from env arg (env defaults)
+\tl_new:N  \l__props_propoptions_item_keys_tl  %% item-key defaults from \propoptions (group-scoped via local assignment)
+\bool_new:N \l__props_in_propoptions_bool       %% true while \propoptions (or \ProcessKeyOptions) routes unknowns
 \tl_new:N  \l__props_env_style_tl       %% style= key from env arg (env default style)
 \int_new:N \l__props_env_items_int      %% items=n key (default 1; used by preview computation)
 \int_set:Nn \l__props_env_items_int { 1 }
@@ -543,9 +545,12 @@
     %% Reset all item locals to structural defaults first.
     \__props_decl_reset:
 
-    %% --- Phase 2.5: apply env-level item-key defaults ---
-    %% These sit between decl_reset (structural defaults) and style_load
-    %% (style preset), so the style preset overrides them.
+    %% --- Phase 2.5: apply item-key defaults ---
+    %% propoptions defaults first (lowest priority in this phase),
+    %% then env-arg defaults override them.  Both sit between decl_reset
+    %% and style_load, so the style preset overrides both.
+    \tl_if_empty:NF \l__props_propoptions_item_keys_tl
+      { \exp_args:NnV \keys_set:nn { props / pitem } \l__props_propoptions_item_keys_tl }
     \tl_if_empty:NF \l__props_env_item_keys_tl
       { \exp_args:NnV \keys_set:nn { props / pitem } \l__props_env_item_keys_tl }
 
@@ -1617,13 +1622,23 @@
     itemindent        .tl_set:N    = \l__props_itemindent_tl ,
     listparindent     .tl_set:N    = \l__props_listparindent_tl ,
     labelindent       .tl_set:N    = \l__props_labelindent_tl ,
-    %% Unknown keys are collected as env-level item-key defaults.
+    %% Unknown keys are item-level keys: route to propoptions tl (persistent,
+    %% group-scoped) when inside \propoptions, or to env tl otherwise.
     unknown           .code:n      =
       {
-        \tl_if_empty:NF \l__props_env_item_keys_tl
-          { \tl_put_right:Nn \l__props_env_item_keys_tl { , } }
-        \tl_put_right:Nx \l__props_env_item_keys_tl
-          { \str_use:N \l_keys_key_str = { \exp_not:n { #1 } } }
+        \bool_if:NTF \l__props_in_propoptions_bool
+          {
+            \tl_if_empty:NF \l__props_propoptions_item_keys_tl
+              { \tl_put_right:Nn \l__props_propoptions_item_keys_tl { , } }
+            \tl_put_right:Nx \l__props_propoptions_item_keys_tl
+              { \str_use:N \l_keys_key_str = { \exp_not:n { #1 } } }
+          }
+          {
+            \tl_if_empty:NF \l__props_env_item_keys_tl
+              { \tl_put_right:Nn \l__props_env_item_keys_tl { , } }
+            \tl_put_right:Nx \l__props_env_item_keys_tl
+              { \str_use:N \l_keys_key_str = { \exp_not:n { #1 } } }
+          }
       } ,
   }
 
@@ -1635,14 +1650,20 @@
   }
 
 \NewDocumentCommand \propoptions { m }
-  { \keys_set:nn { props / global } { #1 } }
+  {
+    \bool_set_true:N \l__props_in_propoptions_bool
+    \keys_set:nn { props / global } { #1 }
+    \bool_set_false:N \l__props_in_propoptions_bool
+  }
 
 
 \tl_set:Nn \l__props_named_style_tl { proposition }
 \tl_set:Nn \l__props_nameless_style_tl { numbered }
 
 
+\bool_set_true:N \l__props_in_propoptions_bool
 \ProcessKeyOptions [ props / global ]
+\bool_set_false:N \l__props_in_propoptions_bool
 
 
 \SetPropStyle { plain }

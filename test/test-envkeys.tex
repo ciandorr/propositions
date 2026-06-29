@@ -208,6 +208,81 @@ Refs: \ref{pfl:P1}, \ref{pfl:P2}.
 \end{prop}
 
 % ============================================================
+\section{\texttt{\textbackslash propoptions} item-key defaults}
+% ============================================================
+
+% Item-level keys set via \propoptions persist across environments.
+% They are group-scoped: \begingroup ... \endgroup scopes the effect.
+% Env-arg keys override propoptions keys for that environment.
+
+\subsection{Persistent counter= default}
+
+% \propoptions{counter=P, style=proposition} applies to all following envs.
+% Both envs below should produce bold P-numbered items.
+
+\propoptions{counter=P, style=proposition}
+
+\begin{prop}
+  \item First~P. \label{po:P1}
+  \item Second~P. \label{po:P2}
+\end{prop}
+
+\begin{prop}
+  \item Third~P (continues from previous). \label{po:P3}
+  \item Fourth~P. \label{po:P4}
+\end{prop}
+
+\propoptions{counter=numpropi, style=numbered}   % restore
+
+Refs: \ref{po:P1}, \ref{po:P2}, \ref{po:P3}, \ref{po:P4}.
+
+\subsection{Env-arg overrides propoptions}
+
+% \propoptions{counter=P} sets P as default.
+% The second env overrides with counter=numpropi for that env only.
+
+\propoptions{counter=P, style=proposition}
+
+\begin{prop}
+  \item P-numbered (from propoptions). \label{po:ov1}
+\end{prop}
+\begin{prop}[counter=numpropi, style=numbered]
+  \item numpropi-numbered (env overrides propoptions). \label{po:ov2}
+\end{prop}
+\begin{prop}
+  \item Back to P (propoptions restored). \label{po:ov3}
+\end{prop}
+
+\propoptions{counter=numpropi, style=numbered}  % restore
+
+Refs: \ref{po:ov1} (P), \ref{po:ov2} (numpropi), \ref{po:ov3} (P).
+
+\subsection{Group-scoped \texttt{\textbackslash propoptions}}
+
+% Inside the group, counter=P; outside, the default numpropi is restored.
+
+Before group: numpropi style.
+\begin{prop}
+  \item Numbered item (numpropi). \label{po:gr0}
+\end{prop}
+
+\begingroup
+  \propoptions{counter=P, style=proposition}
+  Inside group: P style.
+  \begin{prop}
+    \item P-numbered (group scope). \label{po:gr1}
+    \item P-numbered (group scope). \label{po:gr2}
+  \end{prop}
+\endgroup
+
+After group: numpropi restored.
+\begin{prop}
+  \item Numbered item (numpropi again). \label{po:gr3}
+\end{prop}
+
+Refs: \ref{po:gr0}, \ref{po:gr1}, \ref{po:gr2}, \ref{po:gr3}.
+
+% ============================================================
 \section{Global default style changes}
 % ============================================================
 
