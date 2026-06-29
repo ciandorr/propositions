@@ -443,7 +443,7 @@
 % \verb|\begin{prop}[style=proposition, name=foo]\item bar|.
 %
 % \begin{docKey}{style}{=\meta{style}}{no default}
-%   Sets a default style for all \cs{item}s in this environment.  The style's list-dimension keys (|leftmargin|, |labelwidth|, etc.) take effect immediately for the whole list; item-level keys are applied as defaults for each \cs{item}.  An explicit |style=| on an individual \cs{item} overrides this default.
+%   Sets a default style for all \cs{item}s in this environment.  The style's list-dimension keys (|leftmargin|, |labelwidth|, etc.) take effect immediately for the whole list; item-level keys are applied as defaults for each \cs{item}.  An explicit |style=| on an individual \cs{item} overrides this default.  This key is also accepted by \cs{propoptions}, where it acts as a persistent default across all subsequent environments (group-scoped, overridden by the env arg, and overridden by per-item \texttt{style=}).
 % \end{docKey}
 %
 % \subsection{Equation numbering}\label{sect:keys-equations}
@@ -817,7 +817,7 @@
 % \section{Package options}\label{sect:global}
 %
 % \begin{docCommand}{propoptions}{\marg{keys}}
-%   Sets package-level keys (see \autoref{sect:keys}).  List-dimension keys take effect globally.  Item-level keys (\autoref{sect:keys-item}) act as persistent per-item defaults: they are applied before each \cs{item} in every subsequent \texttt{prop} or \texttt{inlineprop}, but can be overridden by the environment arg or by explicit item-level keys.  Because the underlying storage uses a local \LaTeX3 variable, the effect is group-scoped: \verb|\begingroup \propoptions{counter=P} ... \endgroup| applies \texttt{counter=P} only within the group.  The same keys can also be set in the optional argument of \texttt{prop} or \texttt{inlineprop} (local to that environment), or as options to \cs{usepackage} (global, but group-scoped from the preamble group).
+%   Sets package-level keys (see \autoref{sect:keys}).  List-dimension keys take effect globally.  Item-level keys (\autoref{sect:keys-item})---including \texttt{style=}---act as persistent per-item defaults: they are applied before each \cs{item} in every subsequent \texttt{prop} or \texttt{inlineprop}, but can be overridden by the environment arg or by explicit item-level keys.  In particular, \verb|\propoptions{style=thesis}| makes every subsequent \texttt{prop} env use \texttt{thesis} style by default.  Because the underlying storage uses a local \LaTeX3 variable, the effect is group-scoped: \verb|\begingroup \propoptions{style=thesis} ... \endgroup| applies the default only within the group.  The same keys can also be set in the optional argument of \texttt{prop} or \texttt{inlineprop} (local to that environment), or as options to \cs{usepackage} (global, but group-scoped from the preamble group).
 % \end{docCommand}
 %
 % \section{Compatibility}
@@ -919,10 +919,9 @@
 \bool_new:N \l__props_ptag_bool          %% true during \ptag processing
 \bool_new:N \l__props_titlecase_bool    %% true when \Ref etc. want titlecasing
 \bool_new:N \l__props_reset_bool        %% true (default) = reset sub-level counter on \item
-\tl_new:N  \l__props_env_item_keys_tl   %% non-style item-level keys from env arg (env defaults)
-\tl_new:N  \l__props_propoptions_item_keys_tl  %% item-key defaults from \propoptions (group-scoped via local assignment)
-\bool_new:N \l__props_in_propoptions_bool       %% true while \propoptions (or \ProcessKeyOptions) routes unknowns
-\tl_new:N  \l__props_env_style_tl       %% style= key from env arg (env default style)
+\tl_new:N  \l__props_defaults_tl        %% accumulated defaults: style=X entries + item-level keys
+                                        %%   from \propoptions and env arg; group-scoped via local assignment
+\tl_new:N  \l__props_user_style_tl     %% per-item style= from phase 1, saved before defaults override it
 \int_new:N \l__props_env_items_int      %% items=n key (default 1; used by preview computation)
 \int_set:Nn \l__props_env_items_int { 1 }
 \tl_new:N  \g__props_env_preview_label_tl %% preview label built at env open for \propformlabel
@@ -1466,12 +1465,17 @@
           { \keys_set:nn { props / pitem } { name = {#1} } }
       }
 
-    %% --- Resolve style ---
-    %% If the user didn't specify style=, infer it:
-    %%   - name or counter given -> use named style (or ptag named style)
-    %%   - nothing given -> use nameless style (or ptag nameless style)
-    %% Env-level style (\l__props_env_style_tl) takes precedence over
-    %% the global named/nameless defaults, but not over explicit user style=.
+    %% --- Save user-specified style ---
+    %% Must be done before the base-style resolution overwrites \l__props_style_tl.
+    %% If the user gave style= in their \item arg, \l__props_user_style_tl is
+    %% non-empty and will be restored after defaults are applied in phase 2.5.
+    \tl_set_eq:NN \l__props_user_style_tl \l__props_style_tl
+
+    %% --- Resolve base style ---
+    %% If the user didn't specify style=, pick the named/nameless default.
+    %% (env-level style=X, set via \propoptions or \begin{prop}[], is stored
+    %% in \l__props_defaults_tl and applied in phase 2.5 below, where it
+    %% overrides the base style.)
     \tl_if_empty:NT \l__props_style_tl
       {
         \bool_lazy_or:nnTF
@@ -1483,11 +1487,7 @@
               { \l__props_ptag_bool }
               { ! \tl_if_empty_p:N \l__props_named_ptag_style_tl }
               { \tl_set_eq:NN \l__props_style_tl \l__props_named_ptag_style_tl }
-              {
-                \tl_if_empty:NTF \l__props_env_style_tl
-                  { \tl_set_eq:NN \l__props_style_tl \l__props_named_style_tl }
-                  { \tl_set_eq:NN \l__props_style_tl \l__props_env_style_tl }
-              }
+              { \tl_set_eq:NN \l__props_style_tl \l__props_named_style_tl }
           }
           {
             %% Nothing specified -> nameless style.
@@ -1495,11 +1495,7 @@
               { \l__props_ptag_bool }
               { ! \tl_if_empty_p:N \l__props_nameless_ptag_style_tl }
               { \tl_set_eq:NN \l__props_style_tl \l__props_nameless_ptag_style_tl }
-              {
-                \tl_if_empty:NTF \l__props_env_style_tl
-                  { \tl_set_eq:NN \l__props_style_tl \l__props_nameless_style_tl }
-                  { \tl_set_eq:NN \l__props_style_tl \l__props_env_style_tl }
-              }
+              { \tl_set_eq:NN \l__props_style_tl \l__props_nameless_style_tl }
           }
       }
 
@@ -1507,14 +1503,20 @@
     %% Reset all item locals to structural defaults first.
     \__props_decl_reset:
 
-    %% --- Phase 2.5: apply item-key defaults ---
-    %% propoptions defaults first (lowest priority in this phase),
-    %% then env-arg defaults override them.  Both sit between decl_reset
-    %% and style_load, so the style preset overrides both.
-    \tl_if_empty:NF \l__props_propoptions_item_keys_tl
-      { \exp_args:NnV \keys_set:nn { props / pitem } \l__props_propoptions_item_keys_tl }
-    \tl_if_empty:NF \l__props_env_item_keys_tl
-      { \exp_args:NnV \keys_set:nn { props / pitem } \l__props_env_item_keys_tl }
+    %% --- Phase 2.5: apply accumulated defaults ---
+    %% \l__props_defaults_tl holds style=X entries and item-level keys from
+    %% \propoptions (lowest priority) and the env arg (higher priority), in
+    %% that order.  Known props/pitem keys are applied directly; unknown keys
+    %% (list-dimension keys) are silently collected and discarded.
+    %% style= entries merely update \l__props_style_tl; they do not load yet.
+    \tl_if_empty:NF \l__props_defaults_tl
+      {
+        \exp_args:NnV \keys_set_known:nnN
+          { props / pitem } \l__props_defaults_tl \l_tmpa_tl
+      }
+    %% If the user gave an explicit per-item style=, it wins over defaults.
+    \tl_if_empty:NF \l__props_user_style_tl
+      { \tl_set_eq:NN \l__props_style_tl \l__props_user_style_tl }
 
     %% x-expand resolves \proplevelchoice in the style name.
     \tl_set:Nx \l__props_style_tl { \l__props_style_tl }
@@ -2216,32 +2218,6 @@
 \NewDocumentCommand \propformlabel { } { }
 
 %<doc>%% ====================================================================
-%<doc>%% \__props_style_apply_global:n — walk a style's parent chain and
-%<doc>%% apply its overrides through props/global.  Known global keys (list
-%<doc>%% dimensions, tightspacing, etc.) are set directly; unknown keys
-%<doc>%% (item-level keys) are collected by the props/global unknown handler
-%<doc>%% into \l__props_env_item_keys_tl.
-%<doc>%% ====================================================================
-
-\cs_new_protected:Nn \__props_style_apply_global:n
-  {
-    \tl_if_exist:cT { g__props_style_ #1 _parent_tl }
-      {
-        %% Apply parent chain first.
-        \tl_set_eq:Nc \l_tmpa_tl { g__props_style_ #1 _parent_tl }
-        \tl_if_empty:NF \l_tmpa_tl
-          {
-            \tl_set:Nx \l_tmpa_tl { \l_tmpa_tl }
-            \exp_args:NV \__props_style_apply_global:n \l_tmpa_tl
-          }
-        %% Then apply this style's overrides through props/global.
-        \tl_set_eq:Nc \l_tmpa_tl { g__props_style_ #1 _overrides_tl }
-        \tl_if_empty:NF \l_tmpa_tl
-          { \exp_args:NnV \keys_set:nn { props / global } \l_tmpa_tl }
-      }
-  }
-
-%<doc>%% ====================================================================
 %<doc>%% \__props_compute_env_preview: — compute \propformlabel at env open.
 %<doc>%% Resolves what a bare \item would produce with the current env defaults,
 %<doc>%% accounting for items=n (preview shows the n-th item label so that
@@ -2355,14 +2331,12 @@
     \seq_gpush:NV \g__props_parent_tpl_seq \g__props_last_tpl_tl
     \seq_gpush:NV \g__props_parent_cnt_seq \g__props_last_cnt_tl
     \bool_gset_true:N \g__props_display_mode_bool
-    %% Clear env-level item defaults before processing env arg.
-    \tl_clear:N  \l__props_env_item_keys_tl
-    \tl_clear:N  \l__props_env_style_tl
+    %% Reset per-env items= counter (not part of defaults tl).
     \int_set:Nn  \l__props_env_items_int { 1 }
-    %% Apply per-environment overrides.  Known global keys are processed
-    %% normally; unknown item-level keys are collected by the unknown
-    %% handler into \l__props_env_item_keys_tl.  Global-only keys
-    %% (equations) are filtered out with a warning.
+    %% Apply per-environment overrides.  Known global keys (dims, tightspacing,
+    %% etc.) are set directly; unknown item-level keys and style= are appended
+    %% to \l__props_defaults_tl (local assignment, so scoped to this env).
+    %% Global-only keys (equations) are filtered out with a warning.
     \keys_set_filter:nnnN { props / global } { global-only }
       { #1 } \l_tmpa_tl
     \tl_if_empty:NF \l_tmpa_tl
@@ -2568,9 +2542,7 @@
     %% Push last item's template/content onto parent stacks
     \seq_gpush:NV \g__props_parent_tpl_seq \g__props_last_tpl_tl
     \seq_gpush:NV \g__props_parent_cnt_seq \g__props_last_cnt_tl
-    %% Clear env-level item defaults before processing env arg.
-    \tl_clear:N  \l__props_env_item_keys_tl
-    \tl_clear:N  \l__props_env_style_tl
+    %% Reset per-env items= counter (not part of defaults tl).
     \int_set:Nn  \l__props_env_items_int { 1 }
     %% Apply per-environment overrides (same routing as prop).
     \keys_set_filter:nnnN { props / global } { global-only }
@@ -2712,6 +2684,74 @@
   }
 
 %<doc>%% ====================================================================
+%<doc>%% props/dims-only — keyspace for dim-only style application.
+%<doc>%% Has the same list-dimension and spacing handlers as props/global, but
+%<doc>%% its unknown handler is a no-op, so item-level keys in a style's
+%<doc>%% overrides are silently ignored.  Used by \__props_style_apply_dims:n.
+%<doc>%% (Defined here, after all dim tl variables are declared.)
+%<doc>%% ====================================================================
+
+\keys_define:nn { props / dims-only }
+  {
+    style             .code:n      = { \__props_style_apply_dims:n { #1 } } ,
+    tightspacing      .code:n      =
+      {
+        \tl_set:Nn \l__props_topsep_tl     { 2\p@ \@plus\p@ \@minus\p@ }
+        \tl_set:Nn \l__props_itemsep_tl    { 2\p@ \@plus\p@ \@minus\p@ }
+        \tl_set:Nn \l__props_parsep_tl     { \z@ }
+        \tl_set:Nn \l__props_partopsep_tl  { \p@ \@plus\z@ \@minus\p@ }
+      } ,
+    nosep             .code:n      =
+      {
+        \tl_set:Nn \l__props_topsep_tl  { 0pt }
+        \tl_set:Nn \l__props_itemsep_tl { 0pt }
+        \tl_set:Nn \l__props_parsep_tl  { 0pt }
+      } ,
+    continue          .bool_set:N  = \l__props_continue_bool ,
+    continue          .default:n   = { true } ,
+    items             .int_set:N   = \l__props_env_items_int ,
+    topsep            .tl_set:N    = \l__props_topsep_tl ,
+    partopsep         .tl_set:N    = \l__props_partopsep_tl ,
+    itemsep           .tl_set:N    = \l__props_itemsep_tl ,
+    parsep            .tl_set:N    = \l__props_parsep_tl ,
+    leftmargin        .tl_set:N    = \l__props_leftmargin_tl ,
+    rightmargin       .tl_set:N    = \l__props_rightmargin_tl ,
+    labelwidth        .tl_set:N    = \l__props_labelwidth_tl ,
+    labelsep          .tl_set:N    = \l__props_labelsep_tl ,
+    itemindent        .tl_set:N    = \l__props_itemindent_tl ,
+    listparindent     .tl_set:N    = \l__props_listparindent_tl ,
+    labelindent       .tl_set:N    = \l__props_labelindent_tl ,
+    unknown           .code:n      = {} ,
+  }
+
+%<doc>%% ====================================================================
+%<doc>%% \__props_style_apply_dims:n — walk a style's parent chain and apply
+%<doc>%% only its list-dimension overrides (topsep, itemsep, leftmargin, etc.)
+%<doc>%% through props/dims-only.  Item-level keys are silently ignored.
+%<doc>%% Called by the style= handler in props/global so that dimension effects
+%<doc>%% take effect at \begin{prop} time; style= itself is stored lazily in
+%<doc>%% \l__props_defaults_tl for evaluation at item-resolve time.
+%<doc>%% ====================================================================
+
+\cs_new_protected:Nn \__props_style_apply_dims:n
+  {
+    \tl_if_exist:cT { g__props_style_ #1 _parent_tl }
+      {
+        %% Apply parent chain first.
+        \tl_set_eq:Nc \l_tmpa_tl { g__props_style_ #1 _parent_tl }
+        \tl_if_empty:NF \l_tmpa_tl
+          {
+            \tl_set:Nx \l_tmpa_tl { \l_tmpa_tl }
+            \exp_args:NV \__props_style_apply_dims:n \l_tmpa_tl
+          }
+        %% Then apply this style's overrides through props/dims-only.
+        \tl_set_eq:Nc \l_tmpa_tl { g__props_style_ #1 _overrides_tl }
+        \tl_if_empty:NF \l_tmpa_tl
+          { \exp_args:NnV \keys_set:nn { props / dims-only } \l_tmpa_tl }
+      }
+  }
+
+%<doc>%% ====================================================================
 %<doc>%% \propoptions — global configuration
 %<doc>%% ====================================================================
 
@@ -2731,8 +2771,13 @@
     equations         .groups:n    = { global-only } ,
     style             .code:n      =
       {
-        \tl_set:Nn \l__props_env_style_tl { #1 }
-        \__props_style_apply_global:n { #1 }
+        %% Apply dim keys from the style chain eagerly (they affect \begin{prop}).
+        %% Store style=X lazily in defaults for item-time lazy evaluation
+        %% (\proplevelchoice resolves at the correct nesting depth).
+        \__props_style_apply_dims:n { #1 }
+        \tl_if_empty:NF \l__props_defaults_tl
+          { \tl_put_right:Nn \l__props_defaults_tl { , } }
+        \tl_put_right:Nn \l__props_defaults_tl { style = { #1 } }
       } ,
     items             .int_set:N   = \l__props_env_items_int ,
     tightspacing      .code:n      =
@@ -2762,23 +2807,16 @@
     itemindent        .tl_set:N    = \l__props_itemindent_tl ,
     listparindent     .tl_set:N    = \l__props_listparindent_tl ,
     labelindent       .tl_set:N    = \l__props_labelindent_tl ,
-    %% Unknown keys are item-level keys: route to propoptions tl (persistent,
-    %% group-scoped) when inside \propoptions, or to env tl otherwise.
+    %% Unknown keys are item-level keys: accumulate in \l__props_defaults_tl.
+    %% Local assignment keeps them group-scoped; \propoptions and \begin{prop}
+    %% keys both go here (env-arg keys are appended after propoptions keys,
+    %% so they override them when processed at item time).
     unknown           .code:n      =
       {
-        \bool_if:NTF \l__props_in_propoptions_bool
-          {
-            \tl_if_empty:NF \l__props_propoptions_item_keys_tl
-              { \tl_put_right:Nn \l__props_propoptions_item_keys_tl { , } }
-            \tl_put_right:Nx \l__props_propoptions_item_keys_tl
-              { \str_use:N \l_keys_key_str = { \exp_not:n { #1 } } }
-          }
-          {
-            \tl_if_empty:NF \l__props_env_item_keys_tl
-              { \tl_put_right:Nn \l__props_env_item_keys_tl { , } }
-            \tl_put_right:Nx \l__props_env_item_keys_tl
-              { \str_use:N \l_keys_key_str = { \exp_not:n { #1 } } }
-          }
+        \tl_if_empty:NF \l__props_defaults_tl
+          { \tl_put_right:Nn \l__props_defaults_tl { , } }
+        \tl_put_right:Nx \l__props_defaults_tl
+          { \str_use:N \l_keys_key_str = { \exp_not:n { #1 } } }
       } ,
   }
 
@@ -2796,11 +2834,7 @@
   }
 
 \NewDocumentCommand \propoptions { m }
-  {
-    \bool_set_true:N \l__props_in_propoptions_bool
-    \keys_set:nn { props / global } { #1 }
-    \bool_set_false:N \l__props_in_propoptions_bool
-  }
+  { \keys_set:nn { props / global } { #1 } }
 
 %<doc>%% ====================================================================
 %<doc>%% Default global settings (set before options so user options override)
@@ -2813,9 +2847,7 @@
 %<doc>%% Package options (processed via l3keys)
 %<doc>%% ====================================================================
 
-\bool_set_true:N \l__props_in_propoptions_bool
 \ProcessKeyOptions [ props / global ]
-\bool_set_false:N \l__props_in_propoptions_bool
 
 %<doc>%% ====================================================================
 %<doc>%% Default type declarations

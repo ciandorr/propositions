@@ -298,4 +298,208 @@ Refs: \ref{po:gr0}, \ref{po:gr1}, \ref{po:gr2}, \ref{po:gr3}.
 
 Refs: \ref{gs:A}, \ref{gs:B}.
 
+% ============================================================
+\section{Approach B: lazy style + dim-key extraction}
+% ============================================================
+
+% Tests for the \l__props_defaults_tl architecture.
+
+% --------------------------------------------------------
+\subsection{style= via \texttt{\textbackslash propoptions} persists across envs}
+% --------------------------------------------------------
+
+% \propoptions{style=thesis} should persist (old code: style= was not stored
+% in the defaults tl, so it would not persist).  Both envs should use thesis.
+
+\propoptions{style=thesis}
+
+\begin{prop}
+  \item[Claim A] Thesis style (from propoptions). \label{ab:A}
+  \item[Claim B] Also thesis. \label{ab:B}
+\end{prop}
+
+\begin{prop}
+  \item[Claim C] Still thesis (persistent). \label{ab:C}
+\end{prop}
+
+\propoptions{style=proposition}   % restore
+
+Refs: \ref{ab:A}, \ref{ab:B}, \ref{ab:C}.
+
+% --------------------------------------------------------
+\subsection{style= via env arg overrides \texttt{\textbackslash propoptions}}
+% --------------------------------------------------------
+
+% \propoptions{style=thesis} sets the default.  The second env uses
+% style=proposition, which should override just that env.
+
+\propoptions{style=thesis}
+
+\begin{prop}
+  \item[Claim D] Thesis (from propoptions). \label{ab:D}
+\end{prop}
+\begin{prop}[style=proposition]
+  \item[Claim E] Proposition (env overrides). \label{ab:E}
+\end{prop}
+\begin{prop}
+  \item[Claim F] Thesis again (propoptions restored). \label{ab:F}
+\end{prop}
+
+\propoptions{style=proposition}   % restore
+
+Refs: \ref{ab:D} (thesis), \ref{ab:E} (proposition), \ref{ab:F} (thesis).
+
+% --------------------------------------------------------
+\subsection{style= with \texttt{\textbackslash proplevelchoice}: nested envs}
+% --------------------------------------------------------
+
+% The numbered style uses \proplevelchoice internally.  style=numbered set
+% via \propoptions should dispatch correctly at each nesting depth.
+
+\propoptions{style=numbered}
+
+Outer (level 1, arabic-in-parens):
+\begin{prop}
+  \item \label{ab:n1}
+  \item \label{ab:n2}
+
+  Inner (level 2, alphabetic):
+  \begin{prop}
+    \item \label{ab:n2a}
+    \item \label{ab:n2b}
+  \end{prop}
+
+  \item \label{ab:n3}
+\end{prop}
+
+\propoptions{style=numbered}   % no-op restore (already set)
+
+Refs: outer \ref{ab:n1}, \ref{ab:n2}, \ref{ab:n3}; inner \ref{ab:n2a}, \ref{ab:n2b}.
+
+% --------------------------------------------------------
+\subsection{Style with dimension key via \texttt{\textbackslash propoptions}}
+% --------------------------------------------------------
+
+% \SetPropStyle{spacious} has itemsep=12pt and format=\textit{#1}.
+% The itemsep should be applied at \begin{prop} time (dim-only pass);
+% the format should be applied at item time (lazy style load).
+
+\DeclareNumberedStyle{spnum}
+\SetPropStyle{spacious}{
+  style  = spnum,
+  itemsep = 12pt,
+  format  = \textit{(#1)},
+}
+
+\propoptions{style=spacious}
+
+Spacing should be loose (12pt itemsep) and labels italic:
+\begin{prop}
+  \item \label{ab:sp1}
+  \item \label{ab:sp2}
+\end{prop}
+
+\propoptions{style=numbered}   % restore
+
+Refs: \ref{ab:sp1}, \ref{ab:sp2}.
+
+% --------------------------------------------------------
+\subsection{Style with dimension key via env arg}
+% --------------------------------------------------------
+
+% Same spacious style but set per-environment.
+% Effect should be limited to that env.
+
+Before (normal spacing):
+\begin{prop}
+  \item \label{ab:sq1}
+\end{prop}
+
+With spacious:
+\begin{prop}[style=spacious]
+  \item \label{ab:sq2}
+  \item \label{ab:sq3}
+\end{prop}
+
+After (normal spacing restored):
+\begin{prop}
+  \item \label{ab:sq4}
+\end{prop}
+
+Refs: \ref{ab:sq1}, \ref{ab:sq2}, \ref{ab:sq3}, \ref{ab:sq4}.
+
+% --------------------------------------------------------
+\subsection{itemsep directly in \texttt{\textbackslash propoptions} (dim key,
+  both positions)}
+% --------------------------------------------------------
+
+% itemsep is a known dim key in props/global; \propoptions{itemsep=10pt}
+% sets it persistently.  It should apply to all following envs and be
+% overridden by an explicit env-arg value.
+
+\propoptions{itemsep=10pt}
+
+Loose spacing (10pt itemsep):
+\begin{prop}
+  \item \label{ab:di1}
+  \item \label{ab:di2}
+\end{prop}
+
+Override to tight per-env:
+\begin{prop}[itemsep=2pt]
+  \item \label{ab:di3}
+  \item \label{ab:di4}
+\end{prop}
+
+Back to loose:
+\begin{prop}
+  \item \label{ab:di5}
+\end{prop}
+
+\propoptions{itemsep=0pt}   % restore
+
+Refs: \ref{ab:di1}, \ref{ab:di2}, \ref{ab:di3}, \ref{ab:di4}, \ref{ab:di5}.
+
+% --------------------------------------------------------
+\subsection{Per-item style= overrides env/propoptions style=}
+% --------------------------------------------------------
+
+% \propoptions{style=thesis} sets default.  An explicit per-item style=
+% should override for that item only.
+
+\propoptions{style=thesis}
+
+\begin{prop}
+  \item[Claim G] Thesis (from propoptions). \label{ab:pi1}
+  \item[style=proposition, Claim H] Proposition (per-item override). \label{ab:pi2}
+  \item[Claim I] Thesis again. \label{ab:pi3}
+\end{prop}
+
+\propoptions{style=proposition}   % restore
+
+Refs: \ref{ab:pi1} (thesis), \ref{ab:pi2} (proposition), \ref{ab:pi3} (thesis).
+
+% --------------------------------------------------------
+\subsection{Group-scoped style= via \texttt{\textbackslash propoptions}}
+% --------------------------------------------------------
+
+% Inside a group, propoptions style=thesis; outside, proposition is restored.
+
+\begin{prop}
+  \item[Claim J] Proposition (outer). \label{ab:gs1}
+\end{prop}
+
+\begingroup
+  \propoptions{style=thesis}
+  \begin{prop}
+    \item[Claim K] Thesis (in group). \label{ab:gs2}
+  \end{prop}
+\endgroup
+
+\begin{prop}
+  \item[Claim L] Proposition (outer restored). \label{ab:gs3}
+\end{prop}
+
+Refs: \ref{ab:gs1}, \ref{ab:gs2}, \ref{ab:gs3}.
+
 \end{document}
