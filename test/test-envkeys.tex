@@ -502,4 +502,176 @@ Refs: \ref{ab:pi1} (thesis), \ref{ab:pi2} (proposition), \ref{ab:pi3} (thesis).
 
 Refs: \ref{ab:gs1}, \ref{ab:gs2}, \ref{ab:gs3}.
 
+% ============================================================
+\section{Style inheritance and key overriding}
+% ============================================================
+
+% Focused tests for the style parent-chain mechanism and priority ordering.
+% Each test specifies the expected output in a comment so regressions are
+% easy to spot visually.
+
+% --------------------------------------------------------
+\subsection{Child inherits parent keys it does not override}
+% --------------------------------------------------------
+
+% parent-I sets both format (bold-bracketed) and ref~format (parenthesized).
+% child-I overrides only ref~format (italic), so format should be inherited.
+
+\SetPropStyle{parent-I}{
+  format     = \textbf{[#1]} ,
+  ref~format = (#1) ,
+}
+\SetPropStyle{child-I}{
+  style      = parent-I ,
+  ref~format = \textit{#1} ,
+}
+
+\begin{prop}
+  \item[style=child-I, name=Foo]
+    Display should be \textbf{[Foo]} (inherited).  \label{si:inherit1}
+\end{prop}
+
+Ref: \ref{si:inherit1} (should be \textit{italic}, not parenthesized).
+
+% --------------------------------------------------------
+\subsection{Child overrides parent key (same key set in both)}
+% --------------------------------------------------------
+
+% parent-II sets format=bold; child-II inherits it but overrides format=italic.
+% Only child-II's format should appear.
+
+\SetPropStyle{parent-II}{
+  format = \textbf{#1} ,
+}
+\SetPropStyle{child-II}{
+  style  = parent-II ,
+  format = \textit{#1} ,
+}
+
+\begin{prop}
+  \item[style=child-II, name=Bar]
+    Display should be \textit{Bar} (not bold).  \label{si:override}
+\end{prop}
+
+Ref: \ref{si:override}.
+
+% --------------------------------------------------------
+\subsection{Three-level chain: grandparent, parent, child}
+% --------------------------------------------------------
+
+% Each level adds one key; the deepest-derived value should win.
+
+\SetPropStyle{gp-III}{
+  format     = \textbf{#1} ,
+  align      = flush ,
+}
+\SetPropStyle{par-III}{
+  style      = gp-III ,
+  ref~format = [#1] ,
+}
+\SetPropStyle{chi-III}{
+  style      = par-III ,
+  format     = \textit{#1} ,  % overrides gp-III's bold
+}
+
+\begin{prop}
+  \item[style=chi-III, name=Baz]
+    Display should be \textit{Baz} (chi overrides gp).  \label{si:chain}
+\end{prop}
+
+Ref: \ref{si:chain} (should be [Baz] — bracketed from par-III).
+
+% --------------------------------------------------------
+\subsection{Numbered child: inherits counter, overrides format}
+% --------------------------------------------------------
+
+% myformat has style=levelone (which provides counter=numpropi)
+% but overrides format to typewriter.  Counter should be inherited.
+
+\SetPropStyle{myformat}{
+  style  = levelone ,
+  format = \texttt{(#1)} ,
+}
+
+\begin{prop}
+  \item[style=myformat] \label{si:myfmt1}  % typewriter (1)
+  \item[style=myformat] \label{si:myfmt2}  % typewriter (2)
+\end{prop}
+
+Refs: \ref{si:myfmt1}, \ref{si:myfmt2}
+(should be \texttt{(1)}, \texttt{(2)} — typewriter numerals).
+
+% --------------------------------------------------------
+\subsection{Style preset overrides propoptions default for the same key}
+% --------------------------------------------------------
+
+% \propoptions{counter=P} sets counter=P as default.
+% \begin{prop}[style=numbered] loads levelone which sets counter=numpropi.
+% The style preset should win: items should use numpropi, not P.
+
+\propoptions{counter=P}
+
+\begin{prop}[style=numbered]
+  \item \label{si:numwin1}   % expected: (1) — numpropi wins over P
+  \item \label{si:numwin2}   % expected: (2)
+\end{prop}
+
+\propoptions{counter=numpropi}
+
+Refs: \ref{si:numwin1}, \ref{si:numwin2} (should be (1), (2) not P-numbered).
+
+% --------------------------------------------------------
+\subsection{Env default survives when style does not set that key}
+% --------------------------------------------------------
+
+% style=proposition only sets format=\textbf; it does NOT set counter=.
+% An env-arg counter=P should therefore survive through the style load.
+% (This is different from the previous test, where the style DID set counter.)
+
+\begin{prop}[style=proposition, counter=P]
+  \item \label{si:surv1}  % expected: bold, P-numbered
+  \item \label{si:surv2}  % expected: bold, P-numbered
+\end{prop}
+
+Refs: \ref{si:surv1}, \ref{si:surv2} (both P-numbered and bold).
+
+% --------------------------------------------------------
+\subsection{Per-item style= wins over env-arg style= for the same item}
+% --------------------------------------------------------
+
+% Env arg: style=proposition (bold).
+% First item: style=thesis (small-caps, flush) — should override.
+% Second item: no per-item style — env arg (proposition) applies.
+
+\begin{prop}[style=proposition]
+  \item[style=thesis, Claim P]
+    Per-item style=thesis wins.  \label{si:peritem}
+  \item[Claim Q]
+    Env-arg style=proposition applies.  \label{si:envarg}
+\end{prop}
+
+Refs: \ref{si:peritem} (thesis), \ref{si:envarg} (proposition).
+
+% --------------------------------------------------------
+\subsection{propoptions style overridden per-env, then restored}
+% --------------------------------------------------------
+
+% Verifies that an env-arg style= does not bleed into the next env.
+
+\propoptions{style=thesis}
+
+\begin{prop}
+  \item[Claim R] Thesis (propoptions). \label{si:restore1}
+\end{prop}
+\begin{prop}[style=proposition]
+  \item[Claim S] Proposition (env override). \label{si:restore2}
+\end{prop}
+\begin{prop}
+  \item[Claim T] Thesis again (restored). \label{si:restore3}
+\end{prop}
+
+\propoptions{style=proposition}
+
+Refs: \ref{si:restore1} (thesis), \ref{si:restore2} (prop), \ref{si:restore3} (thesis).
+
 \end{document}
