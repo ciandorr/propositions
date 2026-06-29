@@ -81,9 +81,9 @@
 \bool_new:N \l__props_ptag_bool          %% true during \ptag processing
 \bool_new:N \l__props_titlecase_bool    %% true when \Ref etc. want titlecasing
 \bool_new:N \l__props_reset_bool        %% true (default) = reset sub-level counter on \item
-\tl_new:N  \l__props_defaults_tl        %% accumulated defaults: style=X entries + item-level keys
-                                        %%   from \propoptions and env arg; group-scoped via local assignment
-\tl_new:N  \l__props_user_style_tl     %% per-item style= from phase 1, saved before defaults override it
+\tl_new:N  \l__props_defaults_tl        %% cascade base: style=X entries + item-level keys from
+                                        %%   \propoptions and env arg, in priority order (lowest first)
+\bool_new:N \l__props_loading_defaults_bool %% true during the single processing pass so style= loads immediately
 \int_new:N \l__props_env_items_int      %% items=n key (default 1; used by preview computation)
 \int_set:Nn \l__props_env_items_int { 1 }
 \tl_new:N  \g__props_env_preview_label_tl %% preview label built at env open for \propformlabel
@@ -345,6 +345,7 @@
     \tl_clear:N \l__props_shorthand_tl
     \tl_clear:N \l__props_gloss_tl
     \tl_clear:N \l__props_crefname_tl
+    \tl_clear:N \l__props_label_tl
     \bool_set_true:N \l__props_reset_bool
   }
 
@@ -433,7 +434,15 @@
 \keys_define:nn { props / pitem }
   {
     name        .tl_set:N = \l__props_name_tl ,
-    style       .tl_set:N = \l__props_style_tl ,
+    style       .code:n =
+      {
+        \tl_set:Nn \l__props_style_tl { #1 }
+        \bool_if:NT \l__props_loading_defaults_bool
+          {
+            \tl_set:Nx \l__props_style_tl { \l__props_style_tl }
+            \tl_if_empty:NF \l__props_style_tl { \__props_style_load: }
+          }
+      } ,
     counter     .tl_set:N = \l__props_counter_tl ,
     counter~format .code:n =
       {
@@ -481,92 +490,76 @@
       } ,
   }
 
+%% Minimal keyspace used only for the named/nameless peek: reads name= and
+%% counter= from the per-item arg without any other side effects.
+\keys_define:nn { props / pitem-peek }
+  {
+    name    .tl_set:N = \l__props_name_tl ,
+    counter .tl_set:N = \l__props_counter_tl ,
+    unknown .code:n   = {} ,
+  }
+
 
 \cs_new_protected:Nn \__props_resolve_item:n
   {
-    %% --- Phase 0: clear sentinel fields ---
-    %% style/name/counter must be empty so the resolver can
-    %% distinguish "user-set" from "inherited default".
-    \tl_clear:N   \l__props_style_tl
-    \tl_clear:N   \l__props_name_tl
-    \tl_clear:N   \l__props_counter_tl
-    \tl_clear:N   \l__props_label_tl
-
-    %% --- Phase 1: parse user keys ---
-    %% If the argument has no = sign, treat it as a bare name so that
-    %% catcodes (e.g. $math$) are preserved via the name key's value path
-    %% rather than being stringified by the l3keys unknown-key handler.
+    %% --- Peek: determine named vs. nameless ---
+    %% Clear sentinels so we can detect whether #1 provides a name or counter.
+    \tl_clear:N \l__props_name_tl
+    \tl_clear:N \l__props_counter_tl
     \tl_if_empty:nF { #1 }
       {
         \tl_if_in:nnTF { #1 } { = }
-          { \keys_set:nn { props / pitem } { #1 } }
-          { \keys_set:nn { props / pitem } { name = {#1} } }
+          { \keys_set_known:nnN { props / pitem-peek } { #1 } \l_tmpa_tl }
+          { \tl_set:Nn \l__props_name_tl { #1 } }
       }
 
-    %% --- Save user-specified style ---
-    %% Must be done before the base-style resolution overwrites \l__props_style_tl.
-    %% If the user gave style= in their \item arg, \l__props_user_style_tl is
-    %% non-empty and will be restored after defaults are applied in phase 2.5.
-    \tl_set_eq:NN \l__props_user_style_tl \l__props_style_tl
-
-    %% --- Resolve base style ---
-    %% If the user didn't specify style=, pick the named/nameless default.
-    %% (env-level style=X, set via \propoptions or \begin{prop}[], is stored
-    %% in \l__props_defaults_tl and applied in phase 2.5 below, where it
-    %% overrides the base style.)
-    \tl_if_empty:NT \l__props_style_tl
+    %% --- Select base style (named or nameless) ---
+    %% Always determined; used as the first (lowest-priority) cascade layer.
+    \bool_lazy_or:nnTF
+      { ! \tl_if_empty_p:N \l__props_name_tl }
+      { ! \tl_if_empty_p:N \l__props_counter_tl }
       {
-        \bool_lazy_or:nnTF
-          { ! \tl_if_empty_p:N \l__props_name_tl }
-          { ! \tl_if_empty_p:N \l__props_counter_tl }
-          {
-            %% Name or counter given -> named style.
-            \bool_lazy_and:nnTF
-              { \l__props_ptag_bool }
-              { ! \tl_if_empty_p:N \l__props_named_ptag_style_tl }
-              { \tl_set_eq:NN \l__props_style_tl \l__props_named_ptag_style_tl }
-              { \tl_set_eq:NN \l__props_style_tl \l__props_named_style_tl }
-          }
-          {
-            %% Nothing specified -> nameless style.
-            \bool_lazy_and:nnTF
-              { \l__props_ptag_bool }
-              { ! \tl_if_empty_p:N \l__props_nameless_ptag_style_tl }
-              { \tl_set_eq:NN \l__props_style_tl \l__props_nameless_ptag_style_tl }
-              { \tl_set_eq:NN \l__props_style_tl \l__props_nameless_style_tl }
-          }
+        \bool_lazy_and:nnTF
+          { \l__props_ptag_bool }
+          { ! \tl_if_empty_p:N \l__props_named_ptag_style_tl }
+          { \tl_set_eq:NN \l__props_style_tl \l__props_named_ptag_style_tl }
+          { \tl_set_eq:NN \l__props_style_tl \l__props_named_style_tl }
+      }
+      {
+        \bool_lazy_and:nnTF
+          { \l__props_ptag_bool }
+          { ! \tl_if_empty_p:N \l__props_nameless_ptag_style_tl }
+          { \tl_set_eq:NN \l__props_style_tl \l__props_nameless_ptag_style_tl }
+          { \tl_set_eq:NN \l__props_style_tl \l__props_nameless_style_tl }
       }
 
-    %% --- Phase 2: load style preset (sets counter, formats, etc.) ---
-    %% Reset all item locals to structural defaults first.
+    %% --- Reset item locals to structural defaults ---
     \__props_decl_reset:
 
-    %% --- Phase 2.5: apply accumulated defaults ---
-    %% \l__props_defaults_tl holds style=X entries and item-level keys from
-    %% \propoptions (lowest priority) and the env arg (higher priority), in
-    %% that order.  Known props/pitem keys are applied directly; unknown keys
-    %% (list-dimension keys) are silently collected and discarded.
-    %% style= entries merely update \l__props_style_tl; they do not load yet.
-    \tl_if_empty:NF \l__props_defaults_tl
-      {
-        \exp_args:NnV \keys_set_known:nnN
-          { props / pitem } \l__props_defaults_tl \l_tmpa_tl
-      }
-    %% If the user gave an explicit per-item style=, it wins over defaults.
-    \tl_if_empty:NF \l__props_user_style_tl
-      { \tl_set_eq:NN \l__props_style_tl \l__props_user_style_tl }
-
-    %% x-expand resolves \proplevelchoice in the style name.
+    %% --- Load base style as first cascade layer ---
     \tl_set:Nx \l__props_style_tl { \l__props_style_tl }
-    \__props_style_load:
+    \tl_if_empty:NF \l__props_style_tl { \__props_style_load: }
 
-    %% --- Phase 3: re-apply user keys on top of preset ---
-    %% Explicit keys like counter= or ref format= override the style.
+    %% --- Single processing pass over defaults + per-item keys ---
+    %% Copy \l__props_defaults_tl into a local scratch tl and append the
+    %% per-item argument.  The per-item keys come last so they naturally
+    %% override everything earlier.  With \l__props_loading_defaults_bool
+    %% set, each style= entry in the list triggers an immediate style load,
+    %% cascading on top of whatever came before.
+    \tl_set_eq:NN \l_tmpa_tl \l__props_defaults_tl
     \tl_if_empty:nF { #1 }
       {
+        \tl_if_empty:NF \l_tmpa_tl { \tl_put_right:Nn \l_tmpa_tl { , } }
         \tl_if_in:nnTF { #1 } { = }
-          { \keys_set:nn { props / pitem } { #1 } }
-          { \keys_set:nn { props / pitem } { name = {#1} } }
+          { \tl_put_right:Nn \l_tmpa_tl { #1 } }
+          { \tl_put_right:Nn \l_tmpa_tl { name = {#1} } }
+      }
+    \tl_if_empty:NF \l_tmpa_tl
+      {
+        \bool_set_true:N \l__props_loading_defaults_bool
+        \exp_args:NnV \keys_set_known:nnN
+          { props / pitem } \l_tmpa_tl \l_tmpb_tl
+        \bool_set_false:N \l__props_loading_defaults_bool
       }
 
     %% --- Expand counter name ---
