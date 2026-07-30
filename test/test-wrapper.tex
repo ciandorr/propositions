@@ -3,30 +3,58 @@
 \usepackage{mdframed}
 \usepackage{propositions}
 
-%% A "boxed" style: wraps the whole prop list in an mdframed environment.
-%% The wrapper begin/end keys are environment-level: they fire once around
-%% \begin{list}...\end{list}, not once per item.  Values are braced so any
-%% commas inside the mdframed options are not seen as key separators.
-\SetPropStyle{boxed}{
-  wrapper begin = {\begin{mdframed}},
-  wrapper end   = {\end{mdframed}},
-}
+%% The "boxed" style is built into the package (available when mdframed or
+%% tcolorbox is loaded): it frames the list, keeping the level's effective left
+%% margin and centring the frame one padding to the left of the contents.  It is
+%% used directly below, and inherited by boxedbold.
 
-%% A coloured variant, to show options can be passed to the wrapper env.
+%% A custom coloured variant, demonstrating a user-defined wrapper with the same
+%% geometry as the built-in boxed style plus a tinted background.
+\newlength\boxedpad    \setlength\boxedpad{6pt}
+\newlength\boxedouter  \setlength\boxedouter{\dimexpr\leftmargini-\boxedpad\relax}
 \SetPropStyle{shaded}{
-  wrapper begin = {\begin{mdframed}[backgroundcolor=blue!8, linecolor=blue!40]},
+  align = flush, leftmargin = 0pt, rightmargin = 0pt,
+  wrapper begin = {\begin{mdframed}[
+      linewidth=0.4pt, linecolor=blue!40, backgroundcolor=blue!8,
+      leftmargin=\boxedouter, rightmargin=\boxedouter,
+      innerleftmargin=\boxedpad, innerrightmargin=\boxedpad,
+      innertopmargin=\boxedpad, innerbottommargin=\boxedpad,
+      skipabove=\topsep, skipbelow=\topsep]},
   wrapper end   = {\end{mdframed}},
 }
 
-%% Inheritance: a style whose parent is "boxed" inherits the wrapper and
-%% adds item-level formatting (bold names).  Demonstrates that wrapper keys
-%% propagate down the style chain.
+%% Inheritance: a style whose parent is the built-in "boxed" inherits the frame
+%% and adds item-level formatting (bold names).
 \SetPropStyle{boxedbold}{
   style  = boxed,
   format = \textbf{#1},
 }
 
 \begin{document}
+
+\section{Geometry: boxed vs.\ unboxed}
+
+The horizontal rules mark the surrounding text margins.  The boxed list keeps
+the same effective left margin as the unboxed body: the contents sit where the
+unboxed body would, one padding to the right of the frame rule, and the frame
+is centred so the right side is symmetric.  Boxed items are flush, so their
+labels sit at the content edge rather than hanging into the padding.
+
+\noindent\rule{\textwidth}{0.3pt}
+
+\begin{prop}
+  \item[name=Claim] A named unboxed proposition, long enough to wrap onto a
+  second line so the left and right body edges are visible for comparison.
+  \item[counter=none] An unlabelled unboxed proposition.
+\end{prop}
+
+\begin{prop}[style=boxed]
+  \item[name=Claim] A named boxed proposition, long enough to wrap onto a second
+  line so the left and right body edges are visible for comparison.
+  \item[counter=none] An unlabelled boxed proposition.
+\end{prop}
+
+\noindent\rule{\textwidth}{0.3pt}
 
 \section{Boxed style via \texttt{style=boxed}}
 

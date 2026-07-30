@@ -434,44 +434,41 @@
 %   ignored.
 % \end{docKeys}
 %
-% The canonical use is to frame a list with a package such as \textsf{mdframed}.
-% Defining a \texttt{boxed} style once,
+% The package provides a ready-made \texttt{boxed} style
+% (\autoref{sect:builtin-styles}) that frames the list with \textsf{mdframed}, or
+% \textsf{tcolorbox} if that is loaded instead; one of those packages must be
+% loaded.  To frame a list, just write \verb|\begin{prop}[style=boxed]|.
+%
+% To build your own wrapper style, set \texttt{wrapper begin} / \texttt{wrapper
+% end} directly.  Brace any value that contains a comma (such as \textsf{mdframed}
+% options), so that the comma is not read as a key separator:
 % \begin{codebox}
-% \SetPropStyle{boxed}{
-%   wrapper begin = {\begin{mdframed}},
+% \SetPropStyle{redbox}{
+%   wrapper begin = {\begin{mdframed}[linecolor=red, linewidth=2pt]},
 %   wrapper end   = {\end{mdframed}}}
 % \end{codebox}
-% lets \verb|\begin{prop}[style=boxed]| put the entire list inside an
-% \textsf{mdframed} frame.  Because \texttt{boxed} is an ordinary style, another
-% style can inherit the frame with \texttt{style\,=\,boxed} and add its own item
-% formatting on top.
-%
-% Brace any value that contains a comma (such as \textsf{mdframed} options), so
-% that the comma is not read as a key separator:
-% \begin{codebox}
-% wrapper begin = {\begin{mdframed}[linecolor=red, linewidth=2pt]}
-% \end{codebox}
-% The wrapping environment must be one that can be split into separate begin and
-% end code---that is, it must not read its body as a macro argument.
-% \textsf{mdframed} and the default \textsf{tcolorbox} environment qualify;
-% environments that grab their body (via \cs{collect@body} or similar) do not.
-% To turn the wrapper off again within a group, set the keys to empty
+% Because a wrapper style is an ordinary style, another style can inherit the
+% frame with \texttt{style\,=\,boxed} and add its own formatting on top.  The
+% wrapping environment must be one that can be split into separate begin and end
+% code---that is, it must not read its body as a macro argument.  \textsf{mdframed}
+% and the default \textsf{tcolorbox} environment qualify; environments that grab
+% their body (via \cs{collect@body} or similar) do not.  To turn a wrapper off
+% again within a group, set the keys to empty
 % (\texttt{wrapper begin\,=\,\{\}, wrapper end\,=\,\{\}}).
 %
-% The live example below uses \textsf{tcolorbox} (already loaded by this manual);
-% with \textsf{mdframed} only the two environment names change.
-% \begin{example}
-% \SetPropStyle{boxed}{
-%   wrapper begin = {\begin{tcolorbox}},
-%   wrapper end   = {\end{tcolorbox}}}
+% The built-in \texttt{boxed} style in action (this manual loads \textsf{tcolorbox},
+% so the fallback frame is used):
+% \begin{codebox}
 % \begin{prop}[style=boxed]
 %   \item A boxed proposition.
-%   \label{wx:a}
 %   \item And a second one.
-%   \label{wx:b}
+% \end{prop}
+% \end{codebox}
+% \begin{prop}[style=boxed]
+%   \item A boxed proposition. \label{wx:a}
+%   \item And a second one. \label{wx:b}
 % \end{prop}
 % See \ref{wx:a} and \ref{wx:b}.
-% \end{example}
 %
 % \subsection{Default styles}\label{sect:keys-defaults}
 %
@@ -722,6 +719,23 @@
 % \SetPropStyle{hierarchical}{style = \proplevelchoice{
 %   h-base, h-sub}}
 % \end{codebox}
+% \end{description}
+%
+% \subsubsection*{Framed style}
+%
+% \begin{description}
+% \item[\texttt{boxed}] Frames the whole list (see \autoref{sect:keys-wrapper}).
+%   Requires \textsf{mdframed} or, failing that, \textsf{tcolorbox}; the choice is
+%   made at \verb|\begin{document}|, so either package may be loaded before or
+%   after \textsf{propositions}.  Items are set \texttt{flush} and the list runs
+%   at \texttt{leftmargin\,=\,0} inside the frame, so the contents keep the
+%   current level's effective left margin while the frame is centred with its rule
+%   one padding (\(6\,\)pt) to the left of them.  Because it is an ordinary style,
+%   it can be inherited: \verb|\SetPropStyle{mybox}{style=boxed, format=\textbf{#1}}|.
+% \begin{prop}[style=boxed]
+%   \item[name=Note] A framed list, with a flush label and a plain paragraph.
+%   \item[counter=none] The unlabelled line sits flush at the same edge.
+% \end{prop}
 % \end{description}
 %
 % \section{Cross-referencing}\label{sect:xref}
@@ -3161,6 +3175,99 @@
 \SetPropStyle { hierarchical }
   {
     style = \proplevelchoice { h-base , h-sub } ,
+  }
+
+%<doc>%% ====================================================================
+%<doc>%% boxed: wrap the list in a frame (mdframed, or tcolorbox as a fallback)
+%<doc>%% ====================================================================
+%<doc>%% Geometry.  Inside the frame the list runs at leftmargin=0 with flush
+%<doc>%% items, so the contents keep the level's normal effective left margin and
+%<doc>%% labels sit at the content edge rather than hanging.  The frame is centred
+%<doc>%% with its rule one padding to the left of the contents --- i.e. at the
+%<doc>%% current level's leftmargin (\leftmargini, \leftmarginii, ... chosen by
+%<doc>%% \proplevelchoice) minus the padding, clamped so it never crosses the
+%<doc>%% surrounding margin.  The frame package may be loaded before or after
+%<doc>%% propositions, so which one to use is resolved at \begin{document}.
+
+\msg_new:nnn { props } { no-box-package }
+  { Style~'boxed'~needs~mdframed~or~tcolorbox~loaded;~list~left~unframed. }
+
+\dim_new:N \l__props_box_pad_dim            %% padding between contents and rule
+\dim_set:Nn \l__props_box_pad_dim { 6pt }
+\dim_new:N \l__props_box_margin_dim         %% frame outer margin, computed per level
+
+\cs_new_protected:Nn \__props_box_set_margin:
+  {
+    \dim_set:Nn \l__props_box_margin_dim
+      {
+        \dim_max:nn { \c_zero_dim }
+          {
+            \proplevelchoice
+              { \leftmargini , \leftmarginii , \leftmarginiii ,
+                \leftmarginiv , \leftmarginv , \leftmarginvi }
+            - \l__props_box_pad_dim
+          }
+      }
+  }
+
+\cs_new_protected:Nn \__props_box_begin_mdframed:
+  {
+    \begin { mdframed }
+      [
+        linewidth = 0.4pt ,
+        leftmargin = \l__props_box_margin_dim ,
+        rightmargin = \l__props_box_margin_dim ,
+        innerleftmargin = \l__props_box_pad_dim ,
+        innerrightmargin = \l__props_box_pad_dim ,
+        innertopmargin = \l__props_box_pad_dim ,
+        innerbottommargin = \l__props_box_pad_dim ,
+        skipabove = \topsep , skipbelow = \topsep
+      ]
+  }
+
+\cs_new_protected:Nn \__props_box_begin_tcolorbox:
+  {
+    \begin { tcolorbox }
+      [
+        colback = white , colframe = black ,
+        boxrule = 0.4pt , arc = 0pt , boxsep = 0pt ,
+        left~skip = \l__props_box_margin_dim ,
+        right~skip = \l__props_box_margin_dim ,
+        left = \l__props_box_pad_dim , right = \l__props_box_pad_dim ,
+        top = \l__props_box_pad_dim , bottom = \l__props_box_pad_dim
+      ]
+  }
+
+%% Defaults before \begin{document}: warn if used with no frame package.
+\cs_new_protected:Nn \__props_box_begin: { \msg_warning:nn { props } { no-box-package } }
+\cs_new_protected:Nn \__props_box_end:   { }
+
+\AtBeginDocument
+  {
+    \IfPackageLoadedTF { mdframed }
+      {
+        \cs_set_protected:Nn \__props_box_begin:
+          { \__props_box_set_margin: \__props_box_begin_mdframed: }
+        \cs_set_protected:Nn \__props_box_end: { \end { mdframed } }
+      }
+      {
+        \IfPackageLoadedTF { tcolorbox }
+          {
+            \cs_set_protected:Nn \__props_box_begin:
+              { \__props_box_set_margin: \__props_box_begin_tcolorbox: }
+            \cs_set_protected:Nn \__props_box_end: { \end { tcolorbox } }
+          }
+          { }
+      }
+  }
+
+%% The style itself is defined now, so it can be inherited or customised; the
+%% wrapper defers to \__props_box_begin:/end:, finalised at \begin{document}.
+\SetPropStyle { boxed }
+  {
+    align = flush , leftmargin = 0pt , rightmargin = 0pt ,
+    wrapper~begin = { \__props_box_begin: } ,
+    wrapper~end   = { \__props_box_end: } ,
   }
 
 %    \end{macrocode}
