@@ -3,112 +3,115 @@
 \usepackage{mdframed}
 \usepackage{propositions}
 
-%% The "boxed" style is built into the package (available when mdframed or
+%% The "framed" style is built into the package (available when mdframed or
 %% tcolorbox is loaded): it frames the list, keeping the level's effective left
 %% margin and centring the frame one padding to the left of the contents.  It is
-%% used directly below, and inherited by boxedbold.
+%% used directly below, and inherited by framedbold.
 
 %% A custom coloured variant, demonstrating a user-defined wrapper with the same
-%% geometry as the built-in boxed style plus a tinted background.
-\newlength\boxedpad    \setlength\boxedpad{6pt}
-\newlength\boxedouter  \setlength\boxedouter{\dimexpr\leftmargini-\boxedpad\relax}
+%% geometry as the built-in framed style plus a tinted background.
+\newlength\framedpad    \setlength\framedpad{6pt}
+\newlength\framedouter  \setlength\framedouter{\dimexpr\leftmargini-\framedpad\relax}
 \SetPropStyle{shaded}{
   align = flush, leftmargin = 0pt, rightmargin = 0pt,
   wrapper begin = {\begin{mdframed}[
       linewidth=0.4pt, linecolor=blue!40, backgroundcolor=blue!8,
-      leftmargin=\boxedouter, rightmargin=\boxedouter,
-      innerleftmargin=\boxedpad, innerrightmargin=\boxedpad,
-      innertopmargin=\boxedpad, innerbottommargin=\boxedpad,
+      leftmargin=\framedouter, rightmargin=\framedouter,
+      innerleftmargin=\framedpad, innerrightmargin=\framedpad,
+      innertopmargin=\framedpad, innerbottommargin=\framedpad,
       skipabove=\topsep, skipbelow=\topsep]},
   wrapper end   = {\end{mdframed}},
 }
 
-%% Inheritance: a style whose parent is the built-in "boxed" inherits the frame
+%% Inheritance: a style whose parent is the built-in "framed" inherits the frame
 %% and adds item-level formatting (bold names).
-\SetPropStyle{boxedbold}{
-  style  = boxed,
+\SetPropStyle{framedbold}{
+  style  = framed,
   format = \textbf{#1},
 }
 
 \begin{document}
 
-\section{Geometry: boxed vs.\ unboxed}
+\section{Geometry: framed vs.\ unframed}
 
-The horizontal rules mark the surrounding text margins.  The boxed list keeps
-the same effective left margin as the unboxed body: the contents sit where the
-unboxed body would, one padding to the right of the frame rule, and the frame
-is centred so the right side is symmetric.  Boxed items are flush, so their
+The horizontal rules mark the surrounding text margins.  The framed list keeps
+the same effective left margin as the unframed body: the contents sit where the
+unframed body would, one padding to the right of the frame rule, and the frame
+is centred so the right side is symmetric.  Framed items are flush, so their
 labels sit at the content edge rather than hanging into the padding.
 
 \noindent\rule{\textwidth}{0.3pt}
 
 \begin{prop}
-  \item[name=Claim] A named unboxed proposition, long enough to wrap onto a
+  \item[name=Claim] A named unframed proposition, long enough to wrap onto a
   second line so the left and right body edges are visible for comparison.
-  \item[counter=none] An unlabelled unboxed proposition.
+  \item[counter=none] An unlabelled unframed proposition.
 \end{prop}
 
-\begin{prop}[style=boxed]
-  \item[name=Claim] A named boxed proposition, long enough to wrap onto a second
+\begin{prop}[style=framed]
+  \item[name=Claim] A named framed proposition, long enough to wrap onto a second
   line so the left and right body edges are visible for comparison.
-  \item[counter=none] An unlabelled boxed proposition.
+  \item[counter=none] An unlabelled framed proposition, long enough to wrap onto a second
+  line so the left and right body edges are visible for comparison.
+  \item A numbered framed proposition, long enough to wrap onto a second
+  line so the left and right body edges are visible for comparison.  (We hope users won't want to do this!)
 \end{prop}
 
 \noindent\rule{\textwidth}{0.3pt}
 
-\section{Boxed style via \texttt{style=boxed}}
+\section{Framed style via \texttt{style=framed}}
 
-The entire list below should sit inside a single framed box:
+The entire list below should sit inside a single frame:
 
-\begin{prop}[style=boxed]
+\begin{prop}[style=framed]
   \item First proposition. \label{w:first}
   \item Second proposition. \label{w:second}
-  \item[Key Claim] A named item inside the box. \label{w:named}
+  \item[Key Claim] A named item inside the frame. \label{w:named}
 \end{prop}
 
-Cross-references still work across the box boundary:
+Cross-references still work across the frame boundary:
 \ref{w:first}, \ref{w:second}, \ref{w:named}.
 
 \section{Coloured wrapper with options}
 
 \begin{prop}[style=shaded]
-  \item This list is in a shaded, blue-edged box.
+  \item This list is in a shaded, blue-edged frame.
   \item Second item.
 \end{prop}
 
-\section{Inheriting a wrapper (\texttt{boxedbold})}
+\section{Inheriting a wrapper (\texttt{framedbold})}
 
-\begin{prop}[style=boxedbold]
-  \item[Lemma] Inherits the box from \texttt{boxed}, names are bold.
-  \item[Corollary] Another bold-named, boxed item.
+\begin{prop}[style=framedbold]
+  \item[Lemma] Inherits the frame from \texttt{framed}, names are bold.
+  \item[Corollary] Another bold-named, framed item.
 \end{prop}
 
 \section{Wrapper keys used directly (no style)}
 
 \begin{prop}[wrapper begin = {\begin{mdframed}}, wrapper end = {\end{mdframed}}]
-  \item Boxed via direct \texttt{wrapper begin}/\texttt{wrapper end} keys.
+  \item Framed via direct \texttt{wrapper begin}/\texttt{wrapper end} keys.
   \item Second item.
 \end{prop}
 
-\section{An ordinary list is not boxed}
+\section{An ordinary list is not framed}
 
 This list should have no frame (the env-arg wrapper above was local to its
 own environment):
 
 \begin{prop}
-  \item Plain, unboxed proposition.
+  \item Plain, unframed proposition.
   \item Another plain one.
 \end{prop}
 
-\section{Nesting: only the outermost list is boxed}
+\section{Nesting: only the outermost list is framed}
 
 Only the outer list should get a frame; the sublist sits inside that same
-frame and is not separately boxed.
+frame and is not separately framed.
 
-\begin{prop}[style=boxed]
-  \item Outer item, inside the box. \label{w:outer}
+\begin{prop}[style=framed]
+  \item Outer item, inside the frame. \label{w:outer}
   \begin{prop}
-    \item Inner item (sublist is not separately boxed).
+    \item Inner item (sublist is not separately framed).
     \item Second inner item.
   \end{prop}
   \item Back to the outer level. \label{w:back}
@@ -116,10 +119,10 @@ frame and is not separately boxed.
 
 References: \ref{w:outer}, \ref{w:back}.
 
-A standard \texttt{itemize} nested in a boxed prop keeps its bullets and is
-not boxed:
+A standard \texttt{itemize} nested in a framed prop keeps its bullets and is
+not framed:
 
-\begin{prop}[style=boxed]
+\begin{prop}[style=framed]
   \item A proposition.
   \begin{itemize}
     \item an ordinary bullet
@@ -128,34 +131,34 @@ not boxed:
   \item Another proposition.
 \end{prop}
 
-\section{\texttt{\textbackslash propoptions\{style=boxed\}} as a scoped default}
+\section{\texttt{\textbackslash propoptions\{style=framed\}} as a scoped default}
 
 \begingroup
-\propoptions{style=boxed}
+\propoptions{style=framed}
 
-Both lists in this group are boxed by default:
+Both lists in this group are framed by default:
 
 \begin{prop}
-  \item Boxed by the group-level default.
+  \item Framed by the group-level default.
 \end{prop}
 
 \begin{prop}
-  \item Also boxed by the same default.
+  \item Also framed by the same default.
 \end{prop}
 \endgroup
 
-Outside the group, the default is gone, so this list is unboxed:
+Outside the group, the default is gone, so this list is unframed:
 
 \begin{prop}
-  \item Not boxed.
+  \item Not framed.
 \end{prop}
 
 \section{Nesting wrappers explicitly}
 
-A sublist that requests a wrapper of its own is boxed separately, inside the
-outer box.  A \emph{different} wrapper (plain frame outside, shaded inside):
+A sublist that requests a wrapper of its own is framed separately, inside the
+outer frame.  A \emph{different} wrapper (plain frame outside, shaded inside):
 
-\begin{prop}[style=boxed]
+\begin{prop}[style=framed]
   \item Outer item. \label{w:no}
   \begin{prop}[style=shaded]
     \item Inner, shaded.
@@ -167,21 +170,21 @@ outer box.  A \emph{different} wrapper (plain frame outside, shaded inside):
 The \emph{same} wrapper explicitly re-requested also nests (frame inside a
 frame); only an \emph{inherited}, unrequested wrapper is suppressed:
 
-\begin{prop}[style=boxed]
+\begin{prop}[style=framed]
   \item Outer item.
-  \begin{prop}[style=boxed]
+  \begin{prop}[style=framed]
     \item Inner, its own frame.
   \end{prop}
   \item Outer item again.
 \end{prop}
 
-\section{\texttt{\textbackslash propoptions} inside a boxed environment}
+\section{\texttt{\textbackslash propoptions} inside a framed environment}
 
 \texttt{\textbackslash propoptions\{style=shaded\}} issued inside the outer
-(boxed) environment---no explicit group needed---makes each following sublist
-shaded; the outer box is unaffected and still closes correctly:
+(framed) environment---no explicit group needed---makes each following sublist
+shaded; the outer frame is unaffected and still closes correctly:
 
-\begin{prop}[style=boxed]
+\begin{prop}[style=framed]
   \item Outer, before switching the sublist default.
   \propoptions{style=shaded}
   \begin{prop}
@@ -190,7 +193,7 @@ shaded; the outer box is unaffected and still closes correctly:
   \begin{prop}
     \item Second shaded sublist.
   \end{prop}
-  \item Outer, after (still only the outer box).
+  \item Outer, after (still only the outer frame).
 \end{prop}
 
 \end{document}
