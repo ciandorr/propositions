@@ -408,6 +408,71 @@
 %   sizes the left margin to accommodate labels up to the 20th item.
 % \end{docCommand}
 %
+% \subsection{Wrapping the list in another environment}\label{sect:keys-wrapper}
+%
+% \begin{docKeys}[
+%     doc parameter = {=\meta{code}},
+%   ]
+%   {
+%     { doc name = wrapper begin },
+%     { doc name = wrapper end },
+%   }
+%   Insert arbitrary \meta{code} immediately before \verb|\begin{list}| and
+%   immediately after \verb|\end{list}|, so that the whole list is wrapped in
+%   another environment.  These keys act at the environment level: they fire
+%   once around the entire list, not once per \cs{item}.  When \texttt{prop}
+%   environments are nested, an \emph{inherited} wrapper is not repeated---the
+%   outer box is not drawn again around each sublist---but a sublist that sets a
+%   wrapper of its own (via its own \texttt{style=}, or a \refCom{propoptions}
+%   issued inside the enclosing environment) is wrapped separately, nested inside.
+%   They may be set in the
+%   optional argument of \texttt{prop}/\texttt{inlineprop}, via
+%   \refCom{propoptions}, or---most usefully---inside a \refCom{SetPropStyle}
+%   definition.  Like the list dimensions, a setting made in the environment
+%   argument is local to that environment and a \cs{propoptions} setting is a
+%   group-scoped default for subsequent environments; at item level the keys are
+%   ignored.
+% \end{docKeys}
+%
+% The canonical use is to frame a list with a package such as \textsf{mdframed}.
+% Defining a \texttt{boxed} style once,
+% \begin{codebox}
+% \SetPropStyle{boxed}{
+%   wrapper begin = {\begin{mdframed}},
+%   wrapper end   = {\end{mdframed}}}
+% \end{codebox}
+% lets \verb|\begin{prop}[style=boxed]| put the entire list inside an
+% \textsf{mdframed} frame.  Because \texttt{boxed} is an ordinary style, another
+% style can inherit the frame with \texttt{style\,=\,boxed} and add its own item
+% formatting on top.
+%
+% Brace any value that contains a comma (such as \textsf{mdframed} options), so
+% that the comma is not read as a key separator:
+% \begin{codebox}
+% wrapper begin = {\begin{mdframed}[linecolor=red, linewidth=2pt]}
+% \end{codebox}
+% The wrapping environment must be one that can be split into separate begin and
+% end code---that is, it must not read its body as a macro argument.
+% \textsf{mdframed} and the default \textsf{tcolorbox} environment qualify;
+% environments that grab their body (via \cs{collect@body} or similar) do not.
+% To turn the wrapper off again within a group, set the keys to empty
+% (\texttt{wrapper begin\,=\,\{\}, wrapper end\,=\,\{\}}).
+%
+% The live example below uses \textsf{tcolorbox} (already loaded by this manual);
+% with \textsf{mdframed} only the two environment names change.
+% \begin{example}
+% \SetPropStyle{boxed}{
+%   wrapper begin = {\begin{tcolorbox}},
+%   wrapper end   = {\end{tcolorbox}}}
+% \begin{prop}[style=boxed]
+%   \item A boxed proposition.
+%   \label{wx:a}
+%   \item And a second one.
+%   \label{wx:b}
+% \end{prop}
+% See \ref{wx:a} and \ref{wx:b}.
+% \end{example}
+%
 % \subsection{Default styles}\label{sect:keys-defaults}
 %
 % When \cs{pitem} or \cs{ptag} is used without an explicit \texttt{style}, one of the following defaults is selected based on whether a name/counter was given and whether ptag mode is active.
@@ -1656,6 +1721,14 @@
       { \exp_args:NV \label \l__props_label_tl }
   }
 
+%<doc>%% Save the ambient (kernel) \item at load time.  When a wrapper environment
+%<doc>%% (mdframed, center, quote, ... — all of which call \item internally during
+%<doc>%% their own setup) is fired inside a *nested* prop, \item is still bound to
+%<doc>%% the proposition \item command from the enclosing list, so the wrapper's
+%<doc>%% internal \item would spuriously create a prop item.  We restore this saved
+%<doc>%% meaning around the wrapper-begin code (see the prop/inlineprop environments).
+\cs_new_eq:NN \__props_kernel_item: \item
+
 %<doc>%% The proposition \item command used inside prop and inlineprop.
 %<doc>%% Defined with xparse so the optional-argument parser correctly handles
 %<doc>%% nested brackets (e.g. \item[name=\oref[*]{foo}]).  Assigned to \item
@@ -1665,6 +1738,28 @@
     \IfValueTF { #1 }
       { \__props_pitem_body:n { #1 } }
       { \__props_pitem_body:n { } }
+  }
+
+%<doc>%% \item is bound to this dispatcher (not directly to \__props_item_cmd:)
+%<doc>%% inside prop/inlineprop.  It makes the proposition \item available only
+%<doc>%% *directly* under a prop, falling back to the ambient \item inside any
+%<doc>%% nested list (itemize, enumerate, description, quote, ...) or other
+%<doc>%% \item-using environment.
+%<doc>%%
+%<doc>%% Detection: a prop sets \makelabel to \__props_display_label:n.  Every
+%<doc>%% \LaTeX \list / \trivlist resets \makelabel (to \@mklab or {#1->#1}), so
+%<doc>%% inside any nested list \makelabel no longer equals \__props_display_label:n
+%<doc>%% and we defer to the ambient \item; only a (nested) prop sets it back.
+%<doc>%% Unlike \@listdepth (which \texttt{minipage} reinitialises to zero, see
+%<doc>%% latex.ltx), \makelabel is purely group-local, so this is robust even when
+%<doc>%% the prop sits inside a box-based wrapper such as \texttt{tcolorbox}.
+%<doc>%% Neither branch grabs the optional argument: each target does its own
+%<doc>%% (incompatible) optional-arg scan.
+\cs_new_protected:Nn \__props_item_dispatch:
+  {
+    \cs_if_eq:NNTF \makelabel \__props_display_label:n
+      { \__props_item_cmd: }
+      { \__props_kernel_item: }
   }
 
 %<doc>%% ====================================================================
@@ -2267,6 +2362,25 @@
 \tl_new:N \l__props_listparindent_tl
 \tl_new:N \l__props_labelindent_tl
 
+%<doc>%% --- Wrapper (environment-level) ---
+%<doc>%% Code injected immediately before \begin{list} (wrap begin) and
+%<doc>%% immediately after \end{list} (wrap end), wrapping the whole list in
+%<doc>%% another environment (e.g. mdframed).  Set via the \texttt{wrapper begin}
+%<doc>%% / \texttt{wrapper end} keys, typically inside a style.  Local assignment,
+%<doc>%% so an env-arg or \cs{propoptions} setting is group-scoped like the dims.
+%<doc>%%
+%<doc>%% Nesting is handled purely by \TeX{} grouping, with no extra state: an env
+%<doc>%% fires \l__props_wrap_begin_tl (if non-empty), then CLEARS both wrapper
+%<doc>%% variables inside the list group.  Nested props therefore inherit nothing
+%<doc>%% and open a box only if they set a wrapper of their own (so identical
+%<doc>%% boxes-in-boxes are possible when asked for, and never happen by accident).
+%<doc>%% The wrap-end code runs after \end{list}, by which point the list group has
+%<doc>%% closed and the variables have reverted to the values this env fired with ---
+%<doc>%% so begin and end always match, and a \cs{propoptions} issued inside the body
+%<doc>%% (whose assignments live in the list group) cannot leak into the closing.
+\tl_new:N \l__props_wrap_begin_tl
+\tl_new:N \l__props_wrap_end_tl
+
 %<doc>%% \makelabel for prop lists: left-aligns the label and prevents line breaks.
 \cs_new:Nn \__props_display_label:n { \mbox{#1} \hfill }
 
@@ -2365,9 +2479,17 @@
           }
       }
     \bool_gset_false:N \g__props_last_was_prop_bool
+    %% Wrapper: open the surrounding environment (e.g. mdframed) around the
+    %% whole list.  Fired here so the box encloses \begin{list}...\end{list}.
+    %% Wrapper environments that call \item internally (center, quote, mdframed)
+    %% are handled by the item dispatcher: their \list/\trivlist resets \makelabel,
+    %% so their internal \item resolves to the ambient \item, not a prop item.
+    \tl_if_empty:NF \l__props_wrap_begin_tl { \l__props_wrap_begin_tl }
     \begin{list} {}
       {
-        \cs_set:Npn \makelabel ##1 { \__props_display_label:n {##1} }
+        %% \makelabel set by \cs_set_eq: (not a wrapper) so the item dispatcher
+        %% can recognise a prop list by \makelabel's identity.
+        \cs_set_eq:NN \makelabel \__props_display_label:n
         %% Apply dimension overrides.  Each value may be a single length
         %% (applied at all levels) or a comma-list of per-level lengths.
         %% Empty = inherit the document class default.
@@ -2484,9 +2606,16 @@
         \@topsepadd = \g__props_natural_topsepadd_skip
         \bool_gset_false:N \g__props_suppress_topsep_bool
       }
-    %% Locally redefine \item as the proposition-item command.
+    %% Bind \item to the dispatcher, so the proposition \item applies only
+    %% directly under this prop and reverts to the ambient \item inside any
+    %% nested list (the dispatcher keys off \makelabel; see its definition).
     %% Local to the list group; undone automatically by \end{list}.
-    \cs_set_eq:NN \item \__props_item_cmd:
+    \cs_set_eq:NN \item \__props_item_dispatch:
+    %% Clear the wrapper variables inside the list group: nested props inherit
+    %% no wrapper (so an inherited box is not repeated), and \end{list} restores
+    %% these to the values this env fired with, for the matching wrap-end code.
+    \tl_clear:N \l__props_wrap_begin_tl
+    \tl_clear:N \l__props_wrap_end_tl
   }
   {
     %% Save this list's \itemsep+\parsep as the TARGET spacing for the
@@ -2499,6 +2628,10 @@
         \skip_gadd:Nn \g__props_prev_itemsep_parsep_skip { \parsep }
       }
     \end{list}
+    %% Wrapper: close the surrounding environment.  \end{list} has just restored
+    %% \l__props_wrap_end_tl to the value this env fired \l__props_wrap_begin_tl
+    %% with (the in-list clear reverted), so this matches the opening.
+    \tl_if_empty:NF \l__props_wrap_end_tl { \l__props_wrap_end_tl }
     %% Pop parent stacks.  At level >= 2, restore the popped values
     %% into \g__props_last_* so that re-entering a prop for intertext
     %% sees the correct parent (not a stale sub-item).
@@ -2547,10 +2680,26 @@
       }
     %% Compute the preview label for \propformlabel.
     \__props_compute_env_preview:
-    %% Locally redefine \item as the proposition-item command.
-    \cs_set_eq:NN \item \__props_item_cmd:
+    %% Wrapper: open the surrounding environment around the inline content.
+    \tl_if_empty:NF \l__props_wrap_begin_tl { \l__props_wrap_begin_tl }
+    %% inlineprop opens no list, so provide an explicit group to play the list
+    %% group's role: clearing the wrapper variables inside it stops nested props
+    %% inheriting the wrapper, and \group_end: in the end-code restores them for
+    %% the matching wrap-end (same mechanism as prop; see the wrapper declarations).
+    \group_begin:
+    \tl_clear:N \l__props_wrap_begin_tl
+    \tl_clear:N \l__props_wrap_end_tl
+    %% Bind \item to the dispatcher.  inlineprop opens no list, so set \makelabel
+    %% to the prop label maker by hand (it is what the dispatcher keys off); a
+    %% nested list resets \makelabel and the dispatcher reverts to ambient \item.
+    \cs_set_eq:NN \makelabel \__props_display_label:n
+    \cs_set_eq:NN \item \__props_item_dispatch:
   }
   {
+    %% Close the wrapper group (restoring the wrapper variables), then run the
+    %% matching wrap-end code.
+    \group_end:
+    \tl_if_empty:NF \l__props_wrap_end_tl { \l__props_wrap_end_tl }
     %% Pop parent stacks (same restore logic as prop environment)
     \seq_gpop:NN \g__props_parent_tpl_seq \l_tmpa_tl
     \seq_gpop:NN \g__props_parent_cnt_seq \l_tmpb_tl
@@ -2714,6 +2863,8 @@
     itemindent        .tl_set:N    = \l__props_itemindent_tl ,
     listparindent     .tl_set:N    = \l__props_listparindent_tl ,
     labelindent       .tl_set:N    = \l__props_labelindent_tl ,
+    wrapper~begin     .tl_set:N    = \l__props_wrap_begin_tl ,
+    wrapper~end       .tl_set:N    = \l__props_wrap_end_tl ,
     unknown           .code:n      = {} ,
   }
 
@@ -2800,6 +2951,10 @@
     itemindent        .tl_set:N    = \l__props_itemindent_tl ,
     listparindent     .tl_set:N    = \l__props_listparindent_tl ,
     labelindent       .tl_set:N    = \l__props_labelindent_tl ,
+    %% Wrapper: begin/end code injected around the whole list (see
+    %% \l__props_wrap_begin_tl).  Settable directly here or via a style.
+    wrapper~begin     .tl_set:N    = \l__props_wrap_begin_tl ,
+    wrapper~end       .tl_set:N    = \l__props_wrap_end_tl ,
     %% Unknown keys are item-level keys: accumulate in \l__props_defaults_tl.
     %% Local assignment keeps them group-scoped; \propoptions and \begin{prop}
     %% keys both go here (env-arg keys are appended after propoptions keys,

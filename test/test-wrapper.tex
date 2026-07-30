@@ -1,0 +1,168 @@
+\documentclass{article}
+\usepackage{xcolor}
+\usepackage{mdframed}
+\usepackage{propositions}
+
+%% A "boxed" style: wraps the whole prop list in an mdframed environment.
+%% The wrapper begin/end keys are environment-level: they fire once around
+%% \begin{list}...\end{list}, not once per item.  Values are braced so any
+%% commas inside the mdframed options are not seen as key separators.
+\SetPropStyle{boxed}{
+  wrapper begin = {\begin{mdframed}},
+  wrapper end   = {\end{mdframed}},
+}
+
+%% A coloured variant, to show options can be passed to the wrapper env.
+\SetPropStyle{shaded}{
+  wrapper begin = {\begin{mdframed}[backgroundcolor=blue!8, linecolor=blue!40]},
+  wrapper end   = {\end{mdframed}},
+}
+
+%% Inheritance: a style whose parent is "boxed" inherits the wrapper and
+%% adds item-level formatting (bold names).  Demonstrates that wrapper keys
+%% propagate down the style chain.
+\SetPropStyle{boxedbold}{
+  style  = boxed,
+  format = \textbf{#1},
+}
+
+\begin{document}
+
+\section{Boxed style via \texttt{style=boxed}}
+
+The entire list below should sit inside a single framed box:
+
+\begin{prop}[style=boxed]
+  \item First proposition. \label{w:first}
+  \item Second proposition. \label{w:second}
+  \item[Key Claim] A named item inside the box. \label{w:named}
+\end{prop}
+
+Cross-references still work across the box boundary:
+\ref{w:first}, \ref{w:second}, \ref{w:named}.
+
+\section{Coloured wrapper with options}
+
+\begin{prop}[style=shaded]
+  \item This list is in a shaded, blue-edged box.
+  \item Second item.
+\end{prop}
+
+\section{Inheriting a wrapper (\texttt{boxedbold})}
+
+\begin{prop}[style=boxedbold]
+  \item[Lemma] Inherits the box from \texttt{boxed}, names are bold.
+  \item[Corollary] Another bold-named, boxed item.
+\end{prop}
+
+\section{Wrapper keys used directly (no style)}
+
+\begin{prop}[wrapper begin = {\begin{mdframed}}, wrapper end = {\end{mdframed}}]
+  \item Boxed via direct \texttt{wrapper begin}/\texttt{wrapper end} keys.
+  \item Second item.
+\end{prop}
+
+\section{An ordinary list is not boxed}
+
+This list should have no frame (the env-arg wrapper above was local to its
+own environment):
+
+\begin{prop}
+  \item Plain, unboxed proposition.
+  \item Another plain one.
+\end{prop}
+
+\section{Nesting: only the outermost list is boxed}
+
+Only the outer list should get a frame; the sublist sits inside that same
+frame and is not separately boxed.
+
+\begin{prop}[style=boxed]
+  \item Outer item, inside the box. \label{w:outer}
+  \begin{prop}
+    \item Inner item (sublist is not separately boxed).
+    \item Second inner item.
+  \end{prop}
+  \item Back to the outer level. \label{w:back}
+\end{prop}
+
+References: \ref{w:outer}, \ref{w:back}.
+
+A standard \texttt{itemize} nested in a boxed prop keeps its bullets and is
+not boxed:
+
+\begin{prop}[style=boxed]
+  \item A proposition.
+  \begin{itemize}
+    \item an ordinary bullet
+    \item another bullet
+  \end{itemize}
+  \item Another proposition.
+\end{prop}
+
+\section{\texttt{\textbackslash propoptions\{style=boxed\}} as a scoped default}
+
+\begingroup
+\propoptions{style=boxed}
+
+Both lists in this group are boxed by default:
+
+\begin{prop}
+  \item Boxed by the group-level default.
+\end{prop}
+
+\begin{prop}
+  \item Also boxed by the same default.
+\end{prop}
+\endgroup
+
+Outside the group, the default is gone, so this list is unboxed:
+
+\begin{prop}
+  \item Not boxed.
+\end{prop}
+
+\section{Nesting wrappers explicitly}
+
+A sublist that requests a wrapper of its own is boxed separately, inside the
+outer box.  A \emph{different} wrapper (plain frame outside, shaded inside):
+
+\begin{prop}[style=boxed]
+  \item Outer item. \label{w:no}
+  \begin{prop}[style=shaded]
+    \item Inner, shaded.
+    \item Inner, shaded two.
+  \end{prop}
+  \item Outer item again.
+\end{prop}
+
+The \emph{same} wrapper explicitly re-requested also nests (frame inside a
+frame); only an \emph{inherited}, unrequested wrapper is suppressed:
+
+\begin{prop}[style=boxed]
+  \item Outer item.
+  \begin{prop}[style=boxed]
+    \item Inner, its own frame.
+  \end{prop}
+  \item Outer item again.
+\end{prop}
+
+\section{\texttt{\textbackslash propoptions} inside a boxed environment}
+
+\texttt{\textbackslash propoptions\{style=shaded\}} issued inside the outer
+(boxed) environment---no explicit group needed---makes each following sublist
+shaded; the outer box is unaffected and still closes correctly:
+
+\begin{prop}[style=boxed]
+  \item Outer, before switching the sublist default.
+  \propoptions{style=shaded}
+  \begin{prop}
+    \item First shaded sublist.
+  \end{prop}
+  \begin{prop}
+    \item Second shaded sublist.
+  \end{prop}
+  \item Outer, after (still only the outer box).
+\end{prop}
+
+\end{document}

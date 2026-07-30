@@ -680,11 +680,20 @@
       { \exp_args:NV \label \l__props_label_tl }
   }
 
+\cs_new_eq:NN \__props_kernel_item: \item
+
 \NewDocumentCommand \__props_item_cmd: { o }
   {
     \IfValueTF { #1 }
       { \__props_pitem_body:n { #1 } }
       { \__props_pitem_body:n { } }
+  }
+
+\cs_new_protected:Nn \__props_item_dispatch:
+  {
+    \cs_if_eq:NNTF \makelabel \__props_display_label:n
+      { \__props_item_cmd: }
+      { \__props_kernel_item: }
   }
 
 
@@ -1184,6 +1193,9 @@
 \tl_new:N \l__props_listparindent_tl
 \tl_new:N \l__props_labelindent_tl
 
+\tl_new:N \l__props_wrap_begin_tl
+\tl_new:N \l__props_wrap_end_tl
+
 \cs_new:Nn \__props_display_label:n { \mbox{#1} \hfill }
 
 \bool_new:N \l__props_continue_bool
@@ -1262,9 +1274,17 @@
           }
       }
     \bool_gset_false:N \g__props_last_was_prop_bool
+    %% Wrapper: open the surrounding environment (e.g. mdframed) around the
+    %% whole list.  Fired here so the box encloses \begin{list}...\end{list}.
+    %% Wrapper environments that call \item internally (center, quote, mdframed)
+    %% are handled by the item dispatcher: their \list/\trivlist resets \makelabel,
+    %% so their internal \item resolves to the ambient \item, not a prop item.
+    \tl_if_empty:NF \l__props_wrap_begin_tl { \l__props_wrap_begin_tl }
     \begin{list} {}
       {
-        \cs_set:Npn \makelabel ##1 { \__props_display_label:n {##1} }
+        %% \makelabel set by \cs_set_eq: (not a wrapper) so the item dispatcher
+        %% can recognise a prop list by \makelabel's identity.
+        \cs_set_eq:NN \makelabel \__props_display_label:n
         %% Apply dimension overrides.  Each value may be a single length
         %% (applied at all levels) or a comma-list of per-level lengths.
         %% Empty = inherit the document class default.
@@ -1381,9 +1401,16 @@
         \@topsepadd = \g__props_natural_topsepadd_skip
         \bool_gset_false:N \g__props_suppress_topsep_bool
       }
-    %% Locally redefine \item as the proposition-item command.
+    %% Bind \item to the dispatcher, so the proposition \item applies only
+    %% directly under this prop and reverts to the ambient \item inside any
+    %% nested list (the dispatcher keys off \makelabel; see its definition).
     %% Local to the list group; undone automatically by \end{list}.
-    \cs_set_eq:NN \item \__props_item_cmd:
+    \cs_set_eq:NN \item \__props_item_dispatch:
+    %% Clear the wrapper variables inside the list group: nested props inherit
+    %% no wrapper (so an inherited box is not repeated), and \end{list} restores
+    %% these to the values this env fired with, for the matching wrap-end code.
+    \tl_clear:N \l__props_wrap_begin_tl
+    \tl_clear:N \l__props_wrap_end_tl
   }
   {
     %% Save this list's \itemsep+\parsep as the TARGET spacing for the
@@ -1396,6 +1423,10 @@
         \skip_gadd:Nn \g__props_prev_itemsep_parsep_skip { \parsep }
       }
     \end{list}
+    %% Wrapper: close the surrounding environment.  \end{list} has just restored
+    %% \l__props_wrap_end_tl to the value this env fired \l__props_wrap_begin_tl
+    %% with (the in-list clear reverted), so this matches the opening.
+    \tl_if_empty:NF \l__props_wrap_end_tl { \l__props_wrap_end_tl }
     %% Pop parent stacks.  At level >= 2, restore the popped values
     %% into \g__props_last_* so that re-entering a prop for intertext
     %% sees the correct parent (not a stale sub-item).
@@ -1441,10 +1472,26 @@
       }
     %% Compute the preview label for \propformlabel.
     \__props_compute_env_preview:
-    %% Locally redefine \item as the proposition-item command.
-    \cs_set_eq:NN \item \__props_item_cmd:
+    %% Wrapper: open the surrounding environment around the inline content.
+    \tl_if_empty:NF \l__props_wrap_begin_tl { \l__props_wrap_begin_tl }
+    %% inlineprop opens no list, so provide an explicit group to play the list
+    %% group's role: clearing the wrapper variables inside it stops nested props
+    %% inheriting the wrapper, and \group_end: in the end-code restores them for
+    %% the matching wrap-end (same mechanism as prop; see the wrapper declarations).
+    \group_begin:
+    \tl_clear:N \l__props_wrap_begin_tl
+    \tl_clear:N \l__props_wrap_end_tl
+    %% Bind \item to the dispatcher.  inlineprop opens no list, so set \makelabel
+    %% to the prop label maker by hand (it is what the dispatcher keys off); a
+    %% nested list resets \makelabel and the dispatcher reverts to ambient \item.
+    \cs_set_eq:NN \makelabel \__props_display_label:n
+    \cs_set_eq:NN \item \__props_item_dispatch:
   }
   {
+    %% Close the wrapper group (restoring the wrapper variables), then run the
+    %% matching wrap-end code.
+    \group_end:
+    \tl_if_empty:NF \l__props_wrap_end_tl { \l__props_wrap_end_tl }
     %% Pop parent stacks (same restore logic as prop environment)
     \seq_gpop:NN \g__props_parent_tpl_seq \l_tmpa_tl
     \seq_gpop:NN \g__props_parent_cnt_seq \l_tmpb_tl
@@ -1577,6 +1624,8 @@
     itemindent        .tl_set:N    = \l__props_itemindent_tl ,
     listparindent     .tl_set:N    = \l__props_listparindent_tl ,
     labelindent       .tl_set:N    = \l__props_labelindent_tl ,
+    wrapper~begin     .tl_set:N    = \l__props_wrap_begin_tl ,
+    wrapper~end       .tl_set:N    = \l__props_wrap_end_tl ,
     unknown           .code:n      = {} ,
   }
 
@@ -1652,6 +1701,10 @@
     itemindent        .tl_set:N    = \l__props_itemindent_tl ,
     listparindent     .tl_set:N    = \l__props_listparindent_tl ,
     labelindent       .tl_set:N    = \l__props_labelindent_tl ,
+    %% Wrapper: begin/end code injected around the whole list (see
+    %% \l__props_wrap_begin_tl).  Settable directly here or via a style.
+    wrapper~begin     .tl_set:N    = \l__props_wrap_begin_tl ,
+    wrapper~end       .tl_set:N    = \l__props_wrap_end_tl ,
     %% Unknown keys are item-level keys: accumulate in \l__props_defaults_tl.
     %% Local assignment keeps them group-scoped; \propoptions and \begin{prop}
     %% keys both go here (env-arg keys are appended after propoptions keys,
