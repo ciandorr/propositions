@@ -1,0 +1,128 @@
+\documentclass{article}
+\usepackage{hyperref}
+\usepackage{amsmath}
+
+%% cleveref is loaded BEFORE propositions here, which used to be the broken
+%% order: cleveref derives the default reference format of each type from its
+%% name in its own \AtBeginDocument code, so a type declared in a later
+%% begin-document hook arrived too late and \cref reported
+%%   cref reference format for label type `prop' undefined
+%% printing ?? in place of the reference.  The package now declares its private
+%% `prop' type immediately when cleveref is already loaded, and defers only when
+%% it is not.  Both orders must give the same output; see test-props.tex for a
+%% document that loads them the other way round.
+\usepackage{cleveref}
+\usepackage{propositions}
+
+\newtheorem{proposition}{Proposition}
+\crefname{lemma}{lemma}{lemmas}
+\crefname{axiom}{axiom}{axioms}
+
+\begin{document}
+
+\section{References to prop items}
+
+\begin{prop}
+  \item[Physicalism] Everything is physical. \label{c:named}
+  \item An unnamed, numbered item. \label{c:numbered}
+  \begin{prop}
+    \item A sub-item. \label{c:sub}
+  \end{prop}
+\end{prop}
+
+\verb|\cref|: \cref{c:named}, \cref{c:numbered}, \cref{c:sub}.
+
+\verb|\ref|: \ref{c:named}, \ref{c:numbered}, \ref{c:sub}.
+
+Expected: the two lines agree.  The package's \texttt{prop} reference type has
+no name, so \verb|\cref| adds nothing to the formatted reference; in particular
+no \texttt{??} and no \texttt{cref reference format} warning in the log.
+
+\section{The user's own Proposition theorems are untouched}
+
+\begin{proposition} \label{c:thm} A theorem of the user's own. \end{proposition}
+
+\verb|\cref|: \cref{c:thm}.  Expected: \texttt{proposition 1} --- cleveref's
+own default for a \verb|\newtheorem| named \texttt{proposition}, which the
+package does not commandeer.
+
+\section{The \texttt{crefname} key}
+
+\texttt{crefname} gives one item a reference type of its own.  The type is
+carried by the cleveref alias of the \texttt{propanchor} counter, set globally
+for each item, so it must reach the item's own \verb|\label| however many groups
+away that is, and must not leak to the next item.
+
+\section{A section for comparison} \label{c:sec}
+
+\begin{prop}
+  \item[name=A1, crefname=lemma] A typed item. \label{c:lemma}
+  \item[name=A2] Untyped, directly after a typed one. \label{c:untyped}
+  \item[name=A3, crefname=axiom] A second, different type. \label{c:axiom}
+  \item Plain numbered, after two typed items. \label{c:plain}
+\end{prop}
+
+\begin{equation} x = y \ptag[name=T1, crefname=lemma] \label{c:ptag} \end{equation}
+\begin{equation} u = v \ptag[name=T2] \label{c:ptagplain} \end{equation}
+
+\begin{prop}
+  \item[name=B1, crefname=lemma] Typed in a later environment. \label{c:later}
+\end{prop}
+
+\verb|\cref|: \cref{c:lemma}; \cref{c:untyped}; \cref{c:axiom};
+\cref{c:plain}; \cref{c:ptag}; \cref{c:ptagplain}; \cref{c:later};
+\cref{c:sec}.
+
+Expected: \texttt{lemma A1}; \texttt{A2}; \texttt{axiom A3}; \texttt{(2)};
+\texttt{lemma T1}; \texttt{T2}; \texttt{lemma B1}; \texttt{section 4}.
+(The numbered item continues the counter from the list in section~1.)
+
+\verb|\Cref|: \Cref{c:lemma}; \Cref{c:untyped}; \Cref{c:axiom}.
+
+Expected: \texttt{Lemma A1}; \texttt{A2}; \texttt{Axiom A3}.
+
+\verb|\ref| is unaffected by the type: \ref{c:lemma}, \ref{c:untyped},
+\ref{c:axiom}, \ref{c:plain}, \ref{c:ptag}, \ref{c:ptagplain}, \ref{c:later}.
+
+Expected: A1, A2, A3, (2), T1, T2, B1.
+
+\section{A type must not leak past its own item}
+
+The alias is assigned globally, so these are the cases where a type could
+escape the item that asked for it.  A leak would show up below as a stray
+``lemma'' in front of a reference that should not have one.
+
+\begin{prop}
+  \item[name=n1] Outer, untyped. \label{c:n1}
+  \begin{prop}
+    \item[name=n2, crefname=lemma] Nested, typed. \label{c:n2}
+  \end{prop}
+  \item[name=n3] Outer again, after the nested typed item. \label{c:n3}
+\end{prop}
+
+\begin{prop}
+  \item[name=n4, crefname=lemma] Typed, last item of its environment.
+    \label{c:n4}
+\end{prop}
+\begin{inlineprop}
+  \item[name=n5] An \texttt{inlineprop} item after it. \label{c:n5}
+\end{inlineprop}
+
+\begin{prop}
+  \item[name=n6, crefname=lemma, label=c:n6] Typed, labelled by the
+    \texttt{label} key.
+  \item[name=n7, label=c:n7] Untyped, labelled by the \texttt{label} key.
+\end{prop}
+
+\subsection{A subsection after a typed item} \label{c:n8}
+
+Nesting: \cref{c:n1}; \cref{c:n2}; \cref{c:n3}.
+Environment boundary: \cref{c:n4}; \cref{c:n5}.
+Label key: \cref{c:n6}; \cref{c:n7}.
+Other counters: \cref{c:n8}.
+
+Expected: \texttt{n1}; \texttt{lemma n2}; \texttt{n3}; \texttt{lemma n4};
+\texttt{n5}; \texttt{lemma n6}; \texttt{n7}; \texttt{section 5.1}
+(cleveref names subsections ``section'' by default).
+
+\end{document}

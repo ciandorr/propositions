@@ -24,8 +24,8 @@ entire \verb|\labelwidth|, so the allocated label box is visible.
 \subsection{Baseline: no per-item overrides}
 
 \begin{prop}
-  \pitem[name=\flabel{A}] Default dimensions.
-  \pitem[name=\flabel{B}] Same.
+  \item[name=\flabel{A}] Default dimensions.
+  \item[name=\flabel{B}] Same.
 \end{prop}
 
 %%------------------------------------------------------------
@@ -36,9 +36,9 @@ when labelsep shrinks and vice versa, preserving the label's left-edge
 position.
 
 \begin{prop}
-  \pitem[labelsep=2em, name=\flabel{Wide}] labelsep=2em: box shrinks.
-  \pitem[labelsep=0pt, name=\flabel{Tight}] labelsep=0pt: box expands.
-  \pitem[name=\flabel{Normal}] No override (baseline).
+  \item[labelsep=2em, name=\flabel{Wide}] labelsep=2em: box shrinks.
+  \item[labelsep=0pt, name=\flabel{Tight}] labelsep=0pt: box expands.
+  \item[name=\flabel{Normal}] No override (baseline).
 \end{prop}
 
 %%------------------------------------------------------------
@@ -49,11 +49,11 @@ LI is not a register), or fall through to labelsep.  Since labelsep is
 not user-set, it absorbs the deficit.
 
 \begin{prop}
-  \pitem[labelwidth=4em, name=\flabel{W}]
+  \item[labelwidth=4em, name=\flabel{W}]
     labelwidth=4em: wider box, labelsep or LI adjusts.
-  \pitem[labelwidth=0.5em, name=\flabel{N}]
+  \item[labelwidth=0.5em, name=\flabel{N}]
     labelwidth=0.5em: tiny box, label overflows it.
-  \pitem[name=\flabel{Def}] Default.
+  \item[name=\flabel{Def}] Default.
 \end{prop}
 
 %%------------------------------------------------------------
@@ -63,11 +63,11 @@ Resolver derives \texttt{labelwidth} (pos~4).  With labelindent=0em the
 label sits at the margin; with labelindent=1em it is indented.
 
 \begin{prop}
-  \pitem[labelindent=0em, name=\flabel{Flush}]
+  \item[labelindent=0em, name=\flabel{Flush}]
     labelindent=0em: label flush with margin.
-  \pitem[labelindent=1em, name=\flabel{Ind}]
+  \item[labelindent=1em, name=\flabel{Ind}]
     labelindent=1em: label indented, box shrinks.
-  \pitem[name=\flabel{Def}] No override.
+  \item[name=\flabel{Def}] No override.
 \end{prop}
 
 %%------------------------------------------------------------
@@ -77,11 +77,11 @@ Both are user-set, so the resolver must derive \texttt{labelwidth}
 (the lowest-priority non-user-set candidate).
 
 \begin{prop}
-  \pitem[labelindent=0em, labelsep=1em, name=\flabel{X}]
+  \item[labelindent=0em, labelsep=1em, name=\flabel{X}]
     labelindent=0em, labelsep=1em.
-  \pitem[labelindent=0em, labelsep=0pt, name=\flabel{Y}]
+  \item[labelindent=0em, labelsep=0pt, name=\flabel{Y}]
     labelindent=0em, labelsep=0pt: box should be wider than X's.
-  \pitem[name=\flabel{Ref}] No override.
+  \item[name=\flabel{Ref}] No override.
 \end{prop}
 
 %%------------------------------------------------------------
@@ -92,9 +92,9 @@ negative.  The resolver skips it and derives \texttt{itemindent}
 instead, pushing the first line right.
 
 \begin{prop}
-  \pitem[labelindent=0em, labelwidth=5cm, name=\flabel{Long label}]
+  \item[labelindent=0em, labelwidth=5cm, name=\flabel{Long label}]
     Long label: first line pushed right.
-  \pitem[name=\flabel{OK}] Normal item after overflow.
+  \item[name=\flabel{OK}] Normal item after overflow.
 \end{prop}
 
 %%------------------------------------------------------------
@@ -107,10 +107,10 @@ Here \verb|\propoptions| sets labelsep=1.5em.  A per-item
 \begingroup
 \propoptions{labelsep=1.5em}
 \begin{prop}
-  \pitem[name=\flabel{A}] Baseline with global labelsep=1.5em.
-  \pitem[labelindent=0em, name=\flabel{B}]
+  \item[name=\flabel{A}] Baseline with global labelsep=1.5em.
+  \item[labelindent=0em, name=\flabel{B}]
     Per-item labelindent=0em: labelsep stays 1.5em, labelwidth adjusts.
-  \pitem[name=\flabel{C}] Back to baseline.
+  \item[name=\flabel{C}] Back to baseline.
 \end{prop}
 \endgroup
 
@@ -126,10 +126,10 @@ adjusts.  Since labelwidth is protected, the box stays 3em wide.
 \begingroup
 \propoptions{labelwidth=3em}
 \begin{prop}
-  \pitem[name=\flabel{A}] Baseline with global labelwidth=3em.
-  \pitem[labelsep=0pt, name=\flabel{B}]
+  \item[name=\flabel{A}] Baseline with global labelwidth=3em.
+  \item[labelsep=0pt, name=\flabel{B}]
     Per-item labelsep=0pt: labelwidth should stay 3em.
-  \pitem[name=\flabel{C}] Back to baseline.
+  \item[name=\flabel{C}] Back to baseline.
 \end{prop}
 \endgroup
 
@@ -141,10 +141,10 @@ labelindent creates a deficit, the fallback tries them in default
 priority order (LW, LS, II) ignoring user-set status.
 
 \begin{prop}
-  \pitem[labelindent=0em, labelwidth=1.5em, labelsep=0.5em,
+  \item[labelindent=0em, labelwidth=1.5em, labelsep=0.5em,
          itemindent=0pt, name=\flabel{All}]
     All four per-item keys set.  Fallback resolves the deficit.
-  \pitem[name=\flabel{Ref}] Reference item.
+  \item[name=\flabel{Ref}] Reference item.
 \end{prop}
 
 \end{document}

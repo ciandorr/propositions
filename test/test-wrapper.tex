@@ -197,4 +197,44 @@ shaded; the outer frame is unaffected and still closes correctly:
   \item Outer, after (still only the outer frame).
 \end{prop}
 
+\section{The label area survives a wrapper box}
+
+A wrapper box resets \LaTeX's list depth, so the list inside it is a depth-one
+list, and \verb|\@listi| --- unlike \verb|\@listii| and deeper --- does not set
+\verb|\labelwidth|.  A prop must therefore establish its own label area, or it
+inherits whatever the enclosing context left behind: 0pt from a
+\texttt{description}, from an \texttt{amsthm} environment, or from the
+\texttt{minipage} inside the wrapper itself.  Every line below must report a
+label area whose \texttt{LS} is 5pt and whose \texttt{LW} is the class default
+for the list's depth: 17pt for the one prop that really is a depth-two list
+(the plain one directly inside the \texttt{description}), 20pt for the rest.
+If \texttt{LW} and \texttt{LS} collapse to 0pt, a flush label runs straight
+into the item text with no gap.
+
+\newcommand\dims{\texttt{LW=\the\labelwidth\ LS=\the\labelsep}}
+
+\begin{prop}
+  \item Plain, no wrapper: \dims
+\end{prop}
+
+\begin{prop}[wrapper begin = {\begin{mdframed}}, wrapper end = {\end{mdframed}}]
+  \item Inside a wrapper: \dims
+\end{prop}
+
+\begin{description}
+\item[in a description] the enclosing list sets \texttt{labelwidth} to 0pt
+\begin{prop}
+  \item Plain: \dims
+\end{prop}
+\begin{prop}[style=framed]
+  \item Framed: \dims
+  \item[name=Note, align=flush] A flush label needs a gap before this text.
+\end{prop}
+\end{description}
+
+\begin{prop}[style=framed]
+  \item Framed at top level: \dims
+  \item[name=Note, align=flush] A flush label needs a gap before this text.
+\end{prop}
+
 \end{document}

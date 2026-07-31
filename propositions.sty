@@ -79,6 +79,7 @@
 \tl_new:N   \l__props_ref_text_tl        %% what goes into \@currentlabel
 \tl_new:N   \l__props_item_output_tl     %% formatted display (displayfmt + shorthand + gloss)
 \tl_new:N   \l__props_item_arg_tl        %% per-item argument, bare name normalised to name={...}
+\bool_new:N \l__props_valueless_key_bool %% true when an entry of that argument is a key given without a value
 \bool_new:N \l__props_ptag_bool          %% true during \ptag processing
 \bool_new:N \l__props_titlecase_bool    %% true when \Ref etc. want titlecasing
 \bool_new:N \l__props_reset_bool        %% true (default) = reset sub-level counter on \item
@@ -254,10 +255,6 @@
 \msg_new:nnn { props } { item-in-math }
   { Proposition~ items~ cannot~ be~ used~ in~ math~ mode.~
     Use~ \token_to_str:N \ptag \ instead. }
-\msg_new:nnn { props } { pitem-deprecated }
-  { \token_to_str:N \pitem \ is~ deprecated.~
-    Use~ \token_to_str:N \item \ inside~
-    prop~ or~ inlineprop~ instead. }
 \msg_new:nnn { props } { global-only-keys }
   { Key(s)~ '#1'~ ignored~ in~ prop~ optional~ argument~
     (use~ \token_to_str:N \propoptions \ instead). }
@@ -439,7 +436,7 @@
   }
 
 
-\keys_define:nn { props / pitem }
+\keys_define:nn { props / item }
   {
     name        .tl_set:N = \l__props_name_tl ,
     style       .code:n =
@@ -501,7 +498,7 @@
 
 %% Minimal keyspace used only for the named/nameless peek: reads name= and
 %% counter= from the per-item arg without any other side effects.
-\keys_define:nn { props / pitem-peek }
+\keys_define:nn { props / item-peek }
   {
     name    .tl_set:N = \l__props_name_tl ,
     counter .tl_set:N = \l__props_counter_tl ,
@@ -530,7 +527,16 @@
     \tl_if_in:nnTF { #2 } { = }
       { \tl_put_right:Nn #1 { #2 } }
       {
-        \clist_if_in:NnTF \c__props_valueless_item_keys_clist { #2 }
+        \bool_set_false:N \l__props_valueless_key_bool
+        \clist_map_inline:Nn \c__props_valueless_item_keys_clist
+          {
+            \tl_if_eq:nnT { #2 } { ##1 }
+              {
+                \bool_set_true:N \l__props_valueless_key_bool
+                \clist_map_break:
+              }
+          }
+        \bool_if:NTF \l__props_valueless_key_bool
           { \tl_put_right:Nn #1 { #2 } }
           { \tl_put_right:Nn #1 { name = { #2 } } }
       }
@@ -549,7 +555,7 @@
     \tl_if_empty:NF \l__props_item_arg_tl
       {
         \exp_args:NnV \keys_set_known:nnN
-          { props / pitem-peek } \l__props_item_arg_tl \l_tmpa_tl
+          { props / item-peek } \l__props_item_arg_tl \l_tmpa_tl
       }
 
     %% --- Select base style (named or nameless) ---
@@ -600,7 +606,7 @@
       {
         \bool_set_true:N \l__props_loading_defaults_bool
         \exp_args:NnV \keys_set_known:nnN
-          { props / pitem } \l_tmpa_tl \l_tmpb_tl
+          { props / item } \l_tmpa_tl \l_tmpb_tl
         \bool_set_false:N \l__props_loading_defaults_bool
       }
 
@@ -695,7 +701,7 @@
   }
 
 
-\cs_new_protected:Nn \__props_pitem_body:n
+\cs_new_protected:Nn \__props_item_body:n
   {
     \mode_if_math:T
       { \msg_error:nn { props } { item-in-math } }
@@ -727,8 +733,8 @@
 \NewDocumentCommand \__props_item_cmd: { o }
   {
     \IfValueTF { #1 }
-      { \__props_pitem_body:n { #1 } }
-      { \__props_pitem_body:n { } }
+      { \__props_item_body:n { #1 } }
+      { \__props_item_body:n { } }
   }
 
 \cs_new_protected:Nn \__props_item_dispatch:
@@ -736,15 +742,6 @@
     \cs_if_eq:NNTF \makelabel \__props_display_label:n
       { \__props_item_cmd: }
       { \__props_kernel_item: }
-  }
-
-
-\NewDocumentCommand \pitem { o }
-  {
-    \msg_warning:nn { props } { pitem-deprecated }
-    \IfValueTF { #1 }
-      { \item[#1] }
-      { \item }
   }
 
 
@@ -767,25 +764,20 @@
       }
   }
 
-\cs_new_protected:Npn \__props_override_cref_type:n #1
-  {
-    \exp_after:wN \__props_replace_cref_type:w
-      \cref@currentlabel \q_stop { #1 }
-  }
-\cs_new_protected:Npn \__props_replace_cref_type:w [ #1 ] #2 \q_stop #3
-  { \def \cref@currentlabel { [ #3 ] #2 } }
+\cs_new_protected:Npn \__props_set_cref_type:n #1
+  { \cs_gset:cpn { cref@propanchor@alias } { #1 } }
 
 \cs_new_protected:Nn \__props_set_ref:
   {
     \__props_build_ref_text:
     \cs_set:Npx \thepropanchor { \exp_not:V \l__props_ref_result_tl }
+    \bool_if:NT \g__props_cleveref_bool
+      {
+        \tl_if_empty:NTF \l__props_crefname_tl
+          { \__props_set_cref_type:n { prop } }
+          { \exp_args:NV \__props_set_cref_type:n \l__props_crefname_tl }
+      }
     \refstepcounter { propanchor }
-    %% If cleveref is loaded and crefname is set, override the type
-    %% so that any subsequent \label picks up the new type.
-    \bool_lazy_and:nnT
-      { \g__props_cleveref_bool }
-      { ! \tl_if_empty_p:N \l__props_crefname_tl }
-      { \exp_args:NV \__props_override_cref_type:n \l__props_crefname_tl }
   }
 
 
@@ -861,20 +853,23 @@
 
 \bool_new:N \g__props_cleveref_bool
 
-\AtBeginDocument
+\cs_new_protected:Nn \__props_cleveref_setup:
   {
-    \@ifpackageloaded { cleveref }
-      {
-        \bool_gset_true:N \g__props_cleveref_bool
-        %% Map the propanchor counter to a private cleveref type "prop".  We use
-        %% "prop", not "proposition", so we do not commandeer the name a user may
-        %% want for their own Proposition theorems (a common \newtheorem type).
-        \crefalias { propanchor } { prop }
-        %% Empty name: \cref just outputs the formatted ref text
-        \crefname  { prop } {} {}
-        \Crefname  { prop } {} {}
-      }
-      { }
+    \bool_gset_true:N \g__props_cleveref_bool
+    %% Map the propanchor counter to a private cleveref type "prop".  We use
+    %% "prop", not "proposition", so we do not commandeer the name a user may
+    %% want for their own Proposition theorems (a common \newtheorem type).
+    \crefalias { propanchor } { prop }
+    %% Empty name: \cref just outputs the formatted ref text
+    \crefname  { prop } {} {}
+    \Crefname  { prop } {} {}
+  }
+
+\@ifpackageloaded { cleveref }
+  { \__props_cleveref_setup: }
+  {
+    \AtBeginDocument
+      { \@ifpackageloaded { cleveref } { \__props_cleveref_setup: } { } }
   }
 
 
@@ -953,12 +948,13 @@
   {
     \ifmeasuring@ \else
     \cs_set:Npx \thepropanchor { \exp_not:n { #1 } }
-    \refstepcounter { propanchor }
-    \tl_if_empty:nF { #2 }
+    \bool_if:NT \g__props_cleveref_bool
       {
-        \bool_if:NT \g__props_cleveref_bool
-          { \__props_override_cref_type:n { #2 } }
+        \tl_if_empty:nTF { #2 }
+          { \__props_set_cref_type:n { prop } }
+          { \__props_set_cref_type:n { #2 } }
       }
+    \refstepcounter { propanchor }
     \fi
   }
 
@@ -967,7 +963,7 @@
     %% Enter ptag mode so \__props_resolve_item:n can adjust counter stepping
     \bool_set_true:N \l__props_ptag_bool
 
-    %% Process keys (same resolution as \pitem)
+    %% Process keys (same resolution as \item)
     \IfValueTF { #1 }
       { \__props_resolve_item:n { #1 } }
       { \__props_resolve_item:n { } }
@@ -1384,6 +1380,22 @@
         %% \makelabel set by \cs_set_eq: (not a wrapper) so the item dispatcher
         %% can recognise a prop list by \makelabel's identity.
         \cs_set_eq:NN \makelabel \__props_display_label:n
+        %% Establish the standard \labelwidth for this list depth.  \list sets
+        %% \itemindent, \rightmargin and \listparindent itself, and \@listii and
+        %% deeper set \labelwidth, but at depth one \@listi does not: such a list
+        %% inherits whatever \labelwidth the enclosing context happened to leave
+        %% behind.  (A prop inside a wrapper box is at depth one, since the box
+        %% resets the list depth; inside a description, which sets \labelwidth to
+        %% zero for its own labels, it would inherit 0pt and lose its label area
+        %% --- and with it the \labelsep gap after a flush label.)  itemize,
+        %% enumerate and description each set \labelwidth for themselves; this is
+        %% prop doing the same, using the same value \@listii would.
+        \tl_if_empty:NT \l__props_labelwidth_tl
+          {
+            \dim_set:Nn \labelwidth { \leftmargin - \labelsep }
+            \dim_compare:nNnT \labelwidth < \c_zero_dim
+              { \dim_zero:N \labelwidth }
+          }
         %% Apply dimension overrides.  Each value may be a single length
         %% (applied at all levels) or a comma-list of per-level lengths.
         %% Empty = inherit the document class default.

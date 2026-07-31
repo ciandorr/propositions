@@ -15,8 +15,8 @@
 \subsection{Short items}
 
 \begin{prop}
-  \pitem[P] This is proposition P. \label{propP}
-  \pitem[Q] This is proposition Q. \label{propQ}
+  \item[P] This is proposition P. \label{propP}
+  \item[Q] This is proposition Q. \label{propQ}
 \end{prop}
 
 Reference test: \ref{propP} and \ref{propQ}.
@@ -26,8 +26,8 @@ Cleveref test: \cref{propP} and \cref{propQ}.
 \subsection{Long items}
 
 \begin{prop}
-  \pitem[style=thesis, Physicalism] Everything is physical. \label{phys}
-  \pitem[style=thesis, Dualism] Mind and body are distinct. \label{dual}
+  \item[style=thesis, Physicalism] Everything is physical. \label{phys}
+  \item[style=thesis, Dualism] Mind and body are distinct. \label{dual}
 \end{prop}
 
 Reference test: \ref{phys} and \ref{dual}.
@@ -35,9 +35,9 @@ Reference test: \ref{phys} and \ref{dual}.
 \subsection{Numbered items}
 
 \begin{prop}
-  \pitem If $p$ then $q$. \label{num1}
-  \pitem $p$. \label{num2}
-  \pitem Therefore $q$. \label{num3}
+  \item If $p$ then $q$. \label{num1}
+  \item $p$. \label{num2}
+  \item Therefore $q$. \label{num3}
 \end{prop}
 
 References: \ref{num1}, \ref{num2}, \ref{num3}.
@@ -45,9 +45,9 @@ References: \ref{num1}, \ref{num2}, \ref{num3}.
 \subsection{Shortcut commands}
 
 \begin{prop}
-  \pitem[A] Short item A. \label{shortA}
+  \item[A] Short item A. \label{shortA}
   \titem[Some Thesis] A long item. \label{longthesis}
-  \pitem A numbered item. \label{numshort}
+  \item A numbered item. \label{numshort}
 \end{prop}
 
 References: \ref{shortA}, \ref{longthesis}, \ref{numshort}.
@@ -61,17 +61,17 @@ Reference: \ref{bull1}.
 \section{Nesting levels}
 
 \begin{prop}
-  \pitem First numbered item. \label{nest1}
-  \pitem Second numbered item. \label{nest2}
+  \item First numbered item. \label{nest1}
+  \item Second numbered item. \label{nest2}
   \begin{prop}
-    \pitem Level two sub-item. \label{nest2a}
-    \pitem Another level two. \label{nest2b}
+    \item Level two sub-item. \label{nest2a}
+    \item Another level two. \label{nest2b}
     \begin{prop}
-      \pitem Level three deep. \label{nest2ai}
-      \pitem Another level three. \label{nest2aii}
+      \item Level three deep. \label{nest2ai}
+      \item Another level three. \label{nest2aii}
     \end{prop}
   \end{prop}
-  \pitem Third numbered item. \label{nest3}
+  \item Third numbered item. \label{nest3}
 \end{prop}
 
 References across levels: \ref{nest1}, \ref{nest2a}, \ref{nest2ai}.
@@ -79,8 +79,8 @@ References across levels: \ref{nest1}, \ref{nest2a}, \ref{nest2ai}.
 \section{Named counters}
 
 \begin{prop}
-  \pitem[counter=P] First P-numbered. \label{P1}
-  \pitem[counter=P] Second P-numbered. \label{P2}
+  \item[counter=P] First P-numbered. \label{P1}
+  \item[counter=P] Second P-numbered. \label{P2}
 \end{prop}
 
 References: \ref{P1}, \ref{P2}.
@@ -88,8 +88,8 @@ References: \ref{P1}, \ref{P2}.
 \section{Oref and nref test}
 
 \begin{prop}
-  \pitem[P3] The original. \label{myP3}
-  \pitem[name={\nref{myP3}$'$}] The modified version. \label{myP3prime}
+  \item[P3] The original. \label{myP3}
+  \item[name={\nref{myP3}$'$}] The modified version. \label{myP3prime}
 \end{prop}
 
 Plain ref: \ref{myP3}.
@@ -102,9 +102,9 @@ Ref to modified: \ref{myP3prime}.
 
 \section{References in item names}
 \begin{prop}
-    \pitem[style=thesis, name={Problems with \ref{myP3}}]
+    \item[style=thesis, name={Problems with \ref{myP3}}]
     Some problem. \label{P3problem}
-    \pitem[name={\oref[*]{myP3}}]
+    \item[name={\oref[*]{myP3}}]
     A new version. \label{P3star}
 \end{prop}
 Reference: \ref{P3problem} and \ref{P3star}.
@@ -112,7 +112,7 @@ Reference: \ref{P3problem} and \ref{P3star}.
 \section{The label key}
 
 \begin{prop}
-  \pitem[label=autolabel, R] Using the label key.
+  \item[label=autolabel, R] Using the label key.
 \end{prop}
 
 Reference: \ref{autolabel}.
@@ -120,10 +120,10 @@ Reference: \ref{autolabel}.
 \section{Shortcut and gloss}
 
 \begin{prop}
-  \pitem[name={Long Proposition}, display format={\textit{#1}}, shorthand={LP}, shorthand format={ [#1]}, ref format={(#1)}] A long name with a shorthand. \label{lp}
-  \pitem[name={Another Thesis}, display format={\textsc{#1}}, shorthand={AT}] Default shorthand format. \label{at}
-  \pitem[name={Glossed Prop}, gloss={roughly, everything is fine}] A proposition with a gloss. \label{gp}
-  \pitem[name={Full Example}, display format={\textit{#1}}, shorthand={FE}, shorthand format={ [#1]}, gloss={an example}, gloss format={ --- #1}] Both shorthand and gloss. \label{fe}
+  \item[name={Long Proposition}, display format={\textit{#1}}, shorthand={LP}, shorthand format={ [#1]}, ref format={(#1)}] A long name with a shorthand. \label{lp}
+  \item[name={Another Thesis}, display format={\textsc{#1}}, shorthand={AT}] Default shorthand format. \label{at}
+  \item[name={Glossed Prop}, gloss={roughly, everything is fine}] A proposition with a gloss. \label{gp}
+  \item[name={Full Example}, display format={\textit{#1}}, shorthand={FE}, shorthand format={ [#1]}, gloss={an example}, gloss format={ --- #1}] Both shorthand and gloss. \label{fe}
 \end{prop}
 
 Ref to shorthand item: \ref{lp} (should be (LP)).
@@ -137,8 +137,8 @@ Ref to full: \ref{fe} (should be (FE) --- shorthand becomes ref).
 \section{Propapply and brackets}
 
 \begin{prop}
-  \pitem[name={Brack}, ref format={[#1]}] A bracketed item. \label{brk}
-  \pitem[style=thesis, Thesis] A long-format item. \label{thesis}
+  \item[name={Brack}, ref format={[#1]}] A bracketed item. \label{brk}
+  \item[style=thesis, Thesis] A long-format item. \label{thesis}
 \end{prop}
 
 Ref to bracketed: \ref{brk} (should be [Brack]).
@@ -168,8 +168,8 @@ A gather environment:
 
 Interleaved with props:
 \begin{prop}
-  \pitem First premise. \label{eq:prem1}
-  \pitem Second premise. \label{eq:prem2}
+  \item First premise. \label{eq:prem1}
+  \item Second premise. \label{eq:prem2}
 \end{prop}
 
 A further equation:
@@ -191,7 +191,7 @@ Nref on equation: \nref{eq:emc} (should be bare number).
 
 \section{Inline prop}
 
-Some text with \begin{inlineprop}\pitem[X] an inline proposition\end{inlineprop} in the middle, and then \begin{inlineprop}\pitem[Y] another one\end{inlineprop} here.
+Some text with \begin{inlineprop}\item[X] an inline proposition\end{inlineprop} in the middle, and then \begin{inlineprop}\item[Y] another one\end{inlineprop} here.
 
 \section{Ptag test}
 
@@ -318,7 +318,7 @@ Ref: \ref{eq:after} (should be (20), consecutive with ptag above, no gap).
 
 \subsection{Nesting ptags with equations}
 \begin{prop}
-    \pitem
+    \item
     Two of Maxwell's equations:
     \begin{align*}
         \nabla \cdot \mathbf{E} = \frac{\rho}{\varepsilon_0} \ptag \label{eq:inner1} \\
@@ -335,21 +335,21 @@ Ref: \ref{eq:inner1}, \ref{eq:inner2}.
 \subsection{Named ptag inside equation inside prop (level unchanged by arg)}
 
 \begin{prop}
-  \pitem[A] First premise. \label{dlevel:pitemA}
+  \item[A] First premise. \label{dlevel:itemA}
   \begin{equation}
     E = mc^2 \ptag[Named] \label{dlevel:named}
   \end{equation}
-  \pitem[B] Second premise. \label{dlevel:pitemB}
+  \item[B] Second premise. \label{dlevel:itemB}
 \end{prop}
 
 % \ptag has an explicit argument, so it uses the default type regardless of
-% level.  Ref should be \textbf{Named} (same as a plain default-type pitem).
+% level.  Ref should be \textbf{Named} (same as a plain unnamed item).
 Ref to named ptag (should be \textbf{Named}): \ref{dlevel:named}.
 
 \subsection{Unnamed ptag inside equation inside prop (uses leveltwo)}
 
 \begin{prop}
-  \pitem First item. \label{dlevel:outer}
+  \item First item. \label{dlevel:outer}
   \begin{equation}
     F = ma \ptag \label{dlevel:unnumbered}
   \end{equation}
@@ -362,7 +362,7 @@ Ref to unnamed ptag (should be alphabetic sub-item like ``a.'' format): \ref{dle
 \subsection{Unnamed ptag inside align inside prop (tests \textbackslash aftergroup with multi-row amsmath)}
 
 \begin{prop}
-  \pitem Premise. \label{dlevel:align_outer}
+  \item Premise. \label{dlevel:align_outer}
   \begin{align}
     x &= y \ptag \label{dlevel:align1} \\
     p &= q \ptag \label{dlevel:align2}
@@ -375,11 +375,11 @@ Refs (both should be alphabetic): \ref{dlevel:align1} and \ref{dlevel:align2}.
 \subsection{Level restored after display math}
 
 \begin{prop}
-  \pitem First. \label{dlevel:before}
+  \item First. \label{dlevel:before}
   \begin{equation}
     a = b \ptag \label{dlevel:inside}
   \end{equation}
-  \pitem After equation: level should be restored to 1 (numbered type). \label{dlevel:after}
+  \item After equation: level should be restored to 1 (numbered type). \label{dlevel:after}
 \end{prop}
 
 Refs: \ref{dlevel:before}, \ref{dlevel:inside}, \ref{dlevel:after}.
@@ -393,17 +393,17 @@ This section's title contains a reference to \ref{propP}.
 \subsection{Default spacing (no options)}
 
 \begin{prop}
-    \pitem First item with default spacing.
-    \pitem Second item with default spacing.
-    \pitem Third item with default spacing.
+    \item First item with default spacing.
+    \item Second item with default spacing.
+    \item Third item with default spacing.
 \end{prop}
 
 \subsection{rightmargin=3cm}
 
 \propoptions{rightmargin=3cm}
 \begin{prop}
-    \pitem First item: the right margin should be noticeably indented.
-    \pitem Second item: this text should wrap well before the page edge,
+    \item First item: the right margin should be noticeably indented.
+    \item Second item: this text should wrap well before the page edge,
     demonstrating that rightmargin is in effect.
 \end{prop}
 \propoptions{rightmargin=}
@@ -412,8 +412,8 @@ This section's title contains a reference to \ref{propP}.
 
 \propoptions{leftmargin=4cm}
 \begin{prop}
-    \pitem First item: should be indented far from the left.
-    \pitem Second item with large left margin.
+    \item First item: should be indented far from the left.
+    \item Second item with large left margin.
 \end{prop}
 \propoptions{leftmargin=}
 
@@ -421,9 +421,9 @@ This section's title contains a reference to \ref{propP}.
 
 \propoptions{itemsep=20pt}
 \begin{prop}
-    \pitem First item.
-    \pitem Second item: there should be a large gap above this.
-    \pitem Third item: and above this.
+    \item First item.
+    \item Second item: there should be a large gap above this.
+    \item Third item: and above this.
 \end{prop}
 \propoptions{itemsep=}
 
@@ -432,8 +432,8 @@ This section's title contains a reference to \ref{propP}.
 \propoptions{topsep=30pt}
 Text before the list.
 \begin{prop}
-    \pitem First item: large gap above and below the whole list.
-    \pitem Second item.
+    \item First item: large gap above and below the whole list.
+    \item Second item.
 \end{prop}
 Text after the list.
 \propoptions{topsep=}
@@ -443,9 +443,9 @@ Text after the list.
 \propoptions{tightspacing}
 Text before.
 \begin{prop}
-    \pitem First item: the list should be compact.
-    \pitem Second item: minimal spacing around the list and between items.
-    \pitem Third item.
+    \item First item: the list should be compact.
+    \item Second item: minimal spacing around the list and between items.
+    \item Third item.
 \end{prop}
 Text after.
 
@@ -454,9 +454,9 @@ Text after.
 \propoptions{nosep}
 Text before.
 \begin{prop}
-    \pitem First item: zero spacing everywhere.
-    \pitem Second item: no gap between items or around list.
-    \pitem Third item.
+    \item First item: zero spacing everywhere.
+    \item Second item: no gap between items or around list.
+    \item Third item.
 \end{prop}
 Text after.
 
@@ -519,10 +519,10 @@ Cross-refs from inside the group still work: \ref{ax:M1}, \ref{ax:M2}.
 \section{Titlecase reference commands}
 
 \begin{prop}
-  \pitem[Identity Theory, format={the #1}]
+  \item[Identity Theory, format={the #1}]
   Mental states are brain states.
   \label{tc:identity}
-  \pitem[Q]
+  \item[Q]
   A short-named item.
   \label{tc:Q}
 \end{prop}

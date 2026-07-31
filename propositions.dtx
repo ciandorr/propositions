@@ -81,7 +81,7 @@
 %
 % \title{The \textsf{propositions} package\thanks{This document describes
 %   version~\fileversion, dated~\filedate.}}
-% \author{Cian Dorr (with help from Claude Code)\\ \texttt{ciandorr@gmail.com}}
+% \author{Cian Dorr (with help from Claude)\\ \texttt{ciandorr@gmail.com}}
 % \date{\filedate}
 %
 % \maketitle
@@ -181,13 +181,23 @@
 %     align=flush,
 %     display format=\textsc{#1},
 %     ref format=\textit{#1}]
-%     Nothing mental is
-%     physical. \label{incomp}
+%   Nothing mental is
+%   physical. \label{incomp}
 % \end{prop}
 % Is \ref{incomp} consistent
 % with \ref{phys}?
 % \end{example}
-% Preset styles can be declared and used instead of a list of key-value pairs:
+% The prop environment can also take an optional argument with a list of keys:
+% \begin{example}
+% \begin{prop}[leftmargin=2em,
+%     rightmargin=2em,
+%     display format=[#1]]
+%   \item
+%   Every mental thing
+%   is physical.
+% \end{prop}
+% \end{example}
+% Preset styles can be declared and used in place of a set of key-value pairs:
 % \begin{example}
 % \begin{prop}
 %   \item[Nihilism,
@@ -199,11 +209,11 @@
 % \ref{phys}, \ref{dual}, or
 % both?  Discuss.
 % \end{example}
-% Shortcut commands---e.g., |\titem[|\meta{keys}|]| for |\item[style=thesis, |\meta{keys}|]| (within \texttt{prop})---can also be defined.  The package loads with a range of predefined styles.
+% Shortcut commands---e.g., |\titem[|\meta{keys}|]| for |\item[style=thesis, |\meta{keys}|]|---can also be defined.  The package loads with a range of predefined styles (listed in \cref{sect:builtin-styles}).
 %
-% When the package is loaded with |\usepackage[equations]{propositions}|, first-level |\item|s within \texttt{prop} use the same counter
-% as equations.  (This looks better with the |leqno|
-% option to |\documentclass|.)
+% When the package is loaded with |\usepackage[equations]{propositions}|, a first-level |\item| within \texttt{prop} 
+% will use the counter as equations.  (This looks better 
+% with the |leqno| option to |\documentclass|.)
 % \begin{example}
 % \begin{equation}
 %   \exists x (\text{Mental}(x)
@@ -216,8 +226,9 @@
 % \end{prop}
 % \end{example}
 % The |\ptag| command (requires \textsf{amsmath})
-% is an analogue of |\item| (within \texttt{prop}) that works inside
-% displayed math environments.
+% is a replacement for the standard |\tag| command
+% that behaves just like an |\item| in a \texttt{prop} 
+% environment.
 % \begin{example}
 % \begin{equation}
 %   \ptag[Monism] \label{mon}
@@ -227,54 +238,68 @@
 % \ref{dual}?
 % \end{example}
 %
-% \section{The \texttt{prop} environment and \cs{pitem}}
+% \section{Basic environments and commands}
 %
 % \begin{docEnvironment}{prop}{\oarg{keys}}
 %   Creates a displayed list of propositions.  It is a standard \LaTeX{} list, so by default its formatting will depend on the standard length parameters like \cs{itemsep} and \cs{topsep}, although these can be overridden by setting keys.
 %
-%   Within \texttt{prop}, \cs{pitem} (see below) creates labelled items.  The ordinary \cs{item} command is still available for unlabelled items.
+%   Within \texttt{prop}, \cs{item} creates the propositions (see below).
 %
-%   Any display math environment (|\equation|, |align|, etc.) used inside \texttt{prop} or \texttt{inlineprop} automatically increments the nesting level for its duration, so that \cs{ptag} inside such an environment behaves as if it were one level deeper.
-%
-%   The optional \meta{keys} argument accepts the same keys as \refCom{propoptions} (\autoref{sect:keys}), with effects local to this environment.
+%   The optional \meta{keys} argument can contain a list of keys, which will affect only the given environment (not any other \texttt{prop} environments that may be nested within it).  
+% 
 % \end{docEnvironment}
 %
 % \begin{docEnvironment}{inlineprop}{\oarg{keys}}
-%   Like \texttt{prop}, but does not create a list.  Allows \cs{pitem} to be used outside list environments, e.g.\ for generating numbers at the beginning of paragraphs.  Steps the \texttt{prop} counter and increments the nesting level.  Accepts the same optional \meta{keys} as \texttt{prop}.
+%   Like \texttt{prop}, but does not create a list.  Allows \cs{item} to be used outside list environments, e.g.\ for generating numbers at the beginning of paragraphs.  Steps the \texttt{prop} counter and increments the nesting level.  Accepts the same optional \meta{keys} as \texttt{prop}.
 % \end{docEnvironment}
 %
 % Within \texttt{prop} and \texttt{inlineprop}, \cs{item} is redefined to act as the proposition-item command.  Its optional argument is a comma-separated list of \meta{key}=\meta{value} pairs (see \autoref{sect:keys}).  A bare string without \texttt{=} is treated as a proposition name.
 %
 % When used without an optional argument (or without setting \texttt{name}, \texttt{counter}, or \texttt{style}), the style is determined by the \texttt{nameless style} key (\autoref{sect:keys}).  By default this is \texttt{numbered}, which dispatches by nesting depth to \texttt{levelone}, \texttt{leveltwo}, \ldots\ via \cs{proplevelchoice}.
 %
-% \begin{docCommand}[doc description=deprecated]{pitem}{\oarg{keys}}
-%   Deprecated alias for \cs{item} within \texttt{prop} or \texttt{inlineprop}.
-%   Issues a warning on each use.  Replace with \cs{item}.
-% \end{docCommand}
-%
 % \begin{docCommand}{ptag}{\oarg{keys}}
 %   (Available only when \textsf{amsmath} is loaded.)  Works inside displayed math environments like \texttt{equation} and \texttt{align}.  Accepts the same keys as \cs{item} within \texttt{prop}, except that \texttt{align} has no effect (since positioning is controlled by the tag placement system).
+% 
+% Any display math environment (|equation|, |align|, etc.) used inside \texttt{prop} or \texttt{inlineprop} automatically increments the nesting level for its duration, so that \cs{ptag} inside such an environment behaves as if it were one level deeper.
 % \end{docCommand}
-%
+% 
+% \begin{docCommand}{propoptions}{\marg{keys}}
+%   Sets default keys (see \autoref{sect:keys}), which take effect for all subsequent uses of \texttt{prop}, \texttt{inlineprop}, |\item|, and |\ptag| (within the current scope).
+% \end{docCommand}
+% 
+% Further commands are described below, especially in \cref{sect:styles} (defining styles) and \cref{sect:xref} (cross-referencing).  
+% 
 % \section{Keys}\label{sect:keys}
-%
-% Most keys are available in three contexts, which follow one rule: an argument
-% configures a single thing, while \refCom{propoptions} sets a cascading default.
-% \begin{itemize}
-%   \item In the optional argument of |\item| or |\ptag|: the key applies to that item only.
-%   \item In the optional argument of \texttt{prop} or \texttt{inlineprop}: the key applies to \emph{that environment only}.  A list-dimension key (\autoref{sect:keys-dims}) sizes that list; an item-level key acts as a default for that environment's own \cs{item}s.  Neither reaches a nested \texttt{prop}: an argument does not cascade.
-%   \item Via \refCom{propoptions} or as a \cs{usepackage} option: the key sets a default for \emph{every subsequent} \texttt{prop}/\texttt{inlineprop}, nested ones included.  A list-dimension key applies to each such list; an item-level key (\autoref{sect:keys-item}) is a default before each \cs{item} at every level.  The effect is group-scoped (\verb|\begingroup \propoptions{...} \endgroup| scopes it as usual).
-% \end{itemize}
-% So to style a whole tree of nested environments, use \refCom{propoptions}; to style just one environment, use its argument.  When the same key is set several ways, precedence is: explicit item key $>$ environment argument $>$ \refCom{propoptions} $>$ style preset.  The \texttt{equations} key is global only (\autoref{sect:keys-equations}).
-%
+% 
 % \subsection{Item-level keys}\label{sect:keys-item}
 %
-% \begin{docKey}{name}{=\meta{text}}{no default}
-%   The proposition's name.  A bare string (without \texttt{=}) is equivalent to \texttt{name=}\meta{text}: if the optional argument contains no \texttt{=} at all, the whole of it is the name; otherwise it is read as a key list, and any entry of it without an \texttt{=} is the name, so a bare name can be combined with other keys, as in |\item[No Overlap, align=flush]|.  In that case a name containing a comma must be braced---|\item[{Alpha, Beta}, align=flush]|---and a name containing an \texttt{=} needs the explicit \texttt{name=}|{|\meta{text}|}| form.
-% \end{docKey}
-%
+% The keys listed in this subsection can be used in the following places: 
+% \begin{itemize}
+%   \item 
+%    In the optional argument of |\item| or |\ptag|: the key applies to that item only.
+%   \item In the optional argument of \texttt{prop} or \texttt{inlineprop}: the key applies to every top-level |\item| within
+% that environment, unless overridden by the |\item|'s own optional argument.  (If another \texttt{prop} or \texttt{inlineprop} environment is used inside this one, the key will 
+% not apply to its |\item|s.)
+%   \item In the argument of \refCom{propoptions}: the key 
+% will apply to every subsequent |\item| or |\ptag| (in the current group), unless overridden by that |\item|'s optional argument, or that 
+% of its parent \texttt{prop} or \texttt{inlineprop} environment.
+%   \item In the optional argument of |\usepackage{propositions}|: equivalent to |\propoptions|.  
+%   \item With |\SetPropStyle| or |\DeclareNumberedStyle|, to
+% add the key to a given style.  
+% \end{itemize}
+% 
 % \begin{docKey}{style}{=\meta{style}}{no default}
-%   A prop style, equivalent to a preset collection of keys.  Styles can be declared using \refCom{SetPropStyle} or \refCom{DeclareNumberedStyle}, and several come predefined (\autoref{sect:styles}).
+%   A prop style, equivalent to a preset collection of keys: see \cref{sect:styles} for details.  
+% \end{docKey}
+% 
+% \begin{docKey}{align}{=\meta{value}}{no default}
+%   How the label should be positioned.  Possible values: \texttt{left} (standard left-aligned label, offset controlled by \cs{labelwidth} and \cs{labelsep}), \texttt{right} (right-aligned, like \texttt{enumerate}), \texttt{center} (centered within the label box), \texttt{flush} (aligned with left margin of item text), \texttt{nextline} (label on its own line), and \texttt{flush-nextline}.
+%   Has no effect inside \texttt{inlineprop} or \cs{ptag}.
+%   For left-margin alignment, use \texttt{labelindent=0em} instead.
+% \end{docKey}
+% 
+% \begin{docKey}{name}{=\meta{text}}{no default}
+%   The proposition's name.  A bare string (without \texttt{=}) is equivalent to \texttt{name=}\meta{text}.  (To be precise: if the optional argument contains no \texttt{=} at all, the whole of it is the name; otherwise, it is read as a key list, and any entry of it without an \texttt{=} is the name, so a bare name can be combined with other keys, as in |\item[No Overlap, align=flush]|.  In that case a name containing a comma must be braced---|\item[{Alpha, Beta}, align=flush]|---and a name containing an \texttt{=} needs the explicit \texttt{name=}|{|\meta{text}|}| form.)
 % \end{docKey}
 %
 % \begin{docKey}{counter}{=\meta{name}}{no default}
@@ -282,7 +307,7 @@
 % \end{docKey}
 %
 % \begin{docKey}{counter format}{=\meta{template}}{no default}
-%   How to display the counter value.  Use \texttt{\#1} for the counter name, e.g.\ \texttt{counter format=\string\roman\{\#1\}}.  When set, this is used instead of \cs{the}\meta{counter} for generating the item's name.
+%   How to display the counter value.  Use \texttt{\#1} for the counter name, e.g.\ \texttt{counter format=\string\roman\{\#1\}}.  When both this key and \texttt{counter} are set, this is used instead of \cs{the}\meta{counter} for generating the item's \texttt{name}.
 % \end{docKey}
 %
 % \begin{docKey}{format}{=\meta{template}}{no default}
@@ -291,13 +316,6 @@
 %
 % \begin{docKey}{display format}{=\meta{template}}{no default}
 %   Format for displaying the name in the proposition's label.  Does not affect cross-references.
-% \end{docKey}
-%
-% \begin{docKey}{label format}{=\meta{template}}{no default}
-%   Format applied to the \emph{entire} assembled label, i.e.\ the name (after
-%   \texttt{display format}), shorthand, and gloss together.  Use \texttt{\#1} for
-%   the whole assembled text.  For example, \texttt{label format=\#1:}\ appends
-%   a colon after the complete label.  Does not affect cross-references.
 % \end{docKey}
 %
 % \begin{docKey}{ref format}{=\meta{template}}{no default}
@@ -320,6 +338,13 @@
 %   Format for displaying the gloss in the label.
 % \end{docKey}
 %
+% \begin{docKey}{label format}{=\meta{template}}{no default}
+%   Format applied to the \emph{entire} assembled label, i.e.\ the name (after
+%   \texttt{display format}), shorthand, and gloss together.  Use \texttt{\#1} for
+%   the whole assembled text.  For example, \texttt{label format=\#1:}\ appends
+%   a colon after the complete label.
+% \end{docKey}
+%
 % \begin{docKey}{ref}{=\meta{text}}{no default}
 %   Explicitly set the reference text, overriding what would be derived from \texttt{name}, \texttt{counter}, or \texttt{shorthand}.
 % \end{docKey}
@@ -333,23 +358,26 @@
 % \end{docKey}
 %
 % \begin{docKey}{reset}{=\meta{boolean}}{initially \texttt{true}}
-%   When \texttt{true} (the default), processing this \cs{pitem} resets the
+%   When \texttt{true} (the default), processing an \cs{item} resets the
 %   sub-level counter one nesting depth below the current level
-%   (e.g.\ \texttt{numpropii} at level~1).  Set \texttt{reset=false} to
-%   suppress this reset, so that sub-item numbering continues from where it
-%   left off across consecutive parent items.  Can also be set in a style
-%   definition via \refCom{SetPropStyle}.
+%   (e.g.\ \texttt{numpropii} at level~1).  \texttt{reset=false} suppresses this behaviour, so that sub-item numbering continues from where it
+%   left off across consecutive parent items. 
 % \end{docKey}
 %
-% \begin{docKey}{align}{=\meta{value}}{no default}
-%   How the label should be positioned.  Possible values: \texttt{left} (standard left-aligned label, offset controlled by \cs{labelwidth} and \cs{labelsep}), \texttt{right} (right-aligned, like \texttt{enumerate}), \texttt{center} (centered within the label box), \texttt{flush} (aligned with left margin of item text), \texttt{nextline} (label on its own line), and \texttt{flush-nextline}.
-%   Has no effect inside \texttt{inlineprop} or \cs{ptag}.
-%   For left-margin alignment, use \texttt{labelindent=0em} instead.
-% \end{docKey}
+% Four of the list-dimension keys documented in the next section---\texttt{labelwidth}, \texttt{labelsep}, \texttt{itemindent} and \texttt{labelindent}---may also be given to an individual \cs{item}, where they reposition the label of that item alone, overriding the value in force for the rest of the list.  The other dimension keys, have no effect at item level.
+% 
+% \subsection{Keys for \texttt{prop} environments}\label{sect:keys-dims}
 %
-% \subsection{List dimensions}\label{sect:keys-dims}
-%
-% These keys are effective in all three contexts.  At item level, a dimension key applies only to the label of that specific item; at environment and global level it applies to the whole list.
+% The keys in this section can be used in the following places: 
+% \begin{itemize}
+%   \item In the optional argument of \texttt{prop}: the key applies to that environment only, not to any other \texttt{prop} or \texttt{inlineprop} environments that may be nested within it.  
+%   \item In the argument of \refCom{propoptions}: the key 
+% will apply to every subsequent \texttt{prop} environment (in the current group), unless overridden by that environment's optional argument.
+%   \item In the optional argument of |\usepackage{propositions}|: equivalent to |\propoptions|.  
+%   \item With |\SetPropStyle| or |\DeclareNumberedStyle|, to
+% add the key to a given style.  
+% \end{itemize}
+% The keys can also be set in the optional argument of |\item|, |\ptag|, or \texttt{inlineprop}, or as part of a style used in one of those contexts, but will have no effect there, except for \texttt{labelwidth}, \texttt{labelsep}, \texttt{itemindent} and \texttt{labelindent} which will override the given dimensions for an individual |\item|.  
 %
 % \begin{docKeys}[
 %     doc parameter = {=\meta{length / length list}},
@@ -366,15 +394,38 @@
 %     { doc name = itemindent },
 %     { doc name = listparindent },
 %   }
-%   Override the standard \LaTeX{} list dimensions.  Accept the same values as \cs{setlength}, including rubber lengths (e.g.\ \texttt{itemsep=4pt plus 2pt}).  Each key may also take a comma-separated list of per-level values: e.g.\ \texttt{leftmargin=\{2.5em, 0em\}}.  The first value applies at level~1, the second at level~2, etc.  Gaps in the list (e.g.\ \texttt{leftmargin=\{, 0em\}}) cause the class default to be used for that level.
+%   Override the standard \LaTeX{} list dimensions.  Accept the same values as \cs{setlength}, including rubber lengths (e.g.\ \texttt{itemsep=4pt plus 2pt}).  
+% Each of these keys may also be assigned a comma-separated list of dimensions: e.g.\ \texttt{leftmargin=\{2.5em, 0em\}}.  When the value of a keyis such a list, the first dimension in the list applies at level~1, the second at level~2, etc.  (Gaps in the list (e.g.\ \texttt{leftmargin=\{, 0em\}}) cause the class default to be used for that level, as do levels past the end of the list.)
+% 
+% When used with a \texttt{prop} environment, the values of these keys can contain the special |\propformlabel| macro: see below.
 % \end{docKeys}
 %
+% \begin{docCommand}{propformlabel}{}
+%   Expands to the formatted label of the (approximately) \texttt{items}-th item in this
+%   environment, computed at \verb|\begin{prop}| \emph{before} the list dimensions are applied,
+%   so it can be used directly in dimension expressions.
+%   Updated after each \cs{item} to reflect the most recently output label.
+%   Typical use:
+%   \begin{verbatim}
+%   \begin{prop}[items=20, 
+%     leftmargin=\widthof{\propformlabel}+0.5em]
+%   \end{verbatim}
+%   sizes the left margin to accommodate labels up to the 20th item.
+% \end{docCommand}
+%
+% \begin{docKey}{items}{=\meta{n}}{initially \texttt{1}}
+%   Indicates that approximately \meta{n} items are expected in this environment.
+%   The only effect of this key is in conjunction with \refCom{propformlabel}, to compute a preview label wide enough for the \meta{n}\/th expected item, so that dimension expressions such as
+%   \texttt{leftmargin=\cs{widthof}\{\cs{propformlabel}\}+0.5em} reserve enough space for the
+%   widest label.  Has no effect on actual item processing or counter stepping.
+% \end{docKey}
+% 
 % \begin{docKey}{labelindent}{=\meta{length / length list}}{no default}
 %   Positions the left edge of the label box at \meta{length} from the enclosing margin, adjusting \cs{labelwidth}, \cs{leftmargin}, \cs{labelsep}, or \cs{itemindent} as needed.  (Since the value of any one of these dimensions can be derived from those of the other four, it never makes sense to set all five.)
 % \end{docKey}
 %
 % \begin{docKey}{tightspacing}{}{no value}
-%   Sets all vertical spacing to the compact defaults that the standard document classes use for level-three lists (\texttt{topsep} and \texttt{itemsep} to \texttt{2pt} with stretch/shrink, \texttt{parsep} to \texttt{0pt}, \texttt{partopsep} to \texttt{1pt}).  Individual dimension keys set afterward override.
+%   Sets all vertical spacing to the compact defaults that the standard document classes use for level-three lists (\texttt{topsep} and \texttt{itemsep} to \texttt{2pt} with stretch/shrink, \texttt{parsep} to \texttt{0pt}, \texttt{partopsep} to \texttt{1pt}).
 % \end{docKey}
 %
 % \begin{docKey}{nosep}{}{no value}
@@ -389,98 +440,12 @@
 %   appearance of a single continuous list.
 % \end{docKey}
 %
-% \begin{docKey}{items}{=\meta{n}}{initially \texttt{1}}
-%   Indicates that approximately \meta{n} items are expected in this environment.
-%   Used together with \refCom{propformlabel} to compute a preview label wide enough for the
-%   \meta{n}\/th expected item, so that dimension expressions such as
-%   \texttt{leftmargin=\cs{widthof}\{\cs{propformlabel}\}+0.5em} reserve enough space for the
-%   widest label.  Has no effect on actual item processing or counter stepping.
-% \end{docKey}
+% \subsection{Keys for \texttt{prop} and \texttt{inlineprop} environments}\label{sect:keys-env}
 %
-% \begin{docCommand}{propformlabel}{}
-%   Expands to the formatted label of the (approximately) \texttt{items}-th item in this
-%   environment, computed at \verb|\begin{prop}| \emph{before} the list dimensions are applied,
-%   so it can be used directly in dimension expressions.
-%   Updated after each \cs{item} to reflect the most recently output label.
-%   Typical use:
-%   \begin{verbatim}
-%   \begin{prop}[items=20, leftmargin=\widthof{\propformlabel}+0.5em]
-%   \end{verbatim}
-%   sizes the left margin to accommodate labels up to the 20th item.
-% \end{docCommand}
-%
-% \subsection{Wrapping the list in another environment}\label{sect:keys-wrapper}
-%
-% \begin{docKeys}[
-%     doc parameter = {=\meta{code}},
-%   ]
-%   {
-%     { doc name = wrapper begin },
-%     { doc name = wrapper end },
-%   }
-%   Insert arbitrary \meta{code} immediately before \verb|\begin{list}| and
-%   immediately after \verb|\end{list}|, so that the whole list is wrapped in
-%   another environment.  These keys act at the environment level: they fire
-%   once around the entire list, not once per \cs{item}.  They follow the usual
-%   rule (\autoref{sect:keys}): set in a \texttt{prop} argument (or its
-%   \texttt{style=}) a wrapper frames \emph{that one list} and does not reach a
-%   nested \texttt{prop}; set via \refCom{propoptions} it frames \emph{every}
-%   subsequent list, nested ones included.  So a \texttt{framed} sublist inside a
-%   \texttt{framed} list nests only when the sublist asks for it; and to frame a
-%   whole tree of lists at once, use \refCom{propoptions}.  At item level the keys
-%   are ignored.
-% \end{docKeys}
-%
-% The package provides a ready-made \texttt{framed} style
-% (\autoref{sect:builtin-styles}) that frames the list with \textsf{tcolorbox}
-% (which must be loaded).  To frame a list, just write
-% \verb|\begin{prop}[style=framed]|.
-%
-% To build your own wrapper style, set \texttt{wrapper begin} / \texttt{wrapper
-% end} directly.  Brace any value that contains a comma (such as \textsf{mdframed}
-% options), so that the comma is not read as a key separator:
-% \begin{codebox}
-% \SetPropStyle{redbox}{
-%   wrapper begin = {\begin{mdframed}[linecolor=red, linewidth=2pt]},
-%   wrapper end   = {\end{mdframed}}}
-% \end{codebox}
-% Because a wrapper style is an ordinary style, another style can inherit the
-% frame with \texttt{style\,=\,framed} and add its own formatting on top.  The
-% wrapping environment must be one that can be split into separate begin and end
-% code---that is, it must not read its body as a macro argument.  \textsf{mdframed}
-% and the default \textsf{tcolorbox} environment qualify; environments that grab
-% their body (via \cs{collect@body} or similar) do not.  To turn a wrapper off
-% again within a group, set the keys to empty
-% (\texttt{wrapper begin\,=\,\{\}, wrapper end\,=\,\{\}}).
-%
-% The built-in \texttt{framed} style in action:
-% \begin{codebox}
-% \begin{prop}[style=framed]
-%   \item A framed proposition.
-%   \item And a second one.
-% \end{prop}
-% \end{codebox}
-% \begin{prop}[style=framed]
-%   \item A framed proposition. \label{wx:a}
-%   \item And a second one. \label{wx:b}
-% \end{prop}
-% See \ref{wx:a} and \ref{wx:b}.
-%
-% \begin{docCommand}{propoperativeleftmargin}{}
-%   A read-only length giving the \texttt{leftmargin} an ordinary (unframed)
-%   \texttt{prop} would use at the current nesting level---the ambient
-%   \refCom{propoptions}/class value, resolved per level.  It is recomputed at
-%   every \verb|\begin{prop}|, so it is valid inside a wrapper (before the
-%   environment's own \texttt{leftmargin} has taken effect), which is how the
-%   built-in \texttt{framed} style positions its frame to match an unframed list.
-% \end{docCommand}
-%
-% \subsection{Default styles}\label{sect:keys-defaults}
-%
-% When \cs{pitem} or \cs{ptag} is used without an explicit \texttt{style}, one of the following defaults is selected based on whether a name/counter was given and whether ptag mode is active.
-%
+% The keys in this section have effect in both the \texttt{prop} and \texttt{inlineprop} environments.  They can also be used with |\propoptions|, |\usepackage|, and |\SetPropStyle|, just like the keys in the previous subsection.  
+% 
 % \begin{docKey}{named style}{=\meta{style}}{initially \texttt{proposition}}
-%   The style used when a \texttt{name} or \texttt{counter} is given but no explicit \texttt{style}.
+%   The style when an |\item| or |\ptag| has a value for \texttt{name} or \texttt{counter}, but no explicit \texttt{style}.
 % \end{docKey}
 %
 % \begin{docKey}{named ptag style}{=\meta{style}}{initially empty}
@@ -488,47 +453,72 @@
 % \end{docKey}
 %
 % \begin{docKey}{nameless style}{=\meta{style}}{initially \texttt{numbered}}
-%   The style used when \cs{pitem} or \cs{ptag} has no optional argument (no name, counter, or style).
+%   The style used when \cs{item} or \cs{ptag} has no optional argument (no name, counter, or style).
 % \end{docKey}
 %
 % \begin{docKey}{nameless ptag style}{=\meta{style}}{initially empty}
 %   If set, overrides \texttt{nameless style} for \cs{ptag} items only.
 % \end{docKey}
-%
-% \subsection{Environment-level style and item defaults}\label{sect:keys-env}
-%
-% Any key from \autoref{sect:keys-item} may appear in the optional argument of \texttt{prop} or
-% \texttt{inlineprop}.  It is then applied as a default before each \cs{item} of \emph{that}
-% environment that does not set the key explicitly.  An item-level key always overrides the
-% environment default, and the default does not reach the \cs{item}s of a nested environment (an
-% argument styles only its own environment; use \refCom{propoptions} for a cascading default).
-%
-% \textbf{Important ordering note.}
-% Style selection (which decides whether an item is ``named'' or ``nameless'') is based solely on
-% the item's \emph{own} optional argument, before environment defaults are applied.  Consequently,
+% 
+% Note that the automatic assignment of a default style to an |\item| is based solely on
+% the item's \emph{own} optional argument.  Consequently,
 % \verb|\begin{prop}[name=foo]\item bar| produces a \emph{nameless}-style item with label
-% \texttt{(foo)}: the environment default \texttt{name=foo} is not seen during style resolution.
+% \texttt{(foo)}: the environment default \texttt{name=foo} is not seen during style resolution.  
 % To get the equivalent of \verb|\item[name=foo]| (named style, bold), use
 % \verb|\begin{prop}[style=proposition, name=foo]\item bar|.
+% 
+% \begin{docKeys}[
+%     doc parameter = {=\meta{code}},
+%   ]
+%   {
+%     { doc name = wrapper begin },
+%     { doc name = wrapper end },
+%   }
+%   Insert arbitrary \meta{code} immediately before the beginning and after the end of the environment, so that the whole list can (for example) be wrapped in another environment. 
+% 
+% Any value that contains a comma (such as a comma-separated list of options to an environment) must be enclosed in braces, so that the comma is not read as a key separator:
+% \begin{codebox}
+% \SetPropStyle{redbox}{
+%   wrapper begin = {\begin{mdframed}[linecolor=red, linewidth=2pt]},
+%   wrapper end   = {\end{mdframed}}}
+% \end{codebox}
+% The wrapping environment must be one that can be split into separate begin and end
+% code---that is, it must not read its body as a macro argument via \cs{collect@body} or similar.
+% \end{docKeys}
 %
-% \begin{docKey}{style}{=\meta{style}}{no default}
-%   Sets a default style for all \cs{item}s in this environment.  The style's list-dimension keys (|leftmargin|, |labelwidth|, etc.) size this list; its item-level keys are applied as defaults for each of this environment's \cs{item}s.  An explicit |style=| on an individual \cs{item} overrides this default, and (like any argument key) the style does not cascade into a nested \texttt{prop}.  This key is also accepted by \cs{propoptions}, where it \emph{does} cascade: it becomes the default style for all subsequent environments at every level (group-scoped, overridden by the env arg, and overridden by per-item \texttt{style=}).  So \verb|\begin{prop}[style=framed]| frames one list, whereas \verb|\propoptions{style=framed}| frames every following list.
-% \end{docKey}
+% The following command is provided for use with \texttt{wrapper begin}:
+% \begin{docCommand}{propoperativeleftmargin}{}
+%   A read-only length giving the \texttt{leftmargin} a \texttt{prop} environment (with no optional argument) would use, given the current defaults set by |\propoptions| and the current nesting level.  It is recomputed at every \verb|\begin{prop}|, so it is valid inside a wrapper (before the
+%   environment's own \texttt{leftmargin} has taken effect).  For example, the built-in \texttt{framed} style uses this command in the value of \texttt{wrapper begin} to make the margins of framed environments match those of regular environments.
+% \end{docCommand}
 %
-% \subsection{Equation numbering}\label{sect:keys-equations}
+% \subsection{Global keys}
+% \label{sect:keys-global}
 %
+% The following key can only be set in the optional argument of |\usepackage|, or in the preamble with |\propoptions|.  In the optional argument of \texttt{prop} or \texttt{inlineprop} it is ignored, with a warning.  Setting it after \verb|\begin{document}| is worse than useless: the equation hooks are installed at \verb|\begin{document}|, so only the \texttt{nameless style\,=\,eqnum} half of the key takes effect, and \cs{item}s start using the \texttt{equation} counter while the equations themselves keep the standard formatting.
 % \begin{docKey}{equations}{}{no value, \textbf{global only}}
-%   Sets \texttt{nameless style\,=\,eqnum} and installs hooks so that the \LaTeX\ and \textsf{amstex} displayed equation environments (such as \texttt{equation} and \texttt{align}) use the same formatting as the \texttt{equation} prop style.  The \texttt{equation} style's \texttt{display format} and \texttt{ref format} keys are used for generating equation numbers and cross-references to them.  Redefining the \texttt{equation} style, e.g.~with
+%   Installs hooks so that the \LaTeX\ and \textsf{amstex} displayed equation environments (such as \texttt{equation} and \texttt{align}) use the same formatting as the special \texttt{equation} prop style.  The \texttt{equation} style's \texttt{display format} and \texttt{ref format} keys are used for generating equation numbers and cross-references to them.  
+% 
+% Redefining the \texttt{equation} style, e.g.~with
 %\begin{codebox}
 % \SetPropStyle{equation}{format = [#1]}
 %\end{codebox}
 %   will automatically update the hooks.
+% 
+% The \texttt{equations} key also sets \texttt{nameless style\,=\,eqnum}, so that top-level |\item|s with no name will also use the \texttt{equation} style, while lower-level |\item|s will use other kinds of numbering: for details, see \cref{sect:builtin-styles} below.  
+% 
 % \end{docKey}
 %
-% \section{Prop styles}\label{sect:styles}
+% \section{Defining and modifying styles}\label{sect:styles}
 %
+% Styles, equivalent to bundles of key-value settings,
+% can be defined, and used freely in the optional arguments of |\item|, |\ptag|, \texttt{prop}, \texttt{inlineprop}, and the argument of |\propoptions|.  
+% Styles can freely be combined, and the definition of 
+% one style can reference another (in which case redefining
+% the latter style will change the effect of the former style.)
+%  
 % \begin{docCommand}{SetPropStyle}{\marg{name}\marg{keys}}
-%   Defines or modifies a prop style for use with the \texttt{style} key.  All \refCom{pitem} keys are accepted, plus the following:
+%   Defines or modifies a prop style for use with the \texttt{style} key.  All item-level keys (\autoref{sect:keys-item}) are accepted, plus the following:
 % \end{docCommand}
 %
 % \begin{docKey}[][doc label=setpropstyle/style]{style}{=\meta{parent}}{no default}
@@ -538,7 +528,7 @@
 % \end{docKey}
 %
 % \begin{docKey}{macro}{=\meta{command}}{no default}
-%   A new user macro, equivalent to \cs{pitem}\texttt{[style=}\meta{name}\texttt{]}.  Any further keys given to the macro are passed to \cs{pitem}.
+%   A new user macro, equivalent to \cs{item}\texttt{[style=}\meta{name}\texttt{]}.  Any further keys given to the macro are passed to \cs{item}.
 % \end{docKey}
 %
 % If the style \meta{name} already exists, |\SetPropStyle| modifies or adds keys.  For example, |\SetPropStyle{proposition}{align=flush}| changes the alignment of the built-in |proposition| style while preserving its other settings.
@@ -584,7 +574,7 @@
 %   Picks the entry at the current nesting depth (1-indexed, clamped to the list length).  At depth~0 (outside any \texttt{prop} environment), returns the first entry.  This macro is fully expandable and can be used in the \texttt{name}, \texttt{format}, and \texttt{style} keys of \cs{SetPropStyle} to create depth-dependent styles.
 % \end{docCommand}
 %
-% \subsection{Built-in styles}\label{sect:builtin-styles}
+% \section{Built-in styles}\label{sect:builtin-styles}
 %
 % The following prop styles are predefined.
 % Each entry shows the defining code (using user-facing commands)
@@ -693,8 +683,7 @@
 %
 % \subsubsection*{Dispatcher styles}
 %
-% These styles use |style| with \cs{proplevelchoice} to dispatch to a
-% level-specific style at resolution time.
+% These styles use \cs{proplevelchoice} to select a level-specific style depending on the current nesting level
 %
 % \begin{description}
 % \item[\texttt{numbered}] The default nameless style.  Dispatches to
@@ -728,26 +717,38 @@
 % \end{codebox}
 % \end{description}
 %
-% \subsubsection*{Framed style}
+% \subsubsection*{Wrapper style}
 %
 % \begin{description}
-% \item[\texttt{framed}] Frames the whole list in a \textsf{tcolorbox} (which
-%   must be loaded).  Items are set \texttt{flush} and the list runs at
-%   \texttt{leftmargin\,=\,0} inside the frame, so the contents keep the current
-%   level's effective left margin (read via \refCom{propoperativeleftmargin}, so
-%   it honours any \refCom{propoptions} \texttt{leftmargin}) while the frame is
-%   centred with its rule one \cs{propframepad} (default \(6\,\)pt) to the left of
-%   them.  The whole geometry lives in the style definition, so it is easy to copy
-%   and adapt; and being an ordinary style it can be inherited,
-%   \verb|\SetPropStyle{myframe}{style=framed, format=\textbf{#1}}|.  Change the
+% \item[\texttt{framed}] Frames a list in a \texttt{tcolorbox} (requires the \textsf{tcolorbox}
+%   package to be loaded).  Change the
 %   padding with \verb|\setlength\propframepad{...}|.
+% \begin{codebox}
+% \SetPropStyle{framed}{
+%   align = flush, leftmargin = 0pt, rightmargin = 0pt,
+%   wrapper begin = {\begin{tcolorbox}[
+%       colback = white, colframe = black,
+%       boxrule = 0.4pt, arc = 0pt, boxsep = 0pt,
+%       left skip  =
+%         \dimexpr\propoperativeleftmargin-\propframepad\relax,
+%       right skip =
+%         \dimexpr\propoperativeleftmargin-\propframepad\relax,
+%       left = \propframepad, right = \propframepad,
+%       top  = \propframepad, bottom = \propframepad]},
+%   wrapper end = {\end{tcolorbox}},
+% }
+% \end{codebox}
+%   The list runs at \texttt{leftmargin\,=\,0} inside the frame, so
+%   \refCom{propoperativeleftmargin} is what keeps the contents at the left
+%   margin an unframed list would have used, with the frame rule one
+%   \cs{propframepad} further out.
 % \begin{prop}[style=framed]
 %   \item[name=Note] A framed list, with a flush label and a plain paragraph.
 %   \item[counter=none] The unlabelled line sits flush at the same edge.
 % \end{prop}
 % \end{description}
 %
-% \section{Cross-referencing}\label{sect:xref}
+% \section{Cross-referencing commands}\label{sect:xref}
 %
 % Labels placed after |\item| items (within \texttt{prop}) work with the standard
 % |\label|/|\ref| mechanism.  The key difference from ordinary
@@ -836,7 +837,7 @@
 %   { doc name = lastref,  doc parameter = \oarg{prefix}\marg{suffix} },
 %   { doc name = Lastref,  doc parameter = \oarg{prefix}\marg{suffix} },
 % }
-%   Produces a reference (witth no hyperlink) to the most recently processed \cs{pitem} or \cs{ptag}, even without a \cs{label}.  Useful for back-references in running text.  With one argument, \meta{suffix} is appended; with two, \meta{prefix} is also prepended.  Use \cs{lastref}\texttt{\{\}} for a plain reference.  \cs{Lastref} is the titlecase variant.
+%   Produces a reference (witth no hyperlink) to the most recently processed \cs{item} or \cs{ptag}, even without a \cs{label}.  Useful for back-references in running text.  With one argument, \meta{suffix} is appended; with two, \meta{prefix} is also prepended.  Use \cs{lastref}\texttt{\{\}} for a plain reference.  \cs{Lastref} is the titlecase variant.
 % \end{docCommands}
 %
 % \begin{docCommands}{
@@ -890,7 +891,7 @@
 % as~`(\textbf{P1})', a |leveltwo| sub-item references
 % as~`(\textbf{P1a})' and |\nref| returns just~`a'.
 %
-% \subsection{How it works: \cs{propapply}}
+% \subsection{How cross-referencing works: \cs{propapply}}
 %
 % \begin{docCommand}{propapply}{\marg{template}\marg{content}}
 %   Internally, each reference is stored in the \texttt{.aux} file as \cs{propapply}\marg{template}\marg{content}.  The \meta{template} contains formatting with the placeholder \refCom{propfmtarg} where content appears.  At reference time, \cs{propapply} evaluates the template with \cs{propfmtarg} bound to \meta{content}.  The \refCom{oref} and \refCom{nref} commands work by locally redefining \cs{propapply}.
@@ -902,23 +903,31 @@
 %   Placeholder used inside templates; expands to the content argument of the enclosing \refCom{propapply}.
 % \end{docCommand}
 %
-% \section{Package options}\label{sect:global}
-%
-% \begin{docCommand}{propoptions}{\marg{keys}}
-%   Sets cascading defaults (see \autoref{sect:keys}).  Every key---list dimensions and item-level keys (\autoref{sect:keys-item}) alike, including \texttt{style=}---becomes a default for \emph{every subsequent} \texttt{prop}/\texttt{inlineprop}, nested ones included, until overridden by an environment argument or an explicit item key.  In particular, \verb|\propoptions{style=thesis}| makes every subsequent \texttt{prop} (at any depth) use \texttt{thesis} by default.  The effect is group-scoped: \verb|\begingroup \propoptions{style=thesis} ... \endgroup| applies the default only within the group.  This is the counterpart to an environment argument, which sets the same keys for a \emph{single} environment without cascading (\autoref{sect:keys-env}); package options behave like a preamble-level \cs{propoptions}.
-% \end{docCommand}
-%
 % \section{Compatibility}
 %
-% The \textsf{propositions} package is designed to work with \textsf{hyperref}, \textsf{cleveref}, and \textsf{amsmath}.
-% \textsf{amsmath} is required for |\ptag| and the |equations| option.  With \textsf{cleveref} loaded, all proposition items are assigned to a private |prop| ``reference type'' (deliberately not |proposition|, so a user's own \texttt{Proposition} theorems are left untouched); the |crefname| key can override this per item.
-%
-% Recommended load order:
+% The \textsf{propositions} package is designed to work with \textsf{hyperref}, \textsf{cleveref}, \textsf{amsmath}, and \textsf{tcolorbox}.
+% \begin{itemize}
+%    \item 
+%    \textsf{amsmath} is required for |\ptag| and the |equations| option.  
+%    \item 
+%    With \textsf{hyperref}, all cross-referencing 
+%    commands generate hyperlinks, as usual.  
+%    \item
+%    With \textsf{cleveref} loaded, all proposition items are assigned to a private |prop| ``reference type'', which by default has no special name, so |\cref| and |\ref| will generate the same output.  The |crefname| key can override this.  
+%    \item 
+%    The built-in \texttt{framed} style requires \textsf{tcolorbox} to be loaded.
+% \end{itemize}
+% None of these packages has to be loaded in any particular order relative to
+% \textsf{propositions}: each is detected either at load time or at
+% \verb|\begin{document}|, whichever is needed.  The usual external conventions
+% still apply---\textsf{hyperref} late, and \textsf{cleveref} after
+% \textsf{hyperref}---which gives:
 % \begin{Verbatim}[gobble=2]
+% \usepackage{amsmath}      % if using \ptag
+% \usepackage{tcolorbox}    % if using the framed style
 % \usepackage{hyperref}
-% \usepackage{amsmath}   % if using \ptag
 % \usepackage{propositions}
-% \usepackage{cleveref}  % if used
+% \usepackage{cleveref}     % if used
 % \end{Verbatim}
 %
 % \section{Known issues}
@@ -940,23 +949,23 @@
 %
 %    \begin{macrocode}
 %<*package>
-%<doc>%% propositions.sty --- A flexible system for labelling and cross-referencing displayed propositions.
+% propositions.sty --- A flexible system for labelling and cross-referencing displayed propositions.
 \ProvidesExplPackage {propositions} {2026/02/13} {0.2}
   {Proposition labeling with key-value interface}
 
 \RequirePackage { calc }
 
-%<doc>%% ====================================================================
-%<doc>%% Internal variables
-%<doc>%% ====================================================================
+% ====================================================================
+% Internal variables
+% ====================================================================
 
-%<doc>%% --- Nesting level ---
+% --- Nesting level ---
 \int_new:N  \g__props_level_int
 
-%<doc>%% --- Per-item state (set during \pitem / \ptag processing) ---
-%<doc>%% These are cleared at the start of \__props_resolve_item:n and then
-%<doc>%% populated by key parsing and style loading.  Emptiness of a tl
-%<doc>%% indicates the key was not set (no separate boolean tracking needed).
+% --- Per-item state (set during \item / \ptag processing) ---
+% These are cleared at the start of \__props_resolve_item:n and then
+% populated by key parsing and style loading.  Emptiness of a tl
+% indicates the key was not set (no separate boolean tracking needed).
 \tl_new:N   \l__props_name_tl
 \tl_new:N   \l__props_style_tl
 \tl_new:N   \l__props_counter_tl
@@ -973,10 +982,10 @@
 \tl_new:N   \l__props_shorthand_tl
 \tl_new:N   \l__props_gloss_tl
 
-%<doc>%% Format functions (one-argument macros set by keys / style loading).
-%<doc>%% These always have a definition (defaulting to identity or a standard format),
-%<doc>%% so unlike the tl variables above, their "was set" status cannot be inferred
-%<doc>%% from their value.
+% Format functions (one-argument macros set by keys / style loading).
+% These always have a definition (defaulting to identity or a standard format),
+% so unlike the tl variables above, their "was set" status cannot be inferred
+% from their value.
 \cs_new:Npn \l__props_displayfmt:n     #1 { #1 }
 \cs_new:Npn \l__props_reffmt:n      #1 { #1 }
 \cs_new:Npn \l__props_shorthandfmt:n #1 { ~ [#1] }
@@ -985,12 +994,12 @@
 \cs_new:Npn \l__props_counterfmt:n  #1 { }  %% empty = not set
 \bool_new:N \l__props_has_counter_format_bool
 
-%<doc>%% --- Environment mode ---
-%<doc>%% True inside a prop environment, false inside inlineprop.
-%<doc>%% Controls whether \pitem outputs a display label or inline text.
+% --- Environment mode ---
+% True inside a prop environment, false inside inlineprop.
+% Controls whether \item outputs a display label or inline text.
 \bool_new:N \g__props_display_mode_bool
 
-%<doc>%% --- Global settings ---
+% --- Global settings ---
 \tl_new:N   \l__props_named_style_tl             %% default style for named items
 \tl_new:N   \l__props_named_ptag_style_tl        %% ptag override for named items; empty = fall back
 \tl_new:N   \l__props_nameless_style_tl          %% default style for nameless items
@@ -1000,11 +1009,12 @@
 \cs_new:Npn \__props_eqdispfmt:n #1 { (#1) } %% display format for equation tags
 \cs_new:Npn \__props_eqreffmt:n  #1 { (#1) } %% ref format for equation labels
 
-%<doc>%% --- Working variables ---
+% --- Working variables ---
 \tl_new:N   \l__props_display_text_tl    %% what appears in the document
 \tl_new:N   \l__props_ref_text_tl        %% what goes into \@currentlabel
 \tl_new:N   \l__props_item_output_tl     %% formatted display (displayfmt + shorthand + gloss)
 \tl_new:N   \l__props_item_arg_tl        %% per-item argument, bare name normalised to name={...}
+\bool_new:N \l__props_valueless_key_bool %% true when an entry of that argument is a key given without a value
 \bool_new:N \l__props_ptag_bool          %% true during \ptag processing
 \bool_new:N \l__props_titlecase_bool    %% true when \Ref etc. want titlecasing
 \bool_new:N \l__props_reset_bool        %% true (default) = reset sub-level counter on \item
@@ -1022,53 +1032,53 @@
 \int_set:Nn \l__props_env_items_int { 1 }
 \tl_new:N  \g__props_env_preview_label_tl %% preview label built at env open for \propformlabel
 
-%<doc>%% --- Parent-ref stacks and last-item storage ---
-%<doc>%% Two global seq stacks hold the template/content of the parent item.
-%<doc>%% Pushed on \begin{prop}/\begin{inlineprop}, popped on \end.
-%<doc>%% Two global tl variables hold the most recent item's template/content,
-%<doc>%% used by \lastref/\nLastref for linguex-style back-references.
+% --- Parent-ref stacks and last-item storage ---
+% Two global seq stacks hold the template/content of the parent item.
+% Pushed on \begin{prop}/\begin{inlineprop}, popped on \end.
+% Two global tl variables hold the most recent item's template/content,
+% used by \lastref/\nLastref for linguex-style back-references.
 \seq_new:N \g__props_parent_tpl_seq
 \seq_new:N \g__props_parent_cnt_seq
 \tl_new:N  \g__props_last_tpl_tl
 \tl_new:N  \g__props_last_cnt_tl
 
-%<doc>%% --- Anchor counter for hyperref ---
+% --- Anchor counter for hyperref ---
 \newcounter { propanchor }
-%<doc>%% Make hyperref destinations deterministic (not dependent on Hy@linkcounter,
-%<doc>%% which amsmath does not save/restore between measuring and output passes).
-%<doc>%% Note: hyperref prepends "propanchor." automatically in \H@refstepcounter,
-%<doc>%% so \theHpropanchor only needs the unique suffix.
+% Make hyperref destinations deterministic (not dependent on Hy@linkcounter,
+% which amsmath does not save/restore between measuring and output passes).
+% Note: hyperref prepends "propanchor." automatically in \H@refstepcounter,
+% so \theHpropanchor only needs the unique suffix.
 \def \theHpropanchor { \the\value{propanchor} }
 
-%<doc>%% --- Prop environment counter ---
-%<doc>%% Stepped by each \begin{prop} / \begin{inlineprop}.  Not displayed;
-%<doc>%% exists solely so that \numberwithin{equation}{prop} can reset the
-%<doc>%% equation counter per prop block if desired.
+% --- Prop environment counter ---
+% Stepped by each \begin{prop} / \begin{inlineprop}.  Not displayed;
+% exists solely so that \numberwithin{equation}{prop} can reset the
+% equation counter per prop block if desired.
 \newcounter { prop }
 
-%<doc>%% ====================================================================
-%<doc>%% \propapply — format/content separation for cross-references
-%<doc>%% ====================================================================
-%<doc>%%
-%<doc>%% \propfmtarg is a protected placeholder.  In the aux file, format
-%<doc>%% templates contain \propfmtarg where the content should go.
-%<doc>%% \propapply{<template>}{<content>} evaluates the template with
-%<doc>%% \propfmtarg set (via \protected@edef) to the content.  The
-%<doc>%% \protected@edef expands expandable macros (including \propfmtarg
-%<doc>%% tokens from an outer \propapply scope) while preserving robust
-%<doc>%% commands like \textbullet.  This enables correct resolution of
-%<doc>%% nested \parentref references.  \oref and \nref work by locally
-%<doc>%% redefining \propapply to inject prefixes/suffixes or strip
-%<doc>%% formatting.
-%<doc>%%
-%<doc>%% When hyperref is loaded, \propapply locally disables hyperref's
-%<doc>%% link commands to suppress nested hyperlinks.  This matters because
-%<doc>%% ref texts stored in the aux file may contain \ref, \oref, etc.;
-%<doc>%% when \ref{item} renders the stored \propapply{template}{content},
-%<doc>%% the entire output is already inside a hyperlink created by \ref,
-%<doc>%% so any link-generating commands inside must be suppressed.
-%<doc>%% (We avoid \NoHyper/\endNoHyper because they use \global
-%<doc>%% assignments that break when \propapply is nested.)
+% ====================================================================
+% \propapply — format/content separation for cross-references
+% ====================================================================
+%
+% \propfmtarg is a protected placeholder.  In the aux file, format
+% templates contain \propfmtarg where the content should go.
+% \propapply{<template>}{<content>} evaluates the template with
+% \propfmtarg set (via \protected@edef) to the content.  The
+% \protected@edef expands expandable macros (including \propfmtarg
+% tokens from an outer \propapply scope) while preserving robust
+% commands like \textbullet.  This enables correct resolution of
+% nested \parentref references.  \oref and \nref work by locally
+% redefining \propapply to inject prefixes/suffixes or strip
+% formatting.
+%
+% When hyperref is loaded, \propapply locally disables hyperref's
+% link commands to suppress nested hyperlinks.  This matters because
+% ref texts stored in the aux file may contain \ref, \oref, etc.;
+% when \ref{item} renders the stored \propapply{template}{content},
+% the entire output is already inside a hyperlink created by \ref,
+% so any link-generating commands inside must be suppressed.
+% (We avoid \NoHyper/\endNoHyper because they use \global
+% assignments that break when \propapply is nested.)
 
 \cs_new_protected:Npn \propfmtarg { }
 
@@ -1100,33 +1110,33 @@
     \group_end:
   }
 
-%<doc>%% ====================================================================
-%<doc>%% \parentref / \nParentref / \lastref / \nLastref
-%<doc>%% ====================================================================
-%<doc>%%
-%<doc>%% \parentref reads the top of the parent stacks, wrapping the result
-%<doc>%% in \propapply so the parent's template is preserved.  When \nref
-%<doc>%% strips the outermost \propapply, the parent contribution vanishes,
-%<doc>%% leaving only the child content — as expected.
-%<doc>%%
-%<doc>%% \nParentref returns just the parent's content (bare, no template),
-%<doc>%% suitable for use in \the<counter> definitions where the parent
-%<doc>%% prefix should be part of the counter *name* and survive \nref.
-%<doc>%%
-%<doc>%% \lastref / \nLastref are analogous but read from the last-item
-%<doc>%% globals instead of the parent stacks, enabling linguex-style
-%<doc>%% back-references without \label.
-%<doc>%%
-%<doc>%% All four commands are expandable, so they resolve correctly
-%<doc>%% inside \protected@edef (e.g. when building aux-file content).
-%<doc>%%
-%<doc>%% Argument convention:
-%<doc>%%   \parentref{suffix}           — appends suffix to parent content
-%<doc>%%   \parentref[prefix]{suffix}   — wraps parent content with both
-%<doc>%%   \parentref{}                 — plain parent ref (empty suffix)
-%<doc>%%
-%<doc>%% Note: the last argument must be mandatory for expandable commands
-%<doc>%% (xparse requirement), so the suffix is mandatory rather than optional.
+% ====================================================================
+% \parentref / \nParentref / \lastref / \nLastref
+% ====================================================================
+%
+% \parentref reads the top of the parent stacks, wrapping the result
+% in \propapply so the parent's template is preserved.  When \nref
+% strips the outermost \propapply, the parent contribution vanishes,
+% leaving only the child content — as expected.
+%
+% \nParentref returns just the parent's content (bare, no template),
+% suitable for use in \the<counter> definitions where the parent
+% prefix should be part of the counter *name* and survive \nref.
+%
+% \lastref / \nLastref are analogous but read from the last-item
+% globals instead of the parent stacks, enabling linguex-style
+% back-references without \label.
+%
+% All four commands are expandable, so they resolve correctly
+% inside \protected@edef (e.g. when building aux-file content).
+%
+% Argument convention:
+%   \parentref{suffix}           — appends suffix to parent content
+%   \parentref[prefix]{suffix}   — wraps parent content with both
+%   \parentref{}                 — plain parent ref (empty suffix)
+%
+% Note: the last argument must be mandatory for expandable commands
+% (xparse requirement), so the suffix is mandatory rather than optional.
 
 \NewExpandableDocumentCommand \parentref { o m }
   {
@@ -1164,9 +1174,9 @@
 \NewExpandableDocumentCommand \nlastref { }
   { \g__props_last_cnt_tl }
 
-%<doc>%% ====================================================================
-%<doc>%% \Parentref / \Lastref — titlecase versions (for running text)
-%<doc>%% ====================================================================
+% ====================================================================
+% \Parentref / \Lastref — titlecase versions (for running text)
+% ====================================================================
 
 \NewDocumentCommand \Parentref { o m }
   {
@@ -1188,35 +1198,35 @@
     \group_end:
   }
 
-%<doc>%% Titlecase variants of \cs{nparentref} and \cs{nlastref}.
+% Titlecase variants of \cs{nparentref} and \cs{nlastref}.
 \NewDocumentCommand \nParentref { }
   { \text_titlecase_first:n { \nparentref } }
 
 \NewDocumentCommand \nLastref { }
   { \text_titlecase_first:n { \nlastref } }
 
-%<doc>%% ====================================================================
-%<doc>%% Variant generation
-%<doc>%% ====================================================================
+% ====================================================================
+% Variant generation
+% ====================================================================
 
 \cs_generate_variant:Nn \tl_gset_eq:NN { cN }
 \cs_generate_variant:Nn \cs_gset_eq:NN { cN }
 \cs_generate_variant:Nn \cs_set_eq:NN  { Nc }
 \cs_generate_variant:Nn \seq_gpush:Nn  { NV }
 
-%<doc>%% ====================================================================
-%<doc>%% Style preset storage (live-parent model)
-%<doc>%% ====================================================================
-%<doc>%% For each declared style \meta{S}, we store two token lists:
-%<doc>%%   \cs{g__props_style_\meta{S}_parent_tl}   — parent style expression
-%<doc>%%     (possibly containing \cs{proplevelchoice}; empty = no parent)
-%<doc>%%   \cs{g__props_style_\meta{S}_overrides_tl} — raw key-value pairs
-%<doc>%%     (the settings from \cs{SetPropStyle}, minus \texttt{style=}
-%<doc>%%     and \texttt{macro=})
-%<doc>%%
-%<doc>%% At resolution time, the parent chain is walked recursively:
-%<doc>%% the innermost parent's overrides are applied first,
-%<doc>%% then each outer style's overrides on top.
+% ====================================================================
+% Style preset storage (live-parent model)
+% ====================================================================
+% For each declared style \meta{S}, we store two token lists:
+%   \cs{g__props_style_\meta{S}_parent_tl}   — parent style expression
+%     (possibly containing \cs{proplevelchoice}; empty = no parent)
+%   \cs{g__props_style_\meta{S}_overrides_tl} — raw key-value pairs
+%     (the settings from \cs{SetPropStyle}, minus \texttt{style=}
+%     and \texttt{macro=})
+%
+% At resolution time, the parent chain is walked recursively:
+% the innermost parent's overrides are applied first,
+% then each outer style's overrides on top.
 
 \seq_new:N \l__props_style_stack_seq   %% recursion stack for style loading
 
@@ -1229,9 +1239,9 @@
       }
   }
 
-%<doc>%% Load a style's preset into the local item variables.
-%<doc>%% If the style has a parent, the parent is loaded first (recursively),
-%<doc>%% then this style's overrides are applied on top.
+% Load a style's preset into the local item variables.
+% If the style has a parent, the parent is loaded first (recursively),
+% then this style's overrides are applied on top.
 \cs_new_protected:Nn \__props_style_load:
   {
     \tl_if_exist:cTF { g__props_style_ \l__props_style_tl _parent_tl }
@@ -1267,21 +1277,17 @@
 \msg_new:nnn { props } { item-in-math }
   { Proposition~ items~ cannot~ be~ used~ in~ math~ mode.~
     Use~ \token_to_str:N \ptag \ instead. }
-\msg_new:nnn { props } { pitem-deprecated }
-  { \token_to_str:N \pitem \ is~ deprecated.~
-    Use~ \token_to_str:N \item \ inside~
-    prop~ or~ inlineprop~ instead. }
 \msg_new:nnn { props } { global-only-keys }
   { Key(s)~ '#1'~ ignored~ in~ prop~ optional~ argument~
     (use~ \token_to_str:N \propoptions \ instead). }
 
-%<doc>%% ====================================================================
-%<doc>%% l3keys: keys for \SetPropStyle / style application at item level
-%<doc>%% ====================================================================
-%<doc>%% Applied by \__props_style_load: when resolving an item.
-%<doc>%% Keys that are global-only (list dimensions, tightspacing, etc.)
-%<doc>%% are silently ignored via the unknown handler when a style is
-%<doc>%% applied at item level; they take effect only via props/global.
+% ====================================================================
+% l3keys: keys for \SetPropStyle / style application at item level
+% ====================================================================
+% Applied by \__props_style_load: when resolving an item.
+% Keys that are global-only (list dimensions, tightspacing, etc.)
+% are silently ignored via the unknown handler when a style is
+% applied at item level; they take effect only via props/global.
 
 \keys_define:nn { props / declare-style }
   {
@@ -1322,9 +1328,9 @@
     unknown         .code:n    = {} ,
   }
 
-%<doc>%% ====================================================================
-%<doc>%% Helper: define a macro command for a style
-%<doc>%% ====================================================================
+% ====================================================================
+% Helper: define a macro command for a style
+% ====================================================================
 
 \cs_new_protected:Nn \__props_define_macro:Nn
   {
@@ -1343,9 +1349,9 @@
       }
   }
 
-%<doc>%% ====================================================================
-%<doc>%% Helper: store style preset (parent + overrides)
-%<doc>%% ====================================================================
+% ====================================================================
+% Helper: store style preset (parent + overrides)
+% ====================================================================
 
 \cs_new_protected:Nn \__props_store_style:n
   {
@@ -1358,12 +1364,12 @@
     \tl_set_eq:cN { g__props_style_ #1 _overrides_tl } \l__props_decl_overrides_tl
   }
 
-%<doc>%% ====================================================================
-%<doc>%% Helper: reset local state to defaults for style resolution
-%<doc>%% ====================================================================
+% ====================================================================
+% Helper: reset local state to defaults for style resolution
+% ====================================================================
 
-%<doc>%% Set all per-item locals to their defaults.  Called at the start
-%<doc>%% of item resolution, before the style chain is loaded.
+% Set all per-item locals to their defaults.  Called at the start
+% of item resolution, before the style chain is loaded.
 \cs_new_protected:Nn \__props_decl_reset:
   {
     \tl_set:Nn  \l__props_alignment_tl { left }
@@ -1388,10 +1394,10 @@
     \bool_set_true:N \l__props_reset_bool
   }
 
-%<doc>%% ====================================================================
-%<doc>%% Special-keys keyspace: extracts \texttt{style=} and \texttt{macro=}
-%<doc>%% from the key-value input, leaving the rest as overrides.
-%<doc>%% ====================================================================
+% ====================================================================
+% Special-keys keyspace: extracts \texttt{style=} and \texttt{macro=}
+% from the key-value input, leaving the rest as overrides.
+% ====================================================================
 
 \tl_new:N   \l__props_decl_parent_tl
 \tl_new:N   \l__props_decl_overrides_tl
@@ -1402,9 +1408,9 @@
     macro  .tl_set:N = \l__props_decl_macro_tl ,
   }
 
-%<doc>%% ====================================================================
-%<doc>%% \cs{SetPropStyle}\marg{name}\marg{key=value}
-%<doc>%% ====================================================================
+% ====================================================================
+% \cs{SetPropStyle}\marg{name}\marg{key=value}
+% ====================================================================
 
 \NewDocumentCommand \SetPropStyle { m m }
   {
@@ -1440,9 +1446,9 @@
       { \bool_if:NT \g__props_eqhooks_bool { \__props_sync_equation_hooks: } }
   }
 
-%<doc>%% ====================================================================
-%<doc>%% l3keys: special keys for \cs{DeclareNumberedStyle}
-%<doc>%% ====================================================================
+% ====================================================================
+% l3keys: special keys for \cs{DeclareNumberedStyle}
+% ====================================================================
 
 \tl_new:N \l__props_numdecl_parent_tl
 
@@ -1452,9 +1458,9 @@
     macro           .tl_set:N  = \l__props_decl_macro_tl ,
   }
 
-%<doc>%% ====================================================================
-%<doc>%% \cs{DeclareNumberedStyle}\marg{name}\oarg{keys}
-%<doc>%% ====================================================================
+% ====================================================================
+% \cs{DeclareNumberedStyle}\marg{name}\oarg{keys}
+% ====================================================================
 
 \NewDocumentCommand \DeclareNumberedStyle { m O{} }
   {
@@ -1482,11 +1488,11 @@
       { \exp_args:NV \__props_define_macro:Nn \l__props_decl_macro_tl { #1 } }
   }
 
-%<doc>%% ====================================================================
-%<doc>%% l3keys: keys for \item (within prop/inlineprop)
-%<doc>%% ====================================================================
+% ====================================================================
+% l3keys: keys for \item (within prop/inlineprop)
+% ====================================================================
 
-\keys_define:nn { props / pitem }
+\keys_define:nn { props / item }
   {
     name        .tl_set:N = \l__props_name_tl ,
     style       .code:n =
@@ -1548,32 +1554,32 @@
 
 %% Minimal keyspace used only for the named/nameless peek: reads name= and
 %% counter= from the per-item arg without any other side effects.
-\keys_define:nn { props / pitem-peek }
+\keys_define:nn { props / item-peek }
   {
     name    .tl_set:N = \l__props_name_tl ,
     counter .tl_set:N = \l__props_counter_tl ,
     unknown .code:n   = {} ,
   }
 
-%<doc>%% ====================================================================
-%<doc>%% Normalising a per-item argument
-%<doc>%% ====================================================================
+% ====================================================================
+% Normalising a per-item argument
+% ====================================================================
 
-%<doc>%% Item keys of \cs{props/pitem} that may legitimately be given without a
-%<doc>%% value.  Anything else in an item argument that carries no |=| is a bare
-%<doc>%% proposition name.
+% Item keys of \cs{props/item} that may legitimately be given without a
+% value.  Anything else in an item argument that carries no |=| is a bare
+% proposition name.
 \clist_const:Nn \c__props_valueless_item_keys_clist { reset }
 
-%<doc>%% Rewrite the bare name in a per-item argument as \texttt{name=\{...\}}.
-%<doc>%% #1 = tl var to set, #2 = raw item argument.  Doing this up front is what
-%<doc>%% lets the key pass proper use \cs{keys_set_known:nnN}, which collects the
-%<doc>%% list-level keys of the cascading defaults harmlessly but, by design,
-%<doc>%% never runs an \texttt{unknown} handler that could pick a name up.
-%<doc>%%
-%<doc>%% With no |=| anywhere the whole argument is the name, commas and all
-%<doc>%% (|\item[Alpha, Beta]|).  Otherwise the argument is a key list, and each
-%<doc>%% entry of it that carries no |=| is wrapped, so a bare name also works
-%<doc>%% alongside other keys (|\item[No Overlap, align=flush]|).
+% Rewrite the bare name in a per-item argument as \texttt{name=\{...\}}.
+% #1 = tl var to set, #2 = raw item argument.  Doing this up front is what
+% lets the key pass proper use \cs{keys_set_known:nnN}, which collects the
+% list-level keys of the cascading defaults harmlessly but, by design,
+% never runs an \texttt{unknown} handler that could pick a name up.
+%
+% With no |=| anywhere the whole argument is the name, commas and all
+% (|\item[Alpha, Beta]|).  Otherwise the argument is a key list, and each
+% entry of it that carries no |=| is wrapped, so a bare name also works
+% alongside other keys (|\item[No Overlap, align=flush]|).
 \cs_new_protected:Nn \__props_normalize_item_arg:Nn
   {
     \tl_if_in:nnTF { #2 } { = }
@@ -1588,22 +1594,34 @@
       { \tl_clear:N #1 \__props_normalize_entry:Nn #1 { #2 } }
   }
 
-%<doc>%% Append one key-list entry to #1, wrapping it as \texttt{name=\{...\}}
-%<doc>%% unless it carries a value or is a key that may stand without one.
+% Append one key-list entry to #1, wrapping it as \texttt{name=\{...\}}
+% unless it carries a value or is a key that may stand without one.
+% The comparison is a plain token-list test, mapped over the constant:
+% \cs{clist_if_in:NnTF} would put the entry in a macro parameter text,
+% which silently misfires for a name containing braces (|\emph{x}|).
 \cs_new_protected:Nn \__props_normalize_entry:Nn
   {
     \tl_if_in:nnTF { #2 } { = }
       { \tl_put_right:Nn #1 { #2 } }
       {
-        \clist_if_in:NnTF \c__props_valueless_item_keys_clist { #2 }
+        \bool_set_false:N \l__props_valueless_key_bool
+        \clist_map_inline:Nn \c__props_valueless_item_keys_clist
+          {
+            \tl_if_eq:nnT { #2 } { ##1 }
+              {
+                \bool_set_true:N \l__props_valueless_key_bool
+                \clist_map_break:
+              }
+          }
+        \bool_if:NTF \l__props_valueless_key_bool
           { \tl_put_right:Nn #1 { #2 } }
           { \tl_put_right:Nn #1 { name = { #2 } } }
       }
   }
 
-%<doc>%% ====================================================================
-%<doc>%% Shared item resolution (used by both \item within prop and \ptag)
-%<doc>%% ====================================================================
+% ====================================================================
+% Shared item resolution (used by both \item within prop and \ptag)
+% ====================================================================
 
 \cs_new_protected:Nn \__props_resolve_item:n
   {
@@ -1617,7 +1635,7 @@
     \tl_if_empty:NF \l__props_item_arg_tl
       {
         \exp_args:NnV \keys_set_known:nnN
-          { props / pitem-peek } \l__props_item_arg_tl \l_tmpa_tl
+          { props / item-peek } \l__props_item_arg_tl \l_tmpa_tl
       }
 
     %% --- Select base style (named or nameless) ---
@@ -1668,7 +1686,7 @@
       {
         \bool_set_true:N \l__props_loading_defaults_bool
         \exp_args:NnV \keys_set_known:nnN
-          { props / pitem } \l_tmpa_tl \l_tmpb_tl
+          { props / item } \l_tmpa_tl \l_tmpb_tl
         \bool_set_false:N \l__props_loading_defaults_bool
       }
 
@@ -1728,13 +1746,13 @@
     \__props_build_item_output:
   }
 
-%<doc>%% ====================================================================
-%<doc>%% Helpers for label formatting (shared between resolve and preview)
-%<doc>%% ====================================================================
+% ====================================================================
+% Helpers for label formatting (shared between resolve and preview)
+% ====================================================================
 
-%<doc>%% Format \cs{l__props_name_tl} from the current counter value.
-%<doc>%% Called after counter stepping and after manual counter adjustment
-%<doc>%% in preview computation.  Assumes all format functions are set.
+% Format \cs{l__props_name_tl} from the current counter value.
+% Called after counter stepping and after manual counter adjustment
+% in preview computation.  Assumes all format functions are set.
 \cs_new_protected:Nn \__props_format_label_from_counter:
   {
     \bool_if:NTF \l__props_has_counter_format_bool
@@ -1748,9 +1766,9 @@
       }
   }
 
-%<doc>%% Build \cs{l__props_item_output_tl} from the already-computed
-%<doc>%% \cs{l__props_display_text_tl}, applying display format, shorthand,
-%<doc>%% gloss, and label format.  Shared between resolve and preview.
+% Build \cs{l__props_item_output_tl} from the already-computed
+% \cs{l__props_display_text_tl}, applying display format, shorthand,
+% gloss, and label format.  Shared between resolve and preview.
 \cs_new_protected:Nn \__props_build_item_output:
   {
     \protected@edef \l__props_item_output_tl
@@ -1771,13 +1789,13 @@
       { \l__props_labelfmt:n { \l__props_item_output_tl } }
   }
 
-%<doc>%% ====================================================================
-%<doc>%% Core proposition-item logic (called by the local \item in prop/inlineprop)
-%<doc>%% ====================================================================
+% ====================================================================
+% Core proposition-item logic (called by the local \item in prop/inlineprop)
+% ====================================================================
 
-%<doc>%% \__props_pitem_body:n {<key string>}
-%<doc>%% Shared body: resolve keys, optionally reset sub-counter, output item.
-\cs_new_protected:Nn \__props_pitem_body:n
+% \__props_item_body:n {<key string>}
+% Shared body: resolve keys, optionally reset sub-counter, output item.
+\cs_new_protected:Nn \__props_item_body:n
   {
     \mode_if_math:T
       { \msg_error:nn { props } { item-in-math } }
@@ -1804,40 +1822,40 @@
       { \exp_args:NV \label \l__props_label_tl }
   }
 
-%<doc>%% Save the ambient (kernel) \item at load time.  When a wrapper environment
-%<doc>%% (mdframed, center, quote, ... — all of which call \item internally during
-%<doc>%% their own setup) is fired inside a *nested* prop, \item is still bound to
-%<doc>%% the proposition \item command from the enclosing list, so the wrapper's
-%<doc>%% internal \item would spuriously create a prop item.  We restore this saved
-%<doc>%% meaning around the wrapper-begin code (see the prop/inlineprop environments).
+% Save the ambient (kernel) \item at load time.  When a wrapper environment
+% (mdframed, center, quote, ... — all of which call \item internally during
+% their own setup) is fired inside a *nested* prop, \item is still bound to
+% the proposition \item command from the enclosing list, so the wrapper's
+% internal \item would spuriously create a prop item.  We restore this saved
+% meaning around the wrapper-begin code (see the prop/inlineprop environments).
 \cs_new_eq:NN \__props_kernel_item: \item
 
-%<doc>%% The proposition \item command used inside prop and inlineprop.
-%<doc>%% Defined with xparse so the optional-argument parser correctly handles
-%<doc>%% nested brackets (e.g. \item[name=\oref[*]{foo}]).  Assigned to \item
-%<doc>%% locally via \cs_set_eq:NN in each environment's begin code.
+% The proposition \item command used inside prop and inlineprop.
+% Defined with xparse so the optional-argument parser correctly handles
+% nested brackets (e.g. \item[name=\oref[*]{foo}]).  Assigned to \item
+% locally via \cs_set_eq:NN in each environment's begin code.
 \NewDocumentCommand \__props_item_cmd: { o }
   {
     \IfValueTF { #1 }
-      { \__props_pitem_body:n { #1 } }
-      { \__props_pitem_body:n { } }
+      { \__props_item_body:n { #1 } }
+      { \__props_item_body:n { } }
   }
 
-%<doc>%% \item is bound to this dispatcher (not directly to \__props_item_cmd:)
-%<doc>%% inside prop/inlineprop.  It makes the proposition \item available only
-%<doc>%% *directly* under a prop, falling back to the ambient \item inside any
-%<doc>%% nested list (itemize, enumerate, description, quote, ...) or other
-%<doc>%% \item-using environment.
-%<doc>%%
-%<doc>%% Detection: a prop sets \makelabel to \__props_display_label:n.  Every
-%<doc>%% \LaTeX \list / \trivlist resets \makelabel (to \@mklab or {#1->#1}), so
-%<doc>%% inside any nested list \makelabel no longer equals \__props_display_label:n
-%<doc>%% and we defer to the ambient \item; only a (nested) prop sets it back.
-%<doc>%% Unlike \@listdepth (which \texttt{minipage} reinitialises to zero, see
-%<doc>%% latex.ltx), \makelabel is purely group-local, so this is robust even when
-%<doc>%% the prop sits inside a box-based wrapper such as \texttt{tcolorbox}.
-%<doc>%% Neither branch grabs the optional argument: each target does its own
-%<doc>%% (incompatible) optional-arg scan.
+% \item is bound to this dispatcher (not directly to \__props_item_cmd:)
+% inside prop/inlineprop.  It makes the proposition \item available only
+% *directly* under a prop, falling back to the ambient \item inside any
+% nested list (itemize, enumerate, description, quote, ...) or other
+% \item-using environment.
+%
+% Detection: a prop sets \makelabel to \__props_display_label:n.  Every
+% \LaTeX \list / \trivlist resets \makelabel (to \@mklab or {#1->#1}), so
+% inside any nested list \makelabel no longer equals \__props_display_label:n
+% and we defer to the ambient \item; only a (nested) prop sets it back.
+% Unlike \@listdepth (which \texttt{minipage} reinitialises to zero, see
+% latex.ltx), \makelabel is purely group-local, so this is robust even when
+% the prop sits inside a box-based wrapper such as \texttt{tcolorbox}.
+% Neither branch grabs the optional argument: each target does its own
+% (incompatible) optional-arg scan.
 \cs_new_protected:Nn \__props_item_dispatch:
   {
     \cs_if_eq:NNTF \makelabel \__props_display_label:n
@@ -1845,23 +1863,11 @@
       { \__props_kernel_item: }
   }
 
-%<doc>%% ====================================================================
-%<doc>%% \pitem — deprecated alias for \item within prop/inlineprop
-%<doc>%% ====================================================================
+% ====================================================================
+% Cross-referencing: set \@currentlabel
+% ====================================================================
 
-\NewDocumentCommand \pitem { o }
-  {
-    \msg_warning:nn { props } { pitem-deprecated }
-    \IfValueTF { #1 }
-      { \item[#1] }
-      { \item }
-  }
-
-%<doc>%% ====================================================================
-%<doc>%% Cross-referencing: set \@currentlabel
-%<doc>%% ====================================================================
-
-%<doc>%% Build propapply-formatted ref text into \l__props_ref_result_tl.
+% Build propapply-formatted ref text into \l__props_ref_result_tl.
 \tl_new:N \l__props_ref_result_tl
 
 \cs_new_protected:Nn \__props_build_ref_text:
@@ -1881,42 +1887,49 @@
       }
   }
 
-%<doc>%% Override the cleveref type recorded by \cs{refstepcounter}.
-%<doc>%% Parses \cs{cref@currentlabel} = |[type]..rest..| and replaces the type.
-\cs_new_protected:Npn \__props_override_cref_type:n #1
-  {
-    \exp_after:wN \__props_replace_cref_type:w
-      \cref@currentlabel \q_stop { #1 }
-  }
-\cs_new_protected:Npn \__props_replace_cref_type:w [ #1 ] #2 \q_stop #3
-  { \def \cref@currentlabel { [ #3 ] #2 } }
+% Set the cleveref reference type of the next \c{propanchor} label.
+%
+% A per-item type has to be expressed as the cleveref \emph{alias} of
+% \c{propanchor}, because that is the only thing \cs{label} consults.  Neither
+% of the more direct routes survives: cleveref records the type in
+% \cs{cref@currentlabel} when the counter is stepped, but the kernel's first-aid
+% file for cleveref (|latex2e-first-aid-for-external-files.ltx|) adds a |label|
+% hook that rebuilds that value from \cs{@currentcounter} and its alias on every
+% \cs{label}, discarding both a hand-edited \cs{cref@currentlabel} and the type
+% given to cleveref's own \cs{refstepcounter}|[type]{counter}|.
+%
+% The assignment is global, and made for every item: the user's \cs{label} may
+% be several groups away from the \cs{item} that set the type, and the next item
+% must not inherit it.
+\cs_new_protected:Npn \__props_set_cref_type:n #1
+  { \cs_gset:cpn { cref@propanchor@alias } { #1 } }
 
 \cs_new_protected:Nn \__props_set_ref:
   {
     \__props_build_ref_text:
     \cs_set:Npx \thepropanchor { \exp_not:V \l__props_ref_result_tl }
+    \bool_if:NT \g__props_cleveref_bool
+      {
+        \tl_if_empty:NTF \l__props_crefname_tl
+          { \__props_set_cref_type:n { prop } }
+          { \exp_args:NV \__props_set_cref_type:n \l__props_crefname_tl }
+      }
     \refstepcounter { propanchor }
-    %% If cleveref is loaded and crefname is set, override the type
-    %% so that any subsequent \label picks up the new type.
-    \bool_lazy_and:nnT
-      { \g__props_cleveref_bool }
-      { ! \tl_if_empty_p:N \l__props_crefname_tl }
-      { \exp_args:NV \__props_override_cref_type:n \l__props_crefname_tl }
   }
 
-%<doc>%% ====================================================================
-%<doc>%% Save original \ref (for \oref / \nref circularity protection)
-%<doc>%% ====================================================================
+% ====================================================================
+% Save original \ref (for \oref / \nref circularity protection)
+% ====================================================================
 
-%<doc>%% Must happen at begin-document so that hyperref's redefinition of
-%<doc>%% \ref is already in place.  \oref and \nref call this saved copy
-%<doc>%% instead of \ref, so \let\ref\oref works without circularity.
+% Must happen at begin-document so that hyperref's redefinition of
+% \ref is already in place.  \oref and \nref call this saved copy
+% instead of \ref, so \let\ref\oref works without circularity.
 \AtBeginDocument
   { \cs_set_eq:NN \__props_orig_ref:w \ref }
 
-%<doc>%% ====================================================================
-%<doc>%% Hyperref PDF string support
-%<doc>%% ====================================================================
+% ====================================================================
+% Hyperref PDF string support
+% ====================================================================
 
 \AtBeginDocument
   {
@@ -1983,36 +1996,51 @@
       { }
   }
 
-%<doc>%% ====================================================================
-%<doc>%% Cleveref integration
-%<doc>%% ====================================================================
+% ====================================================================
+% Cleveref integration
+% ====================================================================
 
 \bool_new:N \g__props_cleveref_bool
 
-\AtBeginDocument
+\cs_new_protected:Nn \__props_cleveref_setup:
   {
-    \@ifpackageloaded { cleveref }
-      {
-        \bool_gset_true:N \g__props_cleveref_bool
-        %% Map the propanchor counter to a private cleveref type "prop".  We use
-        %% "prop", not "proposition", so we do not commandeer the name a user may
-        %% want for their own Proposition theorems (a common \newtheorem type).
-        \crefalias { propanchor } { prop }
-        %% Empty name: \cref just outputs the formatted ref text
-        \crefname  { prop } {} {}
-        \Crefname  { prop } {} {}
-      }
-      { }
+    \bool_gset_true:N \g__props_cleveref_bool
+    %% Map the propanchor counter to a private cleveref type "prop".  We use
+    %% "prop", not "proposition", so we do not commandeer the name a user may
+    %% want for their own Proposition theorems (a common \newtheorem type).
+    \crefalias { propanchor } { prop }
+    %% Empty name: \cref just outputs the formatted ref text
+    \crefname  { prop } {} {}
+    \Crefname  { prop } {} {}
   }
 
-%<doc>%% ====================================================================
-%<doc>%% Equation formatting integration
-%<doc>%% ====================================================================
+% Cleveref derives the default reference format of a type from its name in its
+% own \AtBeginDocument code, so the type must be declared before that runs.
+% Begin-document hooks fire in the order they were added, which makes the
+% correct moment depend on the load order:
+%
+%   cleveref after us   our hook was added first, so it already runs ahead of
+%                       cleveref's; declare the type there, once cleveref is
+%                       known to be present.
+%   cleveref before us  its hook is ahead of ours and a deferred declaration
+%                       would arrive too late (\cref would report "reference
+%                       format for label type 'prop' undefined"), so declare
+%                       the type immediately instead.
+\@ifpackageloaded { cleveref }
+  { \__props_cleveref_setup: }
+  {
+    \AtBeginDocument
+      { \@ifpackageloaded { cleveref } { \__props_cleveref_setup: } { } }
+  }
 
-%<doc>%% Sync the equation hooks (\cs{tagform@} and \cs{p@equation}) with the
-%<doc>%% current definition of the \texttt{equation} prop style.
-%<doc>%% Called automatically when \cs{SetPropStyle}\texttt{\{equation\}\{...\}}
-%<doc>%% is used while the hooks are active.
+% ====================================================================
+% Equation formatting integration
+% ====================================================================
+
+% Sync the equation hooks (\cs{tagform@} and \cs{p@equation}) with the
+% current definition of the \texttt{equation} prop style.
+% Called automatically when \cs{SetPropStyle}\texttt{\{equation\}\{...\}}
+% is used while the hooks are active.
 \cs_new_protected:Nn \__props_sync_equation_hooks:
   {
     \__props_decl_reset:
@@ -2045,31 +2073,31 @@
       }
   }
 
-%<doc>%% ====================================================================
-%<doc>%% Consecutive-list hook: clear the signal when paragraph text intervenes
-%<doc>%% ====================================================================
-%<doc>%% The para/begin hook fires whenever TeX enters horizontal mode to start
-%<doc>%% a paragraph.  A blank source line between two prop environments does
-%<doc>%% NOT fire it (vertical-mode \par is a no-op), so only real intervening
-%<doc>%% text breaks the consecutive sequence — which is exactly what we want.
+% ====================================================================
+% Consecutive-list hook: clear the signal when paragraph text intervenes
+% ====================================================================
+% The para/begin hook fires whenever TeX enters horizontal mode to start
+% a paragraph.  A blank source line between two prop environments does
+% NOT fire it (vertical-mode \par is a no-op), so only real intervening
+% text breaks the consecutive sequence — which is exactly what we want.
 
 \AddToHook { para/begin }
   { \bool_gset_false:N \g__props_last_was_prop_bool }
 
-%<doc>%% ====================================================================
-%<doc>%% Display math level tracking
-%<doc>%% ====================================================================
-%<doc>%% Inside a prop/inlineprop (level > 0), every display math environment
-%<doc>%% increments the nesting level at its start and decrements it at its
-%<doc>%% end.  This is achieved via \everydisplay (fires for all display math,
-%<doc>%% including all amsmath environments) plus \aftergroup to schedule the
-%<doc>%% decrement when the display math group closes.
+% ====================================================================
+% Display math level tracking
+% ====================================================================
+% Inside a prop/inlineprop (level > 0), every display math environment
+% increments the nesting level at its start and decrements it at its
+% end.  This is achieved via \everydisplay (fires for all display math,
+% including all amsmath environments) plus \aftergroup to schedule the
+% decrement when the display math group closes.
 
-%<doc>%% For display math, we save the parent data in dedicated
-%<doc>%% global variables and push/pop them around the math group.
-%<doc>%% Direct \cs{seq\_gpush} in \cs{everydisplay} is unreliable
-%<doc>%% (amsmath group nesting can corrupt the sequence), so we
-%<doc>%% save the data, then push/pop in a protected helper.
+% For display math, we save the parent data in dedicated
+% global variables and push/pop them around the math group.
+% Direct \cs{seq\_gpush} in \cs{everydisplay} is unreliable
+% (amsmath group nesting can corrupt the sequence), so we
+% save the data, then push/pop in a protected helper.
 \tl_new:N \g__props_dispmath_save_tpl_tl
 \tl_new:N \g__props_dispmath_save_cnt_tl
 
@@ -2101,28 +2129,29 @@
       { \tex_the:D \tex_everydisplay:D \__props_display_start: }
   }
 
-%<doc>%% ====================================================================
-%<doc>%% \ptag — proposition tag for displayed math environments
-%<doc>%% ====================================================================
+% ====================================================================
+% \ptag — proposition tag for displayed math environments
+% ====================================================================
 
-%<doc>%% Wrapper to call \tag* — needed because \exp_args:NV can't expand
-%<doc>%% into a command with * directly.
+% Wrapper to call \tag* — needed because \exp_args:NV can't expand
+% into a command with * directly.
 \cs_new_protected:Nn \__props_tag_star:n { \tag* { #1 } }
 
-%<doc>%% Deferred ref-setting for ptags.  Amsmath typesets equations in two
-%<doc>%% passes (measuring + output); we must only set the ref on the output
-%<doc>%% pass (\ifmeasuring@ is false) to avoid double-stepping propanchor.
-%<doc>%% \#1 = ref text, \#2 = crefname (may be empty).
+% Deferred ref-setting for ptags.  Amsmath typesets equations in two
+% passes (measuring + output); we must only set the ref on the output
+% pass (\ifmeasuring@ is false) to avoid double-stepping propanchor.
+% \#1 = ref text, \#2 = crefname (may be empty).
 \cs_new_protected:Nn \__props_ptag_finish_ref:nn
   {
     \ifmeasuring@ \else
     \cs_set:Npx \thepropanchor { \exp_not:n { #1 } }
-    \refstepcounter { propanchor }
-    \tl_if_empty:nF { #2 }
+    \bool_if:NT \g__props_cleveref_bool
       {
-        \bool_if:NT \g__props_cleveref_bool
-          { \__props_override_cref_type:n { #2 } }
+        \tl_if_empty:nTF { #2 }
+          { \__props_set_cref_type:n { prop } }
+          { \__props_set_cref_type:n { #2 } }
       }
+    \refstepcounter { propanchor }
     \fi
   }
 
@@ -2131,7 +2160,7 @@
     %% Enter ptag mode so \__props_resolve_item:n can adjust counter stepping
     \bool_set_true:N \l__props_ptag_bool
 
-    %% Process keys (same resolution as \pitem)
+    %% Process keys (same resolution as \item)
     \IfValueTF { #1 }
       { \__props_resolve_item:n { #1 } }
       { \__props_resolve_item:n { } }
@@ -2168,13 +2197,13 @@
       { \exp_args:NV \label \l__props_label_tl }
   }
 
-%<doc>%% ====================================================================
-%<doc>%% Item output
-%<doc>%% ====================================================================
+% ====================================================================
+% Item output
+% ====================================================================
 
-%<doc>%% Save the standard \item at package-load time for use inside the
-%<doc>%% output functions.  The local \item redefinition inside prop/inlineprop
-%<doc>%% must not affect these internal calls.
+% Save the standard \item at package-load time for use inside the
+% output functions.  The local \item redefinition inside prop/inlineprop
+% must not affect these internal calls.
 \cs_new_eq:NN \__props_list_item: \item
 
 \cs_new_protected:Nn \__props_output_item:
@@ -2184,18 +2213,18 @@
       { \__props_output_item_inline: }
   }
 
-%<doc>%% Display mode: use \item[...] with alignment and dimension control.
-%<doc>%% Nextline variants handle their own labelindent, so they always
-%<doc>%% go through the alignment path.  For other alignments, per-item
-%<doc>%% dimension keys route through the pidim handler.
-%<doc>%%
-%<doc>%% Zero-width label short-circuit: when the formatted label renders nothing
-%<doc>%% (measured by typeset width, so \displayfmt producing e.g. \textbf{} on an
-%<doc>%% empty name still counts as empty, while a deliberately sized label does
-%<doc>%% not), emit a label-less \item.  This keeps the first line flush at the
-%<doc>%% text margin --- no \labelsep gap or phantom indent from the flush
-%<doc>%% \hspace push, and no empty label line from the nextline variants --- for
-%<doc>%% every alignment.
+% Display mode: use \item[...] with alignment and dimension control.
+% Nextline variants handle their own labelindent, so they always
+% go through the alignment path.  For other alignments, per-item
+% dimension keys route through the pidim handler.
+%
+% Zero-width label short-circuit: when the formatted label renders nothing
+% (measured by typeset width, so \displayfmt producing e.g. \textbf{} on an
+% empty name still counts as empty, while a deliberately sized label does
+% not), emit a label-less \item.  This keeps the first line flush at the
+% text margin --- no \labelsep gap or phantom indent from the flush
+% \hspace push, and no empty label line from the nextline variants --- for
+% every alignment.
 \cs_new_protected:Nn \__props_output_item_display:
   {
     \hbox_set:Nn \l_tmpa_box { \l__props_item_output_tl }
@@ -2220,23 +2249,23 @@
       }
   }
 
-%<doc>%% Per-item dimension positioning.
-%<doc>%% Temporarily overrides \cs{labelwidth}, \cs{labelsep}, and/or
-%<doc>%% \cs{itemindent} so that the \cs{item} mechanism places the label
-%<doc>%% exactly as it would in a list with those dimensions.  After the
-%<doc>%% \cs{item} call the original values are restored.
-%<doc>%%
-%<doc>%% After applying the user's per-item overrides, the five-dimension
-%<doc>%% constraint
-%<doc>%% $\mathit{LI}+\mathit{LW}+\mathit{LS}=
-%<doc>%%  \texttt{\string\leftmargin}+\texttt{\string\itemindent}$
-%<doc>%% is enforced.  The resolver tries to derive the lowest-default-priority
-%<doc>%% dimension that the user did \emph{not} set at this level, subject to
-%<doc>%% $\cs{labelwidth}\ge0$ and $\cs{labelsep}\ge0$.
-%<doc>%% Default priority (most to least protected):
-%<doc>%% \texttt{itemindent}, \texttt{labelsep},
-%<doc>%% \texttt{leftmargin} (frozen per-item),
-%<doc>%% \texttt{labelwidth}, \texttt{labelindent}.
+% Per-item dimension positioning.
+% Temporarily overrides \cs{labelwidth}, \cs{labelsep}, and/or
+% \cs{itemindent} so that the \cs{item} mechanism places the label
+% exactly as it would in a list with those dimensions.  After the
+% \cs{item} call the original values are restored.
+%
+% After applying the user's per-item overrides, the five-dimension
+% constraint
+% $\mathit{LI}+\mathit{LW}+\mathit{LS}=
+%  \texttt{\string\leftmargin}+\texttt{\string\itemindent}$
+% is enforced.  The resolver tries to derive the lowest-default-priority
+% dimension that the user did \emph{not} set at this level, subject to
+% $\cs{labelwidth}\ge0$ and $\cs{labelsep}\ge0$.
+% Default priority (most to least protected):
+% \texttt{itemindent}, \texttt{labelsep},
+% \texttt{leftmargin} (frozen per-item),
+% \texttt{labelwidth}, \texttt{labelindent}.
 \cs_new_protected:Nn \__props_output_item_pidim:
   {
     %% Save current list dimensions.
@@ -2333,7 +2362,7 @@
     \setlength { \itemindent } { \l__props_save_itemindent_dim }
   }
 
-%<doc>%% Alignment-based label placement (no per-item dim overrides).
+% Alignment-based label placement (no per-item dim overrides).
 \cs_new_protected:Nn \__props_output_item_align:
   {
     \str_if_eq:VnTF \l__props_alignment_tl { flush }
@@ -2391,25 +2420,25 @@
       }
   }
 
-%<doc>%% Inline mode: just output text
+% Inline mode: just output text
 \cs_new_protected:Nn \__props_output_item_inline:
   { \l__props_item_output_tl }
 
-%<doc>%% ====================================================================
-%<doc>%% \propformlabel — formatted preview label, set at \begin{prop} and
-%<doc>%% after each \item.  Expand it in list-dimension expressions, e.g.
-%<doc>%% leftmargin=\widthof{\propformlabel}.
-%<doc>%% ====================================================================
+% ====================================================================
+% \propformlabel — formatted preview label, set at \begin{prop} and
+% after each \item.  Expand it in list-dimension expressions, e.g.
+% leftmargin=\widthof{\propformlabel}.
+% ====================================================================
 
 \NewDocumentCommand \propformlabel { } { }
 
-%<doc>%% ====================================================================
-%<doc>%% \__props_compute_env_preview: — compute \propformlabel at env open.
-%<doc>%% Resolves what a bare \item would produce with the current env defaults,
-%<doc>%% accounting for items=n (preview shows the n-th item label so that
-%<doc>%% e.g. leftmargin=\widthof{\propformlabel} is wide enough for all items).
-%<doc>%% Counter steps are undone; only \propformlabel is affected.
-%<doc>%% ====================================================================
+% ====================================================================
+% \__props_compute_env_preview: — compute \propformlabel at env open.
+% Resolves what a bare \item would produce with the current env defaults,
+% accounting for items=n (preview shows the n-th item label so that
+% e.g. leftmargin=\widthof{\propformlabel} is wide enough for all items).
+% Counter steps are undone; only \propformlabel is affected.
+% ====================================================================
 
 \cs_new_protected:Nn \__props_compute_env_preview:
   {
@@ -2442,12 +2471,12 @@
     \protected@edef \propformlabel { \g__props_env_preview_label_tl }
   }
 
-%<doc>%% ====================================================================
-%<doc>%% The prop environment
-%<doc>%% ====================================================================
+% ====================================================================
+% The prop environment
+% ====================================================================
 
-%<doc>%% --- List dimension overrides (empty = use LaTeX default) ---
-%<doc>%% These use local assignment so \propoptions in a group is scoped.
+% --- List dimension overrides (empty = use LaTeX default) ---
+% These use local assignment so \propoptions in a group is scoped.
 \tl_new:N \l__props_topsep_tl
 \tl_new:N \l__props_partopsep_tl
 \tl_new:N \l__props_itemsep_tl
@@ -2460,38 +2489,38 @@
 \tl_new:N \l__props_listparindent_tl
 \tl_new:N \l__props_labelindent_tl
 
-%<doc>%% --- Wrapper (environment-level) ---
-%<doc>%% Code injected immediately before \begin{list} (wrap begin) and
-%<doc>%% immediately after \end{list} (wrap end), wrapping the whole list in
-%<doc>%% another environment (e.g. mdframed).  Set via the \texttt{wrapper begin}
-%<doc>%% / \texttt{wrapper end} keys, typically inside a style.  Local assignment,
-%<doc>%% so an env-arg or \cs{propoptions} setting is group-scoped like the dims.
-%<doc>%%
-%<doc>%% Nesting is handled purely by \TeX{} grouping, with no extra state: an env
-%<doc>%% fires \l__props_wrap_begin_tl (if non-empty), then CLEARS both wrapper
-%<doc>%% variables inside the list group.  Nested props therefore inherit nothing
-%<doc>%% and open a box only if they set a wrapper of their own (so identical
-%<doc>%% boxes-in-boxes are possible when asked for, and never happen by accident).
-%<doc>%% The wrap-end code runs after \end{list}, by which point the list group has
-%<doc>%% closed and the variables have reverted to the values this env fired with ---
-%<doc>%% so begin and end always match, and a \cs{propoptions} issued inside the body
-%<doc>%% (whose assignments live in the list group) cannot leak into the closing.
+% --- Wrapper (environment-level) ---
+% Code injected immediately before \begin{list} (wrap begin) and
+% immediately after \end{list} (wrap end), wrapping the whole list in
+% another environment (e.g. mdframed).  Set via the \texttt{wrapper begin}
+% / \texttt{wrapper end} keys, typically inside a style.  Local assignment,
+% so an env-arg or \cs{propoptions} setting is group-scoped like the dims.
+%
+% Nesting is handled purely by \TeX{} grouping, with no extra state: an env
+% fires \l__props_wrap_begin_tl (if non-empty), then CLEARS both wrapper
+% variables inside the list group.  Nested props therefore inherit nothing
+% and open a box only if they set a wrapper of their own (so identical
+% boxes-in-boxes are possible when asked for, and never happen by accident).
+% The wrap-end code runs after \end{list}, by which point the list group has
+% closed and the variables have reverted to the values this env fired with ---
+% so begin and end always match, and a \cs{propoptions} issued inside the body
+% (whose assignments live in the list group) cannot leak into the closing.
 \tl_new:N \l__props_wrap_begin_tl
 \tl_new:N \l__props_wrap_end_tl
 
-%<doc>%% \makelabel for prop lists: left-aligns the label and prevents line breaks.
+% \makelabel for prop lists: left-aligns the label and prevents line breaks.
 \cs_new:Nn \__props_display_label:n { \mbox{#1} \hfill }
 
-%<doc>%% --- Consecutive-list (continue) state ---
-%<doc>%% \l__props_continue_bool: true (default) = participate in consecutive joining.
-%<doc>%% \g__props_last_was_prop_bool: signal set at \end{prop}, cleared by
-%<doc>%%   \begin{prop} or by the para/begin hook (intervening paragraph text).
-%<doc>%% \g__props_suppress_topsep_bool: internal flag passed from begin-code to
-%<doc>%%   the list parameter block and then to the post-\begin{list} fixup.
-%<doc>%% \g__props_natural_topsepadd_skip: saved \topsep+\partopsep for restoring
-%<doc>%%   \@topsepadd after \begin{list} so that after-spacing is unaffected.
-%<doc>%% \g__props_prev_itemsep_parsep_skip: \itemsep+\parsep saved at \end{prop}
-%<doc>%%   for use as the TARGET spacing by the immediately following \begin{prop}.
+% --- Consecutive-list (continue) state ---
+% \l__props_continue_bool: true (default) = participate in consecutive joining.
+% \g__props_last_was_prop_bool: signal set at \end{prop}, cleared by
+%   \begin{prop} or by the para/begin hook (intervening paragraph text).
+% \g__props_suppress_topsep_bool: internal flag passed from begin-code to
+%   the list parameter block and then to the post-\begin{list} fixup.
+% \g__props_natural_topsepadd_skip: saved \topsep+\partopsep for restoring
+%   \@topsepadd after \begin{list} so that after-spacing is unaffected.
+% \g__props_prev_itemsep_parsep_skip: \itemsep+\parsep saved at \end{prop}
+%   for use as the TARGET spacing by the immediately following \begin{prop}.
 \bool_new:N \l__props_continue_bool
 \bool_set_true:N \l__props_continue_bool
 \bool_new:N \g__props_last_was_prop_bool
@@ -2499,15 +2528,15 @@
 \skip_new:N \g__props_natural_topsepadd_skip
 \skip_new:N \g__props_prev_itemsep_parsep_skip
 
-%<doc>%% Helper: apply a dimension override that may be a single value or a
-%<doc>%% comma-separated per-level list.  \#1 = tl variable, \#2 = dimension.
-%<doc>%% Empty tl $\Rightarrow$ inherit class default.
-%<doc>%% Single value $\Rightarrow$ apply to all levels.
-%<doc>%% Comma-list $\Rightarrow$ pick the item for the current prop level;
-%<doc>%% if the level exceeds the list length, inherit class default.
-%<doc>%% Uses \cs{seq\_set\_split:NnV} (not clist) so that blank entries
-%<doc>%% are preserved: e.g.\ \texttt{leftmargin=\{, 0em\}} means
-%<doc>%% ``class default at level~1, 0em at level~2.''
+% Helper: apply a dimension override that may be a single value or a
+% comma-separated per-level list.  \#1 = tl variable, \#2 = dimension.
+% Empty tl $\Rightarrow$ inherit class default.
+% Single value $\Rightarrow$ apply to all levels.
+% Comma-list $\Rightarrow$ pick the item for the current prop level;
+% if the level exceeds the list length, inherit class default.
+% Uses \cs{seq\_set\_split:NnV} (not clist) so that blank entries
+% are preserved: e.g.\ \texttt{leftmargin=\{, 0em\}} means
+% ``class default at level~1, 0em at level~2.''
 \seq_new:N \l__props_dim_split_seq
 \cs_generate_variant:Nn \seq_set_split:Nnn { NnV }
 \cs_new:Nn \__props_apply_dim:Nn
@@ -2528,17 +2557,17 @@
       }
   }
 
-%<doc>%% ====================================================================
-%<doc>%% Env-local list configuration: save/restore
-%<doc>%% ====================================================================
-%<doc>%% The list-dimension and wrapper variables below hold the configuration a
-%<doc>%% prop applies to its own list.  A prop argument may override them, but the
-%<doc>%% override must not reach nested environments (an argument configures just
-%<doc>%% this environment).  So each prop snapshots these into \l__props_ambient_*
-%<doc>%% before reading its argument, and restores them inside the list group after
-%<doc>%% \begin{list} --- the list itself has already used the argument values,
-%<doc>%% while nested props see the restored (cascading / \propoptions) values.
-%<doc>%% The ambient snapshot also feeds the operative-dimension interface.
+% ====================================================================
+% Env-local list configuration: save/restore
+% ====================================================================
+% The list-dimension and wrapper variables below hold the configuration a
+% prop applies to its own list.  A prop argument may override them, but the
+% override must not reach nested environments (an argument configures just
+% this environment).  So each prop snapshots these into \l__props_ambient_*
+% before reading its argument, and restores them inside the list group after
+% \begin{list} --- the list itself has already used the argument values,
+% while nested props see the restored (cascading / \propoptions) values.
+% The ambient snapshot also feeds the operative-dimension interface.
 \clist_const:Nn \c__props_env_dims_clist
   {
     leftmargin , rightmargin , topsep , partopsep , itemsep , parsep ,
@@ -2560,14 +2589,14 @@
       { \tl_set_eq:cc { l__props_ ##1 _tl } { l__props_ambient_ ##1 _tl } }
   }
 
-%<doc>%% Operative-dimension interface.  \propoperativeleftmargin is a read-only
-%<doc>%% length holding the leftmargin an ordinary (unframed) prop would use at the
-%<doc>%% current nesting level: the ambient \propoptions/class value, resolved per
-%<doc>%% level exactly as \__props_apply_dim: does (single value for all levels; a
-%<doc>%% comma list picks the level's item, an empty/out-of-range item falling back
-%<doc>%% to the class default \leftmargin<level>).  It is recomputed from the ambient
-%<doc>%% snapshot at every \begin{prop}, so it is valid inside a prop's wrapper code
-%<doc>%% (before that environment's own leftmargin override has taken effect).
+% Operative-dimension interface.  \propoperativeleftmargin is a read-only
+% length holding the leftmargin an ordinary (unframed) prop would use at the
+% current nesting level: the ambient \propoptions/class value, resolved per
+% level exactly as \__props_apply_dim: does (single value for all levels; a
+% comma list picks the level's item, an empty/out-of-range item falling back
+% to the class default \leftmargin<level>).  It is recomputed from the ambient
+% snapshot at every \begin{prop}, so it is valid inside a prop's wrapper code
+% (before that environment's own leftmargin override has taken effect).
 \newlength \propoperativeleftmargin
 \cs_new_protected:Nn \__props_set_operative_leftmargin:
   {
@@ -2657,6 +2686,22 @@
         %% \makelabel set by \cs_set_eq: (not a wrapper) so the item dispatcher
         %% can recognise a prop list by \makelabel's identity.
         \cs_set_eq:NN \makelabel \__props_display_label:n
+        %% Establish the standard \labelwidth for this list depth.  \list sets
+        %% \itemindent, \rightmargin and \listparindent itself, and \@listii and
+        %% deeper set \labelwidth, but at depth one \@listi does not: such a list
+        %% inherits whatever \labelwidth the enclosing context happened to leave
+        %% behind.  (A prop inside a wrapper box is at depth one, since the box
+        %% resets the list depth; inside a description, which sets \labelwidth to
+        %% zero for its own labels, it would inherit 0pt and lose its label area
+        %% --- and with it the \labelsep gap after a flush label.)  itemize,
+        %% enumerate and description each set \labelwidth for themselves; this is
+        %% prop doing the same, using the same value \@listii would.
+        \tl_if_empty:NT \l__props_labelwidth_tl
+          {
+            \dim_set:Nn \labelwidth { \leftmargin - \labelsep }
+            \dim_compare:nNnT \labelwidth < \c_zero_dim
+              { \dim_zero:N \labelwidth }
+          }
         %% Apply dimension overrides.  Each value may be a single length
         %% (applied at all levels) or a comma-list of per-level lengths.
         %% Empty = inherit the document class default.
@@ -2826,9 +2871,9 @@
       { \bool_gset_true:N \g__props_last_was_prop_bool }
   }
 
-%<doc>%% ====================================================================
-%<doc>%% The inlineprop environment
-%<doc>%% ====================================================================
+% ====================================================================
+% The inlineprop environment
+% ====================================================================
 
 \NewDocumentEnvironment { inlineprop } { O{} }
   {
@@ -2884,13 +2929,13 @@
     \int_gdecr:N \g__props_level_int
   }
 
-%<doc>%% ====================================================================
-%<doc>%% \oref — ref with optional prefix/suffix
-%<doc>%% ====================================================================
+% ====================================================================
+% \oref — ref with optional prefix/suffix
+% ====================================================================
 
-%<doc>%% Helper: locally redefine \propapply to inject prefix (#1) and
-%<doc>%% suffix (#2) into the content slot.  Uses \cs_set_protected:Npx to
-%<doc>%% freeze the prefix/suffix values at definition time.
+% Helper: locally redefine \propapply to inject prefix (#1) and
+% suffix (#2) into the content slot.  Uses \cs_set_protected:Npx to
+% freeze the prefix/suffix values at definition time.
 \cs_new_protected:Nn \__props_oref_setup:nn
   {
     \tl_set:Nn \l_tmpa_tl { #1 }
@@ -2927,9 +2972,9 @@
     \group_end:
   }
 
-%<doc>%% ====================================================================
-%<doc>%% \nref — naked ref (strips formatting)
-%<doc>%% ====================================================================
+% ====================================================================
+% \nref — naked ref (strips formatting)
+% ====================================================================
 
 \NewDocumentCommand \nref { s m }
   {
@@ -2941,16 +2986,16 @@
     \group_end:
   }
 
-%<doc>%% ====================================================================
-%<doc>%% \Ref — titlecase ref
-%<doc>%% ====================================================================
+% ====================================================================
+% \Ref — titlecase ref
+% ====================================================================
 
-%<doc>%% Overrides the LaTeX kernel's \Ref, which does not understand
-%<doc>%% \propapply.  For non-propositions labels (equations, sections, etc.)
-%<doc>%% \Ref behaves like \ref (no titlecasing); use \MakeUppercase{\ref{..}}
-%<doc>%% for those if needed.  Deferred to \AtBeginDocument because the kernel
-%<doc>%% re-establishes its own \Ref during \begin{document}; our definition
-%<doc>%% must come after that.
+% Overrides the LaTeX kernel's \Ref, which does not understand
+% \propapply.  For non-propositions labels (equations, sections, etc.)
+% \Ref behaves like \ref (no titlecasing); use \MakeUppercase{\ref{..}}
+% for those if needed.  Deferred to \AtBeginDocument because the kernel
+% re-establishes its own \Ref during \begin{document}; our definition
+% must come after that.
 \AtBeginDocument
   {
     \DeclareDocumentCommand \Ref { s m }
@@ -2964,9 +3009,9 @@
       }
   }
 
-%<doc>%% ====================================================================
-%<doc>%% \Oref — titlecase ref with optional prefix/suffix
-%<doc>%% ====================================================================
+% ====================================================================
+% \Oref — titlecase ref with optional prefix/suffix
+% ====================================================================
 
 \NewDocumentCommand \Oref { s o o m }
   {
@@ -2984,9 +3029,9 @@
     \group_end:
   }
 
-%<doc>%% ====================================================================
-%<doc>%% \Nref — titlecase naked ref
-%<doc>%% ====================================================================
+% ====================================================================
+% \Nref — titlecase naked ref
+% ====================================================================
 
 \NewDocumentCommand \Nref { s m }
   {
@@ -2998,13 +3043,13 @@
     \group_end:
   }
 
-%<doc>%% ====================================================================
-%<doc>%% props/dims-only — keyspace for dim-only style application.
-%<doc>%% Has the same list-dimension and spacing handlers as props/global, but
-%<doc>%% its unknown handler is a no-op, so item-level keys in a style's
-%<doc>%% overrides are silently ignored.  Used by \__props_style_apply_dims:n.
-%<doc>%% (Defined here, after all dim tl variables are declared.)
-%<doc>%% ====================================================================
+% ====================================================================
+% props/dims-only — keyspace for dim-only style application.
+% Has the same list-dimension and spacing handlers as props/global, but
+% its unknown handler is a no-op, so item-level keys in a style's
+% overrides are silently ignored.  Used by \__props_style_apply_dims:n.
+% (Defined here, after all dim tl variables are declared.)
+% ====================================================================
 
 \keys_define:nn { props / dims-only }
   {
@@ -3041,14 +3086,14 @@
     unknown           .code:n      = {} ,
   }
 
-%<doc>%% ====================================================================
-%<doc>%% \__props_style_apply_dims:n — walk a style's parent chain and apply
-%<doc>%% only its list-dimension overrides (topsep, itemsep, leftmargin, etc.)
-%<doc>%% through props/dims-only.  Item-level keys are silently ignored.
-%<doc>%% Called by the style= handler in props/global so that dimension effects
-%<doc>%% take effect at \begin{prop} time; style= itself is stored lazily in
-%<doc>%% \l__props_defaults_tl for evaluation at item-resolve time.
-%<doc>%% ====================================================================
+% ====================================================================
+% \__props_style_apply_dims:n — walk a style's parent chain and apply
+% only its list-dimension overrides (topsep, itemsep, leftmargin, etc.)
+% through props/dims-only.  Item-level keys are silently ignored.
+% Called by the style= handler in props/global so that dimension effects
+% take effect at \begin{prop} time; style= itself is stored lazily in
+% \l__props_defaults_tl for evaluation at item-resolve time.
+% ====================================================================
 
 \cs_new_protected:Nn \__props_style_apply_dims:n
   {
@@ -3068,9 +3113,9 @@
       }
   }
 
-%<doc>%% Append an item-level key entry to the active item-default layer: the
-%<doc>%% env-local layer while a prop argument is being read, the cascading layer
-%<doc>%% (\propoptions) otherwise.
+% Append an item-level key entry to the active item-default layer: the
+% env-local layer while a prop argument is being read, the cascading layer
+% (\propoptions) otherwise.
 \cs_new_protected:Nn \__props_defaults_append:n
   {
     \bool_if:NTF \l__props_env_arg_bool
@@ -3086,9 +3131,9 @@
       }
   }
 
-%<doc>%% ====================================================================
-%<doc>%% \propoptions — global configuration
-%<doc>%% ====================================================================
+% ====================================================================
+% \propoptions — global configuration
+% ====================================================================
 
 \keys_define:nn { props / global }
   {
@@ -3153,12 +3198,12 @@
       } ,
   }
 
-%<doc>%% \cs{proplevelchoice}\marg{item1,item2,\ldots}
-%<doc>%% picks the entry at position \cs{g__props_level_int}
-%<doc>%% (the current \texttt{prop}/\texttt{inlineprop} nesting depth).
-%<doc>%% If the depth exceeds the list length, the last entry is used.
-%<doc>%% Useful in the \texttt{name} key of prop styles that should vary
-%<doc>%% their symbol with nesting depth.
+% \cs{proplevelchoice}\marg{item1,item2,\ldots}
+% picks the entry at position \cs{g__props_level_int}
+% (the current \texttt{prop}/\texttt{inlineprop} nesting depth).
+% If the depth exceeds the list length, the last entry is used.
+% Useful in the \texttt{name} key of prop styles that should vary
+% their symbol with nesting depth.
 \NewExpandableDocumentCommand \proplevelchoice { m }
   {
     \clist_item:nn { #1 }
@@ -3173,22 +3218,22 @@
     \keys_set:nn { props / global } { #1 }
   }
 
-%<doc>%% ====================================================================
-%<doc>%% Default global settings (set before options so user options override)
-%<doc>%% ====================================================================
+% ====================================================================
+% Default global settings (set before options so user options override)
+% ====================================================================
 
 \tl_set:Nn \l__props_named_style_tl { proposition }
 \tl_set:Nn \l__props_nameless_style_tl { numbered }
 
-%<doc>%% ====================================================================
-%<doc>%% Package options (processed via l3keys)
-%<doc>%% ====================================================================
+% ====================================================================
+% Package options (processed via l3keys)
+% ====================================================================
 
 \ProcessKeyOptions [ props / global ]
 
-%<doc>%% ====================================================================
-%<doc>%% Default type declarations
-%<doc>%% ====================================================================
+% ====================================================================
+% Default type declarations
+% ====================================================================
 
 \SetPropStyle { plain }
   {
@@ -3258,9 +3303,9 @@
               equation , leveltwo , levelthree , levelfour , levelfive } ,
   }
 
-%<doc>%% ====================================================================
-%<doc>%% Default numbered styles
-%<doc>%% ====================================================================
+% ====================================================================
+% Default numbered styles
+% ====================================================================
 
 \DeclareNumberedStyle { roman }
   [
@@ -3339,14 +3384,14 @@
     style = \proplevelchoice { h-base , h-sub } ,
   }
 
-%<doc>%% ====================================================================
-%<doc>%% framed: wrap the list in a tcolorbox
-%<doc>%% ====================================================================
-%<doc>%% Requires \textsf{tcolorbox}.  The whole geometry lives in the style below,
-%<doc>%% so it can be copied and adapted.  Inside the frame the list runs flush at
-%<doc>%% \texttt{leftmargin\,=\,0}, so the contents keep the level's effective left
-%<doc>%% margin --- read via \cs{propoperativeleftmargin} --- while the frame is
-%<doc>%% centred with its rule one \cs{propframepad} to the left of the contents.
+% ====================================================================
+% framed: wrap the list in a tcolorbox
+% ====================================================================
+% Requires \textsf{tcolorbox}.  The whole geometry lives in the style below,
+% so it can be copied and adapted.  Inside the frame the list runs flush at
+% \texttt{leftmargin\,=\,0}, so the contents keep the level's effective left
+% margin --- read via \cs{propoperativeleftmargin} --- while the frame is
+% centred with its rule one \cs{propframepad} to the left of the contents.
 
 \newlength \propframepad
 \setlength \propframepad { 6pt }  %% padding between contents and rule (adjustable)
