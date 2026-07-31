@@ -1,0 +1,139 @@
+\documentclass{article}
+\usepackage{calc}           % for \widthof
+\usepackage{propositions}
+
+%% Per-level dimension lists: every list dimension key accepts a
+%% comma-separated list of values, one per nesting level.  The first applies
+%% at level 1, the second at level 2, and so on; a gap falls back to the class
+%% default for that level.  This file reports the dimensions the list actually
+%% ends up with, so the expectations can be checked without measuring the page.
+
+\newcommand\report{\texttt{LM=\the\leftmargin, LW=\the\labelwidth,
+  LS=\the\labelsep}}
+
+%% Print the width of some text (\widthof is only usable in a calc expression).
+\newlength\testwd
+\newcommand\wid[1]{\setlength\testwd{\widthof{#1}}\the\testwd}
+
+\begin{document}
+
+\section{Class defaults (baseline)}
+
+\verb|\leftmargini| = \the\leftmargini, \verb|\leftmarginii| =
+\the\leftmarginii, \verb|\leftmarginiii| = \the\leftmarginiii.
+
+With no options set, each level should use the class default for its depth.
+
+\begin{prop}
+  \item Level 1: \report
+  \begin{prop}
+    \item Level 2: \report
+    \begin{prop}
+      \item Level 3: \report
+    \end{prop}
+  \end{prop}
+\end{prop}
+
+\section{A per-level list via \texttt{\textbackslash propoptions}}
+
+\verb|leftmargin={3em, 1em}|: level 1 is 3em and level 2 is 1em.  Level 3 is
+past the end of the list, which is treated like a gap: it falls back to the
+class default (\the\leftmarginiii), rather than reusing the last value.
+
+\begingroup
+\propoptions{leftmargin={3em, 1em}}
+\begin{prop}
+  \item Level 1 (expect 3em): \report
+  \begin{prop}
+    \item Level 2 (expect 1em): \report
+    \begin{prop}
+      \item Level 3 (expect \the\leftmarginiii): \report
+    \end{prop}
+  \end{prop}
+\end{prop}
+\endgroup
+
+\section{Gaps fall back to the class default}
+
+\verb|leftmargin={, 0em}|: level 1 takes the class default (\the\leftmargini),
+level 2 is 0em, so level-2 text aligns with level-1 text.
+
+\begingroup
+\propoptions{leftmargin={, 0em}}
+\begin{prop}
+  \item Level 1 (expect \the\leftmargini): \report
+  \begin{prop}
+    \item Level 2 (expect 0.0pt): \report
+  \end{prop}
+\end{prop}
+\endgroup
+
+\section{Per-level \texttt{labelwidth} sized to the widest label}
+
+\verb|labelwidth={\widthof{(99)}, \widthof{a.}, \widthof{(iii)}}| gives each
+level just enough room for its own widest label.
+
+\begingroup
+\propoptions{labelindent=0pt,
+  labelwidth={\widthof{(99)}, \widthof{a.}, \widthof{(iii)}}}
+\begin{prop}
+  \item Level 1 (expect LW=\wid{(99)}): \report
+  \begin{prop}
+    \item Level 2 (expect LW=\wid{a.}): \report
+    \begin{prop}
+      \item Level 3 (expect LW=\wid{(iii)}): \report
+    \end{prop}
+  \end{prop}
+\end{prop}
+\endgroup
+
+\section{Per-level \texttt{labelindent}}
+
+\verb|labelindent=0em| at every level: the label starts at the enclosing
+margin, so sub-item labels sit in the gap left by the outer label while the
+sub-item text keeps the class-default indent.
+
+\begingroup
+\propoptions{labelindent=0em}
+\begin{prop}
+  \item Outermost item, labels flush with the enclosing margin.
+  \begin{prop}
+    \item Sub-item a: label in the gap, text indented.
+    \item Sub-item b: same layout.
+  \end{prop}
+  \item Another outermost item, confirming dimensions are restored.
+\end{prop}
+\endgroup
+
+The original mockup layout: \verb|labelindent={0em, -1.5em}| pushes level-2
+labels left into the gap, and \verb|leftmargin={3em, 0em}| zeroes the level-2
+margin so level-2 text aligns with level-1 text.
+
+\begingroup
+\propoptions{labelindent={0em, -1.5em}, leftmargin={3em, 0em}}
+\begin{prop}
+  \item Outermost item.  The level-two text below should align with this text.
+  \begin{prop}
+    \item Sub-item one: its text aligns with the level-one text above, and its
+    label sits to the left, in the gap where the outer label was.
+    \item Sub-item two: confirming alignment.
+  \end{prop}
+  \item Another outermost item, confirming level-one layout is unaffected.
+\end{prop}
+\endgroup
+
+\section{A per-level list in an environment argument is env-local}
+
+An argument styles only its own environment, so the nested list below falls
+back to the class default rather than inheriting the second entry of the list.
+
+\begin{prop}[leftmargin={3em, 1em}]
+  \item Level 1 (expect 3em): \report
+  \begin{prop}
+    \item Level 2 (expect \the\leftmarginii, not 1em): \report
+  \end{prop}
+\end{prop}
+
+With \verb|\propoptions| the same list does cascade, as in section~2 above.
+
+\end{document}

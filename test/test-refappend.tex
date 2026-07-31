@@ -3,49 +3,26 @@
 \usepackage{amsmath}
 \usepackage{propositions}
 
-\DeclareNumberedType{P}[ref format=(\textbf{#1})]
+%% References, label formatting and alignment.  Every section states what it
+%% expects, so a run can be checked by comparing the two lines.
 
-\newcounter{mainequation}
-\makeatletter
-\newenvironment{axiomset}[1]{%
-  \setcounter{mainequation}{\value{equation}}%
-  \setcounter{equation}{0}%
-  \begingroup
-  \def\theequation{#1\arabic{equation}}%
-  \SetItemType{equation}{format=#1}%
-  \ignorespaces
-}{%
-  \endgroup
-  \setcounter{equation}{\value{mainequation}}%
-  \ignorespacesafterend%
-}
-\makeatother
+\DeclareNumberedStyle{P}[ref format=(\textbf{#1})]
 
 \begin{document}
 
-Right margin: \the\rightmargin
+\section{Parentref in ref format with a custom numbered style}
 
-Level one left margin: \the\leftmargini
-
-Level two left margin: \the\leftmarginii
-
-\section{Parentref in ref format with custom parent type}
+Sub-items of a \texttt{P} item use the default level-two style, whose
+\texttt{ref format} is \verb|\parentref{#1}|, so their references carry the
+parent's name.
 
 \begin{prop}
-    \pitem[type=P]
-    Premise One is a two-part premise.
-    \label{P1}
-    \begin{prop}
-        \pitem
-        The first part is called part a.
-        \label{P1a}
-        \pitem
-        The second part is called part b.
-        \label{P1b}
-    \end{prop}
-    \pitem[type=P]
-    Premise Two is straightforward.
-    \label{P2}
+  \item[style=P] Premise One is a two-part premise. \label{P1}
+  \begin{prop}
+    \item The first part is called part a. \label{P1a}
+    \item The second part is called part b. \label{P1b}
+  \end{prop}
+  \item[style=P] Premise Two is straightforward. \label{P2}
 \end{prop}
 
 References: \ref{P1}, \ref{P1a}, \ref{P1b}, \ref{P2}.
@@ -55,146 +32,114 @@ Expected: (\textbf{P1}), (\textbf{P1a}), (\textbf{P1b}), (\textbf{P2}).
 \section{Three-level deep nesting}
 
 \begin{prop}
-    \pitem[type=P]
-    Top level.
-    \label{top}
+  \item[style=P] Top level. \label{top}
+  \begin{prop}
+    \item Level two item a. \label{l2a}
+    \item Level two item b. \label{l2b}
     \begin{prop}
-        \pitem
-        Level two item a.
-        \label{l2a}
-        \pitem
-        Level two item b.
-        \label{l2b}
-        \begin{prop}
-            \pitem
-            Level three item.
-            \label{l3i}
-            \pitem
-            Another level three.
-            \label{l3ii}
-        \end{prop}
+      \item Level three item. \label{l3i}
+      \item Another level three. \label{l3ii}
     \end{prop}
+  \end{prop}
 \end{prop}
 
 References: \ref{top}, \ref{l2a}, \ref{l2b}, \ref{l3i}, \ref{l3ii}.
 
-Expected: (\textbf{P3}), (\textbf{P3a}), (\textbf{P3b}), (\textbf{P3b.i}), (\textbf{P3b.ii}).
+Expected: (\textbf{P3}), (\textbf{P3a}), (\textbf{P3b}), (\textbf{P3b.i}),
+(\textbf{P3b.ii}).
 
 \section{Oref and nref on nested refs}
 
-Suffix test: \oref[']{P1a} (expected: (\textbf{P1a'})).
+Suffix: \oref[']{P1a} (expected: (\textbf{P1a'})).
 
-Prefix test: \oref[*][]{P1a} (expected: (\textbf{P1*a})).
+Prefix and suffix: \oref[*][]{P1a} (expected: (\textbf{P1*a})).
 
-Nref test: \nref{P1a} (expected: a).
+Naked: \nref{P1a} (expected: a --- the parent prefix comes from the
+\texttt{ref format}, which \verb|\nref| strips).
 
-\section{Lastref and nLastref in running text}
+\section{Lastref and nlastref in running text}
 
 \begin{prop}
-    \pitem[type=P]
-    Premise Three. \label{P3}
+  \item[style=P] Premise Three. \label{P3}
 \end{prop}
 
 Lastref: \lastref{} (expected: (\textbf{P4})).
 
 Lastref with suffix: \lastref{'} (expected: (\textbf{P4'})).
 
-nLastref: \nlastref{} (expected: P4).
+nlastref: \nlastref{} (expected: P4).
 
-\section{Backward compatibility: ref append key}
+\section{The \texttt{ref append} key}
 
-\DeclareNumberedType{Q}[
-  ref format=(\textit{#1}),
-]
-\DeclareNumberedType{Qsub}[
+\DeclareNumberedStyle{Q}[ref format=(\textit{#1})]
+\DeclareNumberedStyle{Qsub}[
   counter format = \alph{Qsub},
   display format = #1.,
-  ref append = #1,
+  ref append     = #1,
 ]
 
 \begin{prop}
-    \pitem[type=Q]
-    Item one. \label{q1}
-    \begin{prop}
-        \pitem[type=Qsub]
-        Sub-item a. \label{q1a}
-        \pitem[type=Qsub]
-        Sub-item b. \label{q1b}
-    \end{prop}
+  \item[style=Q] Item one. \label{q1}
+  \begin{prop}
+    \item[style=Qsub] Sub-item a. \label{q1a}
+    \item[style=Qsub] Sub-item b. \label{q1b}
+  \end{prop}
 \end{prop}
 
 References: \ref{q1}, \ref{q1a}, \ref{q1b}.
 
 Expected: (\textit{Q1}), (\textit{Q1a}), (\textit{Q1b}).
 
-\section{Standard numbered type still works}
+\section{The default numbered styles still work}
 
 \begin{prop}
-    \pitem First numbered. \label{n1}
-    \pitem Second numbered. \label{n2}
-    \begin{prop}
-        \pitem Sub-item a. \label{n2a}
-        \pitem Sub-item b. \label{n2b}
-    \end{prop}
+  \item First numbered. \label{n1}
+  \item Second numbered. \label{n2}
+  \begin{prop}
+    \item Sub-item a. \label{n2a}
+    \item Sub-item b. \label{n2b}
+  \end{prop}
 \end{prop}
 
 References: \ref{n1}, \ref{n2}, \ref{n2a}, \ref{n2b}.
 
-\section{Counter with explicit name override}
+Expected: (1), (2), (2a), (2b).
 
-\DeclareNumberedType{R}[ref format=(\textbf{#1})]
+\section{Counter with an explicit name override}
 
-\begin{prop}
-    \pitem[type=R, name={Premise~\arabic{R}}]
-    A premise with a richer name. \label{rn1}
-    \pitem[type=R]
-    A plain counter-only item. \label{rn2}
-\end{prop}
-
-Ref with name override: \ref{rn1} (expected: (\textbf{Premise~1})).
-
-Ref without override: \ref{rn2} (expected: (\textbf{R2})).
-
-Nref with name override: \nref{rn1} (expected: Premise~1).
-
-Nref without override: \nref{rn2} (expected: R2).
-
-\section{Alignment=right and center}
-
-Labels of varying width show the difference between left, right, and centered
-alignment.  Right-aligned labels are flush against the item text (like standard
-\texttt{enumerate}); left-aligned labels start at the left margin; centered
-labels are centered in the label box.
+\DeclareNumberedStyle{R}[ref format=(\textbf{#1})]
 
 \begin{prop}
-    \pitem[name={A},   align=right]  Right-aligned short label.
-    \pitem[name={BB},  align=right]  Right-aligned medium label.
-    \pitem[name={CCC}, align=right]  Right-aligned long label.
-    \pitem[name={A},   align=left]   Left-aligned short label (compare with first).
-    \pitem[name={BB},  align=left]   Left-aligned medium label (compare with second).
-    \pitem[name={CCC}, align=left]   Left-aligned long label (compare with third).
-    \pitem[name={A},   align=center] Centered short label.
-    \pitem[name={BB},  align=center] Centered medium label.
-    \pitem[name={CCC}, align=center] Centered long label.
+  \item[style=R, name={Premise~\arabic{R}}]
+    A premise with a richer name.  Note that an explicit name suppresses the
+    counter step, so \texttt{R} is still at its previous value. \label{rn1}
+  \item[style=R] A plain counter-only item. \label{rn2}
 \end{prop}
 
-\section{Ref key on a type declaration}
+Ref with name override: \ref{rn1} (expected: (\textbf{Premise~0})).
+
+Ref without override: \ref{rn2} (expected: (\textbf{R1})).
+
+Nref with name override: \nref{rn1} (expected: Premise~0).
+
+Nref without override: \nref{rn2} (expected: R1).
+
+\section{The \texttt{ref} key on a style declaration}
 
 The \texttt{ref} key bakes the parent prefix into the ref \emph{text} (not the
 format), so \verb|\nref| returns the full hierarchical name.
 
-\DeclareNumberedType{newinner}[
-  counter format=\alph{newinner},
-  display format=#1.,
-  ref={\nparentref\thenewinner},
-  ref format={(#1)}]
+\DeclareNumberedStyle{newinner}[
+  counter format = \alph{newinner},
+  display format = #1.,
+  ref            = {\nparentref\alph{newinner}},
+  ref format     = {(#1)}]
+
 \begin{prop}
-  \pitem Outer item. \label{outer}
+  \item Outer item. \label{outer}
   \begin{prop}
-    \pitem[type=newinner]
-    Subitem. \label{sub1}
-    \pitem[type=newinner]
-    Second subitem. \label{sub2}
+    \item[style=newinner] Subitem. \label{sub1}
+    \item[style=newinner] Second subitem. \label{sub2}
   \end{prop}
 \end{prop}
 
@@ -204,201 +149,79 @@ Nref: \nref{sub1} (expected: 3a).
 
 Ref outer: \ref{outer} (expected: (3)).
 
-\section{Testing a compact example for the docs}
+\section{Four ways to derive a subitem's reference}
 
-\DeclareNumberedType{inner}[
-  counter format=\alph{inner},
-  display format=#1.]
+\DeclareNumberedStyle{inner}[
+  counter format = \alph{inner},
+  display format = #1.]
 
 \begin{prop}
-  \pitem[OI] Outer item. \label{outer2}
+  \item[OI] Outer item. \label{outer2}
   \begin{prop}
-    \pitem[type=inner,
-    format=\parentref{.#1}]
-    \label{dsub1}
-    This subitem will be referenced as \ref{dsub1}, or \nref{dsub1}.
-    \pitem[type=inner,
-    display format=#1.,
-    ref format=\parentref{.#1}]
-    \label{dsub2}
-    This subitem will be referenced as \ref{dsub2}, or \nref{dsub2}.
-    \pitem[type=inner,
-    name={\nparentref.\theinner}]
-    \label{dsub3}
-    This subitem will be referenced as \ref{dsub3}, or \nref{dsub3}.
-    \pitem[type=inner,
-    ref={\nparentref.\theinner}]
-    \label{dsub4}
-    This subitem will be referenced as \ref{dsub4}, or \nref{dsub4}.
+    \item[style=inner, format=\parentref{.#1}] \label{dsub1}
+      \texttt{format}: \ref{dsub1}, naked \nref{dsub1}.
+    \item[style=inner, display format=#1., ref format=\parentref{.#1}]
+      \label{dsub2}
+      \texttt{ref format}: \ref{dsub2}, naked \nref{dsub2}.
+    \item[style=inner, name={\nparentref.\alph{inner}}] \label{dsub3}
+      \texttt{name}: \ref{dsub3}, naked \nref{dsub3}.
+    \item[style=inner, ref={\nparentref.\alph{inner}}] \label{dsub4}
+      \texttt{ref}: \ref{dsub4}, naked \nref{dsub4}.
   \end{prop}
 \end{prop}
 
+Expected refs: \texttt{OI.a}, \texttt{OI.b}, \texttt{OI.b}, \texttt{OI.c}.  The
+\texttt{name} and \texttt{ref} variants put the prefix into the naked form too;
+\texttt{format} and \texttt{ref format} do not.  Note that the third item
+repeats the second's letter: an explicit \texttt{name} suppresses the counter
+step, so \texttt{ref} is the key to use for a derived reference that should
+still count.
 
-\section{Testing math mode in names}
-\label{sect:section}
+\section{Math and other commands in names}
 
 \begin{prop}
-    \pitem[M$'$]
-    Label should look like \textbf{M$'$}, but actually looks like \textbf{M\$'\$}.
-    \pitem[name=M$'$]
-    Label should look like \textbf{M$'$}.
+  \item[M$'$] Bare name in math mode: the label should read \textbf{M$'$}.
+  \item[name=M$'$] The same via \texttt{name=}.
+  \item[Ext\emph{dash}, gloss=boo] A macro in the name. \label{ext}
+    Reference: \ref{ext}.
+  \item[\nref{first}a] A name built from another reference. \label{second}
 \end{prop}
 
 \begin{prop}
-    \pitem[Ext\emph{dash}, gloss=boo] \label{ext}
-    Test of other commands in item name.
-    \ref{ext}.
+  \item First. \label{first}
+  \item Second. \label{b}
+  \item[\oref[$'$]{first}] Name built with \verb|\oref|. \label{c}
 \end{prop}
 
-\section{Miscellaneous debugging}
+References: \ref{first}, \ref{b}, \ref{c}, and \ref{second} (whose name is
+built from \ref{first}, so it needs an extra \LaTeX{} run to settle).
 
-
-
-\begin{prop}
-    \pitem \label{first} Item.
-    \pitem[\nref{first}a] Item. \label{second}
-\end{prop}
-That was \ref{second}.
-
-
-
-
-\begin{axiomset}{M}
-\begin{align}
-    \label{third} Stuff
-\end{align}
-\ref{third}
-\end{axiomset}
-
-
-\begin{prop}
-    \pitem \label{a} Thing.
-    \pitem \label{b} Other thing.
-    \pitem[\oref[$'$]{a}] \label{c}
-    Something goes wrong after this.
-	\pitem[\oref[$'$]{b}] \label{d}
-	Check it out.
-\end{prop}
-Refs: \ref{a}, \ref{b}, \ref{c}, \ref{d}.  Now refs to earlier pitems don't make hyperlinks either: \ref{third}. Even refs to things like sections don't: \ref{sect:section}.
-
-\section{Alignment: nextline variants}
-
-\begin{prop}
-    \pitem[name={Short label}, align=nextline]
-    Nextline with a short label (starts at the default label position).
-    \pitem[name={A much longer label that should demonstrate how the nextline option lets labels wrap across multiple lines when they are awkwardly long},
-    align=nextline]
-    Nextline with a long wrapping label.
-    \pitem[name={Short label}, align=nextline, labelindent=0pt]
-    Nextline with labelindent=0pt (starts at the left margin, replaces left-nextline).
-    \pitem[name={A much longer label that should demonstrate how the nextline option with labelindent=0pt lets labels wrap across multiple lines when they are awkwardly long},
-    align=nextline, labelindent=0pt]
-    Nextline with labelindent=0pt and a long wrapping label.
-    \pitem[name={Short label}, align=flush-nextline]
-    Flush-nextline with a short label (starts at the item text margin).
-    \pitem[name={A much longer label that should demonstrate how the flush-nextline option lets labels wrap across multiple lines when they are awkwardly long},
-    align=flush-nextline]
-    Flush-nextline with a long wrapping label.  This is some more long text to see what's happening at the beginning of the item text.
-    \pitem[name={N}, align=left]
-    Normal left alignment for comparison.
-\end{prop}
-
-\section{Intertext: counter reset moved to pitem}
-This is some text to see where the right margin is in general for main text.  This is some text to see where the right margin is in general for main text.  
-\begin{prop}
-    \pitem[type=P]
-    Multi-clause definition.  This is some text to see where the right margin is on this item.  \label{mcd}
-    \begin{prop}
-        \pitem Clause one. This is some text to see where the right margin is on this item.  \label{cl1}
-        \pitem Clause two. \label{cl2}
-    \end{prop}
-\end{prop}
-Commentary on why these clauses aren't enough and we also need:
-\begin{prop}
-    \item
-    \begin{prop}
-        \pitem Clause three (should be c, not a). \label{cl3}
-    \end{prop}
-\end{prop}
-
-References: \ref{mcd}, \ref{cl1}, \ref{cl2}, \ref{cl3}.
-
-Expected: (\textbf{P5}), (\textbf{P5a}), (\textbf{P5b}), (\textbf{P5c}).
-
-\section{Per-level dimensions with \texttt{labelindent}}
-
-%% Test 1: labelindent alone (class default leftmargin at each level)
-\propoptions{labelindent=0em}
-
-\begin{prop}
-    \pitem[type=P]
-    Outermost item with \verb|labelindent=0em|.  The sub-item labels
-    fill the gap, but the sub-item text is still indented by the class
-    default \verb|\leftmarginii|.
-    \begin{prop}
-        \pitem Sub-item a: label in the gap, text indented.
-        \pitem Sub-item b: same layout.
-    \end{prop}
-    \pitem[type=P]
-    Another outermost item, confirming dimensions are restored.
-\end{prop}
-
-\propoptions{labelindent={}}
-
-%% Test 2: aligned text margins (the original mockup layout).
-%% Level-two leftmargin=0em so text aligns with level one.
-%% Negative labelindent pushes labels left, into the gap.
-\propoptions{labelindent={0em, -1.5em}, leftmargin={3em, 0em}}
-
-\begin{prop}
-    \pitem[type=P]
-    Outermost item.  The level-two text below should align with this
-    text, because \verb|leftmargin={, 0em}| zeroes the level-two margin.
-    \begin{prop}
-        \pitem Sub-item one: its text should align with the level-one
-        text above.  The label sits to the left, in the gap where the
-        outer label was.
-        \pitem Sub-item two: confirming alignment.
-    \end{prop}
-    \pitem[type=P]
-    Another outermost item, confirming level-one layout is unaffected.
-\end{prop}
-
-%% Restore defaults
-\propoptions{labelindent={}, leftmargin={}}
-
+Expected: the four labels of the first list are \textbf{M$'$}, \textbf{M$'$},
+\textbf{Ext\emph{dash}}~(boo) and \textbf{4a}; those of the second are
+(4), (5) and (4$'$).
 
 \section{Titlecase reference commands}
 
-\DeclareNumberedType{TC}[ref format=(\textbf{#1})]
+\DeclareNumberedStyle{TC}[ref format=(\textbf{#1})]
 
 \begin{prop}
-    \pitem[type=TC, name={Identity Theory},ref format={(\textbf{the #1})}]
-    Mental states are physical states.
-    \label{tc:id}
-    \pitem[type=TC]
-    A plain numbered TC item.
-    \label{tc:num}
-    \begin{prop}
-        \pitem
-        Sub-item a.
-        \label{tc:sub}
-    \end{prop}
-    \pitem[test,type=TC]
-    An unnumbered TC item with lower case name.
-    \label{tc:lower}
-    \begin{prop}
-        \pitem
-        Sub-item a.
-        \label{tc:lowersub}
-    \end{prop}
+  \item[style=TC, name={Identity Theory}, ref format={(\textbf{the #1})}]
+    Mental states are physical states. \label{tc:id}
+  \item[style=TC] A plain numbered TC item. \label{tc:num}
+  \begin{prop}
+    \item Sub-item a. \label{tc:sub}
+  \end{prop}
+  \item[test, style=TC] A named TC item with a lower-case name. \label{tc:lower}
+  \begin{prop}
+    \item Sub-item a. \label{tc:lowersub}
+  \end{prop}
 \end{prop}
 
 Ref: \ref{tc:id} (expected: (\textbf{the Identity Theory})).
 
 Ref (titlecase): \Ref{tc:id} (expected: (\textbf{The Identity Theory})).
 
-Ref* (titlecase, no link): \Ref*{tc:id} (expected: (\textbf{The Identity Theory}), no hyperlink).
+Ref* (titlecase, no link): \Ref*{tc:id} (expected: the same, unlinked).
 
 Nref: \nref{tc:id} (expected: Identity Theory).
 
@@ -406,76 +229,142 @@ Nref (titlecase): \Nref{tc:id} (expected: Identity Theory).
 
 Oref: \oref[$'$]{tc:id} (expected: (\textbf{the Identity Theory$'$})).
 
-Oref (titlecase): \Oref[$'$]{tc:id} (expected: (\textbf{The Identity Theory$'$})).
+Oref (titlecase): \Oref[$'$]{tc:id} (expected: (\textbf{The Identity
+Theory$'$})).
 
-Lastref: \lastref{} (expected: (\textbf{test})).
+Lastref: \lastref{} (expected: (\textbf{test})---the sub-list's items are
+local to it, so once it has closed \verb|\lastref| again refers to the last
+item of the enclosing level).
 
 Lastref (titlecase): \Lastref{} (expected: (\textbf{Test})).
 
-Nested ref (titlecase): \Ref{tc:sub} (expected: (\textbf{TC2a}) --- TC is
-already uppercase).
+Nested ref (titlecase): \Ref{tc:sub} (expected: (\textbf{TC1a})).
 
-More examples: \Ref{tc:lower} (expected: (\textbf{Test})),
+Lower-case names: \Ref{tc:lower} (expected: (\textbf{Test})),
 \Ref{tc:lowersub} (expected: (\textbf{Testa})).
 
 \section{Label format and name format keys}
 
-\DeclareNumberedType{LF}[ref format=(#1)]
-
-%% label format on type declaration
-\DeclareNumberedType{LG}[ref format=(#1), label format=#1:]
+\DeclareNumberedStyle{LF}[ref format=(#1)]
+\DeclareNumberedStyle{LG}[ref format=(#1), label format=#1:]
 
 \begin{prop}
-    \pitem[type=LF, label format=#1:]
-    Item with label-format colon, declared per-item. \label{lf1}
-    \pitem[type=LF, label format=#1:]
-    Second item; confirm colon appears. \label{lf2}
-    \pitem[type=LF]
-    Third item; no colon (label format reset). \label{lf3}
+  \item[style=LF, label format=#1:]
+    Item with a label-format colon, set per item. \label{lf1}
+  \item[style=LF, label format=#1:]
+    Second item; confirm the colon appears. \label{lf2}
+  \item[style=LF] Third item; no colon (label format not inherited). \label{lf3}
 \end{prop}
 
-Expected: \texttt{LF1:} \quad \texttt{LF2:} \quad \texttt{LF3} (no colon).
+Expected labels: \texttt{LF1:} \quad \texttt{LF2:} \quad \texttt{LF3} (no
+colon).
 
 \begin{prop}
-    \pitem[type=LG]
-    Type-level label format. \label{lg1}
-    \pitem[type=LG, shorthand=SH, gloss=a gloss]
-    Item with shorthand and gloss; colon after all. \label{lg2}
+  \item[style=LG] Style-level label format. \label{lg1}
+  \item[style=LG, shorthand=SH, gloss=a gloss]
+    Item with shorthand and gloss; the colon comes after both. \label{lg2}
 \end{prop}
 
-Expected: \texttt{LG1:} \quad \texttt{LG2~[SH]~(a gloss):} (colon after gloss).
+Expected labels: \texttt{LG1:} \quad \texttt{LG2~[SH]~(a gloss):}.
 
-%% name format is a synonym for display format
-\DeclareNumberedType{NF}[name format=\textit{#1}, ref format=(#1)]
+\DeclareNumberedStyle{NF}[name format=\textit{#1}, ref format=(#1)]
 
 \begin{prop}
-    \pitem[type=NF, gloss={should not be italic}]
-    Item with name format (italic). \label{nf1}
+  \item[style=NF, gloss={should not be italic}]
+    \texttt{name format} is a synonym for \texttt{display format}. \label{nf1}
 \end{prop}
 
-Expected: \textit{NF1} in display; \texttt{(NF1)} for ref: \ref{nf1}.
+Expected: \textit{NF1} in the label, \texttt{(NF1)} for the ref: \ref{nf1}.
 
-\section{Testing stuff}
+\section{Alignment: left, right, center}
 
+Labels of varying width show the difference.  Right-aligned labels are flush
+against the item text (like standard \texttt{enumerate}); left-aligned labels
+start at the left of the label box; centered labels are centered in it.
 
-\begin{enumerate}
-    \item Normal.  
-    \item Now going to set leftmargin.  \labelsep=4cm
-    \item Now going to set it way back \leftmargin=1cm
-    \item Did this do anything I wonder?
-\end{enumerate}
+\begin{prop}
+  \item[name={A},   align=right]  Right-aligned short label.
+  \item[name={BB},  align=right]  Right-aligned medium label.
+  \item[name={CCC}, align=right]  Right-aligned long label.
+  \item[name={A},   align=left]   Left-aligned short label.
+  \item[name={BB},  align=left]   Left-aligned medium label.
+  \item[name={CCC}, align=left]   Left-aligned long label.
+  \item[name={A},   align=center] Centered short label.
+  \item[name={BB},  align=center] Centered medium label.
+  \item[name={CCC}, align=center] Centered long label.
+\end{prop}
 
+\section{Alignment: nextline variants}
+
+\begin{prop}
+  \item[name={Short label}, align=nextline]
+    Nextline with a short label (starts at the default label position).
+  \item[name={A much longer label that should demonstrate how the nextline
+    option lets labels wrap across multiple lines when they are awkwardly
+    long}, align=nextline]
+    Nextline with a long wrapping label.
+  \item[name={Short label}, align=nextline, labelindent=0pt]
+    Nextline with \texttt{labelindent=0pt} (starts at the left margin).
+  \item[name={A much longer label that should demonstrate how the nextline
+    option with labelindent=0pt lets labels wrap across multiple lines when
+    they are awkwardly long}, align=nextline, labelindent=0pt]
+    Nextline with \texttt{labelindent=0pt} and a long wrapping label.
+  \item[name={Short label}, align=flush-nextline]
+    Flush-nextline with a short label (starts at the item text margin).
+  \item[name={A much longer label that should demonstrate how the
+    flush-nextline option lets labels wrap across multiple lines when they are
+    awkwardly long}, align=flush-nextline]
+    Flush-nextline with a long wrapping label.  Some more text, to see what
+    happens at the start of the item body.
+  \item[name={N}, align=left] Normal left alignment, for comparison.
+\end{prop}
+
+\section{Continuing sub-item lettering with \texttt{reset=false}}
+
+Processing an \verb|\item| resets the counter of the level below it, so a sublist
+opened under a fresh outer item normally restarts at~\texttt{a}.  With
+\texttt{reset=false} on that outer item the lettering carries on instead, which
+is what is wanted when commentary interrupts a list of clauses.
+
+\begin{prop}
+  \item[style=P] Multi-clause definition. \label{mcd}
+  \begin{prop}
+    \item Clause one. \label{cl1}
+    \item Clause two. \label{cl2}
+  \end{prop}
+\end{prop}
+
+Commentary on why these clauses are not enough, and we also need:
+
+\begin{prop}
+  \item[reset=false]
+  \begin{prop}
+    \item Clause three: continues at c. \label{cl3}
+  \end{prop}
+\end{prop}
+
+More commentary, this time under an unlabelled outer item:
+
+\begin{prop}
+  \item[counter=none, reset=false]
+  \begin{prop}
+    \item Clause four: continues at d. \label{cl4}
+  \end{prop}
+\end{prop}
+
+And without \texttt{reset=false}, for contrast:
+
+\begin{prop}
+  \item[counter=none]
+  \begin{prop}
+    \item Back to a. \label{cl5}
+  \end{prop}
+\end{prop}
+
+References: \ref{mcd}, \ref{cl1}, \ref{cl2}, \ref{cl3}, \ref{cl4}, \ref{cl5}.
+
+Expected: (\textbf{P5}), (\textbf{P5a}), (\textbf{P5b}), (6c), d, a.  The
+prefix of each sub-reference is its own parent item, which is why clause three
+is \texttt{6c} and clause four, whose parent is unlabelled, is bare.
 
 \end{document}
-
-
-
-(P1)        This is an outermost |\pitem|.
-       a.   This is a level-two one: note how the left margin
-            of the text is aligned with the left margin for
-            the outermost one above it.
-       b.   This could be achieved if one could set 
-            |leftmargin=0em| just for the level two list.  
-            |itemindent| and |itemsep| might also need to be
-            set to level-relative values to ensure the 
-            desired alignment.

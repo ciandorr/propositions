@@ -7,6 +7,7 @@
 *.hd
 *.tcbtemp
 *-ex.tex
+*-cb.tex
 *.ind
 *.ilg
 
