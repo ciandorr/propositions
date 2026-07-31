@@ -329,7 +329,7 @@
 % \end{docKey}
 %
 % \begin{docKey}{crefname}{=\meta{type}}{no default}
-%   When \textsf{cleveref} is loaded, assigns an arbitrary reference type to this proposition.  For example, \texttt{crefname=lemma} causes \cs{cref} to use the names defined by \cs{crefname}\texttt{\{lemma\}\{...\}\{...\}} instead of the default \texttt{proposition} type.  The \meta{type} must be known to \textsf{cleveref}; new types can be declared with \cs{crefname}.
+%   When \textsf{cleveref} is loaded, assigns an arbitrary reference type to this proposition.  For example, \texttt{crefname=lemma} causes \cs{cref} to use the names defined by \cs{crefname}\texttt{\{lemma\}\{...\}\{...\}} instead of the default (private) \texttt{prop} type.  The \meta{type} must be known to \textsf{cleveref}; new types can be declared with \cs{crefname}.
 % \end{docKey}
 %
 % \begin{docKey}{reset}{=\meta{boolean}}{initially \texttt{true}}
@@ -911,7 +911,7 @@
 % \section{Compatibility}
 %
 % The \textsf{propositions} package is designed to work with \textsf{hyperref}, \textsf{cleveref}, and \textsf{amsmath}.
-% \textsf{amsmath} is required for |\ptag| and the |equations| option.  With \textsf{cleveref} loaded, all proposition items are assigned to a default |proposition| ``reference type''; the |crefname| key can override this.
+% \textsf{amsmath} is required for |\ptag| and the |equations| option.  With \textsf{cleveref} loaded, all proposition items are assigned to a private |prop| ``reference type'' (deliberately not |proposition|, so a user's own \texttt{Proposition} theorems are left untouched); the |crefname| key can override this per item.
 %
 % Recommended load order:
 % \begin{Verbatim}[gobble=2]
@@ -1946,11 +1946,13 @@
     \@ifpackageloaded { cleveref }
       {
         \bool_gset_true:N \g__props_cleveref_bool
-        %% Map the propanchor counter type to "proposition"
-        \crefalias { propanchor } { proposition }
+        %% Map the propanchor counter to a private cleveref type "prop".  We use
+        %% "prop", not "proposition", so we do not commandeer the name a user may
+        %% want for their own Proposition theorems (a common \newtheorem type).
+        \crefalias { propanchor } { prop }
         %% Empty name: \cref just outputs the formatted ref text
-        \crefname  { proposition } {} {}
-        \Crefname  { proposition } {} {}
+        \crefname  { prop } {} {}
+        \Crefname  { prop } {} {}
       }
       { }
   }

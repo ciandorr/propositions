@@ -836,11 +836,13 @@
     \@ifpackageloaded { cleveref }
       {
         \bool_gset_true:N \g__props_cleveref_bool
-        %% Map the propanchor counter type to "proposition"
-        \crefalias { propanchor } { proposition }
+        %% Map the propanchor counter to a private cleveref type "prop".  We use
+        %% "prop", not "proposition", so we do not commandeer the name a user may
+        %% want for their own Proposition theorems (a common \newtheorem type).
+        \crefalias { propanchor } { prop }
         %% Empty name: \cref just outputs the formatted ref text
-        \crefname  { proposition } {} {}
-        \Crefname  { proposition } {} {}
+        \crefname  { prop } {} {}
+        \Crefname  { prop } {} {}
       }
       { }
   }
