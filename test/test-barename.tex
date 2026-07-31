@@ -1,0 +1,62 @@
+\documentclass{article}
+\usepackage{amsmath}
+\usepackage{propositions}
+
+%% A bare string in an item's optional argument means name={...}.  This must
+%% work whether or not the argument also carries genuine key=value entries.
+
+\begin{document}
+
+\section{Bare name alone}
+
+\begin{prop}
+  \item[No Overlap] Name with a space. \label{b:space}
+  \item[Nihilism] Single word. \label{b:word}
+  \item[$P \wedge Q$] Math, catcodes preserved. \label{b:math}
+  \item[{Alpha, Beta}] Braced, containing a comma. \label{b:comma}
+\end{prop}
+
+References: \ref{b:space}, \ref{b:word}, \ref{b:math}, \ref{b:comma}.
+
+\section{Bare name alongside other keys}
+
+Each of these must show its name, not fall back to a number.
+
+\begin{prop}
+  \item[No Overlap, align=flush, display format=\textsc{#1},
+    ref format=\textit{#1}]
+    Bare name first, then keys with \texttt{\#1} in their values.
+    \label{b:keys}
+  \item[align=flush, Trailing Name] Bare name last. \label{b:last}
+  \item[Nihilism, style=thesis] Bare name with \texttt{style}. \label{b:style}
+  \item[{Alpha, Beta}, align=flush] Braced comma name with a key.
+    \label{b:comma2}
+\end{prop}
+
+References: \ref{b:keys}, \ref{b:last}, \ref{b:style}, \ref{b:comma2}.
+
+\section{Keys that are not names}
+
+\begin{prop}
+  \item[reset] A valueless key must stay a key, so this item is numbered.
+    \label{b:reset}
+  \item[reset=false] Explicit form, also numbered. \label{b:reset2}
+  \item[counter=none] Text item: no number, no name.
+  \item Plain numbered item. \label{b:plain}
+\end{prop}
+
+References: \ref{b:reset}, \ref{b:reset2}, \ref{b:plain}.
+
+\section{Other entry points}
+
+\begin{equation}
+  x = y \ptag[Tag Me, align=flush]
+\end{equation}
+
+\begin{prop}
+  \titem[Shortcut Name, align=flush] Style shortcut command. \label{b:short}
+\end{prop}
+
+Reference: \ref{b:short}.
+
+\end{document}

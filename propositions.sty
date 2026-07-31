@@ -78,6 +78,7 @@
 \tl_new:N   \l__props_display_text_tl    %% what appears in the document
 \tl_new:N   \l__props_ref_text_tl        %% what goes into \@currentlabel
 \tl_new:N   \l__props_item_output_tl     %% formatted display (displayfmt + shorthand + gloss)
+\tl_new:N   \l__props_item_arg_tl        %% per-item argument, bare name normalised to name={...}
 \bool_new:N \l__props_ptag_bool          %% true during \ptag processing
 \bool_new:N \l__props_titlecase_bool    %% true when \Ref etc. want titlecasing
 \bool_new:N \l__props_reset_bool        %% true (default) = reset sub-level counter on \item
@@ -490,11 +491,12 @@
     label           .tl_set:N = \l__props_label_tl ,
     reset       .bool_set:N = \l__props_reset_bool ,
     reset       .default:n  = { true } ,
-    unknown     .code:n =
-      {
-        %% The key NAME is the proposition name (e.g., \item[P] -> key "P")
-        \tl_set:NV \l__props_name_tl \l_keys_key_str
-      } ,
+    %% The pass over this keyspace also sees the cascading defaults, which may
+    %% carry list-level keys (leftmargin, wrapper begin, ...); those are not
+    %% errors here, and \keys_set_known:nnN collects them harmlessly.  A bare
+    %% proposition name (\item[P]) never reaches this handler: it is rewritten
+    %% as name={P} beforehand by \__props_normalize_item_arg:Nn.
+    unknown     .code:n = {} ,
   }
 
 %% Minimal keyspace used only for the named/nameless peek: reads name= and
@@ -507,17 +509,47 @@
   }
 
 
+\clist_const:Nn \c__props_valueless_item_keys_clist { reset }
+
+\cs_new_protected:Nn \__props_normalize_item_arg:Nn
+  {
+    \tl_if_in:nnTF { #2 } { = }
+      {
+        \tl_clear:N #1
+        \clist_map_inline:nn { #2 }
+          {
+            \tl_if_empty:NF #1 { \tl_put_right:Nn #1 { , } }
+            \__props_normalize_entry:Nn #1 { ##1 }
+          }
+      }
+      { \tl_clear:N #1 \__props_normalize_entry:Nn #1 { #2 } }
+  }
+
+\cs_new_protected:Nn \__props_normalize_entry:Nn
+  {
+    \tl_if_in:nnTF { #2 } { = }
+      { \tl_put_right:Nn #1 { #2 } }
+      {
+        \clist_if_in:NnTF \c__props_valueless_item_keys_clist { #2 }
+          { \tl_put_right:Nn #1 { #2 } }
+          { \tl_put_right:Nn #1 { name = { #2 } } }
+      }
+  }
+
+
 \cs_new_protected:Nn \__props_resolve_item:n
   {
+    %% --- Normalise the argument: a bare name becomes name={...} ---
+    \__props_normalize_item_arg:Nn \l__props_item_arg_tl { #1 }
+
     %% --- Peek: determine named vs. nameless ---
     %% Clear sentinels so we can detect whether #1 provides a name or counter.
     \tl_clear:N \l__props_name_tl
     \tl_clear:N \l__props_counter_tl
-    \tl_if_empty:nF { #1 }
+    \tl_if_empty:NF \l__props_item_arg_tl
       {
-        \tl_if_in:nnTF { #1 } { = }
-          { \keys_set_known:nnN { props / pitem-peek } { #1 } \l_tmpa_tl }
-          { \tl_set:Nn \l__props_name_tl { #1 } }
+        \exp_args:NnV \keys_set_known:nnN
+          { props / pitem-peek } \l__props_item_arg_tl \l_tmpa_tl
       }
 
     %% --- Select base style (named or nameless) ---
@@ -559,12 +591,10 @@
         \tl_if_empty:NF \l_tmpa_tl { \tl_put_right:Nn \l_tmpa_tl { , } }
         \tl_put_right:NV \l_tmpa_tl \l__props_env_defaults_tl
       }
-    \tl_if_empty:nF { #1 }
+    \tl_if_empty:NF \l__props_item_arg_tl
       {
         \tl_if_empty:NF \l_tmpa_tl { \tl_put_right:Nn \l_tmpa_tl { , } }
-        \tl_if_in:nnTF { #1 } { = }
-          { \tl_put_right:Nn \l_tmpa_tl { #1 } }
-          { \tl_put_right:Nn \l_tmpa_tl { name = {#1} } }
+        \tl_put_right:NV \l_tmpa_tl \l__props_item_arg_tl
       }
     \tl_if_empty:NF \l_tmpa_tl
       {
