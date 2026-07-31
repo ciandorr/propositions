@@ -674,4 +674,33 @@ Refs: \ref{si:peritem} (thesis), \ref{si:envarg} (proposition).
 
 Refs: \ref{si:restore1} (thesis), \ref{si:restore2} (prop), \ref{si:restore3} (thesis).
 
+% --------------------------------------------------------
+\section{Argument keys are env-local; \texttt{\textbackslash propoptions} cascades}
+% --------------------------------------------------------
+
+% An argument styles only its own environment (dims and item-level keys alike);
+% \propoptions styles every subsequent environment at every nesting level.
+
+\propoptions{style=proposition}
+
+Argument keys do NOT reach the sublist (outer flush + 5em; inner is normal):
+\begin{prop}[align=flush, leftmargin=5em]
+  \item[name=Outer] Outer: flush, at 5em. \label{el:o1}
+  \begin{prop}
+    \item[name=Inner] Inner: should be a normal hanging item at the usual
+    level-2 margin, NOT flush and NOT at 5em. \label{el:i1}
+  \end{prop}
+\end{prop}
+
+\propoptions keys DO reach the sublist (both flush):
+\begingroup
+\propoptions{align=flush}
+\begin{prop}
+  \item[name=Outer] Outer: flush. \label{el:o2}
+  \begin{prop}
+    \item[name=Inner] Inner: also flush (cascaded). \label{el:i2}
+  \end{prop}
+\end{prop}
+\endgroup
+
 \end{document}

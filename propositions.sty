@@ -81,8 +81,15 @@
 \bool_new:N \l__props_ptag_bool          %% true during \ptag processing
 \bool_new:N \l__props_titlecase_bool    %% true when \Ref etc. want titlecasing
 \bool_new:N \l__props_reset_bool        %% true (default) = reset sub-level counter on \item
-\tl_new:N  \l__props_defaults_tl        %% cascade base: style=X entries + item-level keys from
-                                        %%   \propoptions and env arg, in priority order (lowest first)
+%% Two layers of item-level defaults.  The cascading layer (\l__props_defaults_tl)
+%% is fed by \propoptions and is inherited by nested environments; the env-local
+%% layer (\l__props_env_defaults_tl) is fed by a prop's own optional argument and
+%% is reset at the start of every environment, so an argument styles only that
+%% environment's items, not those of any sub-environment.  \l__props_env_arg_bool
+%% routes keys to the right layer (true while a prop argument is being read).
+\tl_new:N  \l__props_defaults_tl
+\tl_new:N  \l__props_env_defaults_tl
+\bool_new:N \l__props_env_arg_bool
 \bool_new:N \l__props_loading_defaults_bool %% true during the single processing pass so style= loads immediately
 \int_new:N \l__props_env_items_int      %% items=n key (default 1; used by preview computation)
 \int_set:Nn \l__props_env_items_int { 1 }
@@ -541,12 +548,17 @@
     \tl_if_empty:NF \l__props_style_tl { \__props_style_load: }
 
     %% --- Single processing pass over defaults + per-item keys ---
-    %% Copy \l__props_defaults_tl into a local scratch tl and append the
-    %% per-item argument.  The per-item keys come last so they naturally
-    %% override everything earlier.  With \l__props_loading_defaults_bool
-    %% set, each style= entry in the list triggers an immediate style load,
-    %% cascading on top of whatever came before.
+    %% Scratch list = cascading defaults (\propoptions) then env-local defaults
+    %% (this environment's argument) then the per-item argument.  Later entries
+    %% override earlier ones, giving the precedence item > env-arg > \propoptions.
+    %% With \l__props_loading_defaults_bool set, each style= entry triggers an
+    %% immediate style load, cascading on top of whatever came before.
     \tl_set_eq:NN \l_tmpa_tl \l__props_defaults_tl
+    \tl_if_empty:NF \l__props_env_defaults_tl
+      {
+        \tl_if_empty:NF \l_tmpa_tl { \tl_put_right:Nn \l_tmpa_tl { , } }
+        \tl_put_right:NV \l_tmpa_tl \l__props_env_defaults_tl
+      }
     \tl_if_empty:nF { #1 }
       {
         \tl_if_empty:NF \l_tmpa_tl { \tl_put_right:Nn \l_tmpa_tl { , } }
@@ -1197,9 +1209,6 @@
 \tl_new:N \l__props_itemindent_tl
 \tl_new:N \l__props_listparindent_tl
 \tl_new:N \l__props_labelindent_tl
-%% Mirror of the user's leftmargin (see the framed style); declared here because
-%% the props/global leftmargin handler feeds it, possibly at package-option time.
-\tl_new:N \l__props_frame_ref_leftmargin_tl
 
 \tl_new:N \l__props_wrap_begin_tl
 \tl_new:N \l__props_wrap_end_tl
@@ -1233,6 +1242,49 @@
       }
   }
 
+\clist_const:Nn \c__props_env_dims_clist
+  {
+    leftmargin , rightmargin , topsep , partopsep , itemsep , parsep ,
+    labelsep , itemindent , listparindent , labelwidth , labelindent ,
+    wrap_begin , wrap_end
+  }
+\cs_generate_variant:Nn \tl_set_eq:NN { cc }
+\clist_map_inline:Nn \c__props_env_dims_clist
+  { \tl_new:c { l__props_ambient_ #1 _tl } }
+\cs_new_protected:Nn \__props_env_snapshot:
+  {
+    \clist_map_inline:Nn \c__props_env_dims_clist
+      { \tl_set_eq:cc { l__props_ambient_ ##1 _tl } { l__props_ ##1 _tl } }
+    \__props_set_operative_leftmargin:
+  }
+\cs_new_protected:Nn \__props_env_restore:
+  {
+    \clist_map_inline:Nn \c__props_env_dims_clist
+      { \tl_set_eq:cc { l__props_ ##1 _tl } { l__props_ambient_ ##1 _tl } }
+  }
+
+\newlength \propoperativeleftmargin
+\cs_new_protected:Nn \__props_set_operative_leftmargin:
+  {
+    \setlength \propoperativeleftmargin
+      { \proplevelchoice { \leftmargini , \leftmarginii , \leftmarginiii ,
+          \leftmarginiv , \leftmarginv , \leftmarginvi } }
+    \tl_if_empty:NF \l__props_ambient_leftmargin_tl
+      {
+        \seq_set_split:NnV \l__props_dim_split_seq
+          { , } \l__props_ambient_leftmargin_tl
+        \int_compare:nNnTF { \seq_count:N \l__props_dim_split_seq } > { 1 }
+          {
+            \tl_set:Nx \l_tmpa_tl
+              { \seq_item:Nn \l__props_dim_split_seq { \g__props_level_int } }
+            \tl_if_empty:NF \l_tmpa_tl
+              { \setlength \propoperativeleftmargin { \l_tmpa_tl } }
+          }
+          { \setlength \propoperativeleftmargin
+              { \l__props_ambient_leftmargin_tl } }
+      }
+  }
+
 \NewDocumentEnvironment { prop } { O{} }
   {
     \stepcounter { prop }
@@ -1243,12 +1295,19 @@
     \bool_gset_true:N \g__props_display_mode_bool
     %% Reset per-env items= counter (not part of defaults tl).
     \int_set:Nn  \l__props_env_items_int { 1 }
-    %% Apply per-environment overrides.  Known global keys (dims, tightspacing,
-    %% etc.) are set directly; unknown item-level keys and style= are appended
-    %% to \l__props_defaults_tl (local assignment, so scoped to this env).
-    %% Global-only keys (equations) are filtered out with a warning.
+    %% Snapshot the cascading list configuration, and start this environment with
+    %% an empty env-local item-default layer (so the argument, read next, styles
+    %% only this environment).
+    \__props_env_snapshot:
+    \tl_clear:N \l__props_env_defaults_tl
+    %% Apply the argument.  Known global keys (dims, tightspacing, wrapper) go to
+    %% the live list-config variables; unknown item-level keys and style= are
+    %% routed to the env-local layer by \l__props_env_arg_bool.  Global-only keys
+    %% (equations) are filtered out with a warning.
+    \bool_set_true:N \l__props_env_arg_bool
     \keys_set_filter:nnnN { props / global } { global-only }
       { #1 } \l_tmpa_tl
+    \bool_set_false:N \l__props_env_arg_bool
     \tl_if_empty:NF \l_tmpa_tl
       {
         \msg_warning:nnx { props } { global-only-keys }
@@ -1414,11 +1473,13 @@
     %% nested list (the dispatcher keys off \makelabel; see its definition).
     %% Local to the list group; undone automatically by \end{list}.
     \cs_set_eq:NN \item \__props_item_dispatch:
-    %% Clear the wrapper variables inside the list group: nested props inherit
-    %% no wrapper (so an inherited box is not repeated), and \end{list} restores
-    %% these to the values this env fired with, for the matching wrap-end code.
-    \tl_clear:N \l__props_wrap_begin_tl
-    \tl_clear:N \l__props_wrap_end_tl
+    %% Restore the cascading list configuration inside the list group.  \begin{list}
+    %% above has already consumed this environment's argument values, so nested
+    %% props now see the cascading (\propoptions) values, not this environment's
+    %% overrides --- e.g. an argument leftmargin/wrapper does not reach sublists.
+    %% \end{list} reverts the restore, so the end code still sees this env's own
+    %% wrapper for the matching wrap-end.
+    \__props_env_restore:
   }
   {
     %% Save this list's \itemsep+\parsep as the TARGET spacing for the
@@ -1470,9 +1531,14 @@
     \seq_gpush:NV \g__props_parent_cnt_seq \g__props_last_cnt_tl
     %% Reset per-env items= counter (not part of defaults tl).
     \int_set:Nn  \l__props_env_items_int { 1 }
-    %% Apply per-environment overrides (same routing as prop).
+    %% Snapshot cascading config and reset the env-local item layer (same as prop).
+    \__props_env_snapshot:
+    \tl_clear:N \l__props_env_defaults_tl
+    %% Apply the argument (env-local routing on).
+    \bool_set_true:N \l__props_env_arg_bool
     \keys_set_filter:nnnN { props / global } { global-only }
       { #1 } \l_tmpa_tl
+    \bool_set_false:N \l__props_env_arg_bool
     \tl_if_empty:NF \l_tmpa_tl
       {
         \msg_warning:nnx { props } { global-only-keys }
@@ -1483,12 +1549,11 @@
     %% Wrapper: open the surrounding environment around the inline content.
     \tl_if_empty:NF \l__props_wrap_begin_tl { \l__props_wrap_begin_tl }
     %% inlineprop opens no list, so provide an explicit group to play the list
-    %% group's role: clearing the wrapper variables inside it stops nested props
-    %% inheriting the wrapper, and \group_end: in the end-code restores them for
-    %% the matching wrap-end (same mechanism as prop; see the wrapper declarations).
+    %% group's role: restoring the cascading config inside it stops nested props
+    %% inheriting this environment's overrides, and \group_end: in the end-code
+    %% reverts the restore so the matching wrap-end sees this env's own wrapper.
     \group_begin:
-    \tl_clear:N \l__props_wrap_begin_tl
-    \tl_clear:N \l__props_wrap_end_tl
+    \__props_env_restore:
     %% Bind \item to the dispatcher.  inlineprop opens no list, so set \makelabel
     %% to the prop label maker by hand (it is what the dispatcher keys off); a
     %% nested list resets \makelabel and the dispatcher reverts to ambient \item.
@@ -1656,6 +1721,21 @@
       }
   }
 
+\cs_new_protected:Nn \__props_defaults_append:n
+  {
+    \bool_if:NTF \l__props_env_arg_bool
+      {
+        \tl_if_empty:NF \l__props_env_defaults_tl
+          { \tl_put_right:Nn \l__props_env_defaults_tl { , } }
+        \tl_put_right:Nn \l__props_env_defaults_tl { #1 }
+      }
+      {
+        \tl_if_empty:NF \l__props_defaults_tl
+          { \tl_put_right:Nn \l__props_defaults_tl { , } }
+        \tl_put_right:Nn \l__props_defaults_tl { #1 }
+      }
+  }
+
 
 \keys_define:nn { props / global }
   {
@@ -1674,12 +1754,10 @@
     style             .code:n      =
       {
         %% Apply dim keys from the style chain eagerly (they affect \begin{prop}).
-        %% Store style=X lazily in defaults for item-time lazy evaluation
-        %% (\proplevelchoice resolves at the correct nesting depth).
+        %% Store style=X lazily in the active item-default layer for item-time
+        %% evaluation (\proplevelchoice resolves at the correct nesting depth).
         \__props_style_apply_dims:n { #1 }
-        \tl_if_empty:NF \l__props_defaults_tl
-          { \tl_put_right:Nn \l__props_defaults_tl { , } }
-        \tl_put_right:Nn \l__props_defaults_tl { style = { #1 } }
+        \__props_defaults_append:n { style = { #1 } }
       } ,
     items             .int_set:N   = \l__props_env_items_int ,
     tightspacing      .code:n      =
@@ -1702,13 +1780,7 @@
     partopsep         .tl_set:N    = \l__props_partopsep_tl ,
     itemsep           .tl_set:N    = \l__props_itemsep_tl ,
     parsep            .tl_set:N    = \l__props_parsep_tl ,
-    %% leftmargin is also mirrored (only here, not in props/dims-only) so the
-    %% framed style can recover the user's leftmargin after setting its own to 0.
-    leftmargin        .code:n      =
-      {
-        \tl_set:Nn \l__props_leftmargin_tl { #1 }
-        \tl_set:Nn \l__props_frame_ref_leftmargin_tl { #1 }
-      } ,
+    leftmargin        .tl_set:N    = \l__props_leftmargin_tl ,
     rightmargin       .tl_set:N    = \l__props_rightmargin_tl ,
     labelwidth        .tl_set:N    = \l__props_labelwidth_tl ,
     labelsep          .tl_set:N    = \l__props_labelsep_tl ,
@@ -1719,15 +1791,11 @@
     %% \l__props_wrap_begin_tl).  Settable directly here or via a style.
     wrapper~begin     .tl_set:N    = \l__props_wrap_begin_tl ,
     wrapper~end       .tl_set:N    = \l__props_wrap_end_tl ,
-    %% Unknown keys are item-level keys: accumulate in \l__props_defaults_tl.
-    %% Local assignment keeps them group-scoped; \propoptions and \begin{prop}
-    %% keys both go here (env-arg keys are appended after propoptions keys,
-    %% so they override them when processed at item time).
+    %% Unknown keys are item-level keys: route to the active item-default layer
+    %% (env-local for a prop argument, cascading for \propoptions).
     unknown           .code:n      =
       {
-        \tl_if_empty:NF \l__props_defaults_tl
-          { \tl_put_right:Nn \l__props_defaults_tl { , } }
-        \tl_put_right:Nx \l__props_defaults_tl
+        \exp_args:Nx \__props_defaults_append:n
           { \str_use:N \l_keys_key_str = { \exp_not:n { #1 } } }
       } ,
   }
@@ -1740,7 +1808,11 @@
   }
 
 \NewDocumentCommand \propoptions { m }
-  { \keys_set:nn { props / global } { #1 } }
+  {
+    %% \propoptions feeds the cascading layer (env-local routing off).
+    \bool_set_false:N \l__props_env_arg_bool
+    \keys_set:nn { props / global } { #1 }
+  }
 
 
 \tl_set:Nn \l__props_named_style_tl { proposition }
@@ -1897,101 +1969,38 @@
   }
 
 
-\msg_new:nnn { props } { no-frame-package }
-  { Style~'framed'~needs~mdframed~or~tcolorbox~loaded;~list~left~unframed. }
+\newlength \propframepad
+\setlength \propframepad { 6pt }  %% padding between contents and rule (adjustable)
 
-\dim_new:N \l__props_frame_pad_dim           %% padding between contents and rule
-\dim_set:Nn \l__props_frame_pad_dim { 6pt }
-\dim_new:N \l__props_frame_margin_dim        %% frame outer margin, computed per level
+\msg_new:nnn { props } { no-tcolorbox }
+  { Style~'framed'~needs~the~tcolorbox~package;~list~left~unframed. }
 
-\cs_new_protected:Nn \__props_frame_set_margin:
-  {
-    %% Natural leftmargin for this level: the class default unless the user set
-    %% one (mirrored above), resolved per level exactly as \__props_apply_dim:
-    %% would (single value for all levels; a comma list picks the level-th item,
-    %% an empty or out-of-range item falling back to the class default).
-    \dim_set:Nn \l__props_frame_margin_dim
-      { \proplevelchoice
-          { \leftmargini , \leftmarginii , \leftmarginiii ,
-            \leftmarginiv , \leftmarginv , \leftmarginvi } }
-    \tl_if_empty:NF \l__props_frame_ref_leftmargin_tl
-      {
-        \seq_set_split:NnV \l__props_dim_split_seq
-          { , } \l__props_frame_ref_leftmargin_tl
-        \int_compare:nNnTF { \seq_count:N \l__props_dim_split_seq } > { 1 }
-          {
-            \tl_set:Nx \l_tmpa_tl
-              { \seq_item:Nn \l__props_dim_split_seq { \g__props_level_int } }
-            \tl_if_empty:NF \l_tmpa_tl
-              { \dim_set:Nn \l__props_frame_margin_dim { \l_tmpa_tl } }
-          }
-          { \dim_set:Nn \l__props_frame_margin_dim
-              { \l__props_frame_ref_leftmargin_tl } }
-      }
-    %% Frame outer margin = that leftmargin - padding, clamped >= 0.
-    \dim_set:Nn \l__props_frame_margin_dim
-      { \dim_max:nn { \c_zero_dim }
-          { \l__props_frame_margin_dim - \l__props_frame_pad_dim } }
-  }
+%% Definition given in ordinary catcodes so the tcolorbox keys read naturally.
+\ExplSyntaxOff
+\SetPropStyle{framed}{
+  align = flush, leftmargin = 0pt, rightmargin = 0pt,
+  wrapper begin = {\begin{tcolorbox}[
+      colback = white, colframe = black,
+      boxrule = 0.4pt, arc = 0pt, boxsep = 0pt,
+      left skip  = \dimexpr\propoperativeleftmargin-\propframepad\relax,
+      right skip = \dimexpr\propoperativeleftmargin-\propframepad\relax,
+      left = \propframepad, right = \propframepad,
+      top  = \propframepad, bottom = \propframepad]},
+  wrapper end = {\end{tcolorbox}},
+}
+\ExplSyntaxOn
 
-\cs_new_protected:Nn \__props_frame_begin_mdframed:
-  {
-    \begin { mdframed }
-      [
-        linewidth = 0.4pt ,
-        leftmargin = \l__props_frame_margin_dim ,
-        rightmargin = \l__props_frame_margin_dim ,
-        innerleftmargin = \l__props_frame_pad_dim ,
-        innerrightmargin = \l__props_frame_pad_dim ,
-        innertopmargin = \l__props_frame_pad_dim ,
-        innerbottommargin = \l__props_frame_pad_dim ,
-        skipabove = \topsep , skipbelow = \topsep
-      ]
-  }
-
-\cs_new_protected:Nn \__props_frame_begin_tcolorbox:
-  {
-    \begin { tcolorbox }
-      [
-        colback = white , colframe = black ,
-        boxrule = 0.4pt , arc = 0pt , boxsep = 0pt ,
-        left~skip = \l__props_frame_margin_dim ,
-        right~skip = \l__props_frame_margin_dim ,
-        left = \l__props_frame_pad_dim , right = \l__props_frame_pad_dim ,
-        top = \l__props_frame_pad_dim , bottom = \l__props_frame_pad_dim
-      ]
-  }
-
-%% Defaults before \begin{document}: warn if used with no frame package.
-\cs_new_protected:Nn \__props_frame_begin: { \msg_warning:nn { props } { no-frame-package } }
-\cs_new_protected:Nn \__props_frame_end:   { }
-
+%% Without tcolorbox, keep the flush layout but warn instead of framing.
 \AtBeginDocument
   {
-    \IfPackageLoadedTF { mdframed }
+    \IfPackageLoadedTF { tcolorbox } { }
       {
-        \cs_set_protected:Nn \__props_frame_begin:
-          { \__props_frame_set_margin: \__props_frame_begin_mdframed: }
-        \cs_set_protected:Nn \__props_frame_end: { \end { mdframed } }
-      }
-      {
-        \IfPackageLoadedTF { tcolorbox }
+        \SetPropStyle { framed }
           {
-            \cs_set_protected:Nn \__props_frame_begin:
-              { \__props_frame_set_margin: \__props_frame_begin_tcolorbox: }
-            \cs_set_protected:Nn \__props_frame_end: { \end { tcolorbox } }
+            wrapper~begin = { \msg_warning:nn { props } { no-tcolorbox } } ,
+            wrapper~end   = { } ,
           }
-          { }
       }
-  }
-
-%% The style itself is defined now, so it can be inherited or customised; the
-%% wrapper defers to \__props_frame_begin:/end:, finalised at \begin{document}.
-\SetPropStyle { framed }
-  {
-    align = flush , leftmargin = 0pt , rightmargin = 0pt ,
-    wrapper~begin = { \__props_frame_begin: } ,
-    wrapper~end   = { \__props_frame_end: } ,
   }
 
 %% 

@@ -258,13 +258,14 @@
 %
 % \section{Keys}\label{sect:keys}
 %
-% Most keys are available in three contexts:
+% Most keys are available in three contexts, which follow one rule: an argument
+% configures a single thing, while \refCom{propoptions} sets a cascading default.
 % \begin{itemize}
 %   \item In the optional argument of |\item| or |\ptag|: the key applies to that item only.
-%   \item In the optional argument of \texttt{prop} or \texttt{inlineprop}: list-dimension keys (\autoref{sect:keys-dims}) take effect immediately for the whole list; other keys act as per-item defaults, applied before each item's own explicit keys.
-%   \item Via \refCom{propoptions} or as a \cs{usepackage} option: list-dimension keys take effect globally; item-level keys (\autoref{sect:keys-item}) act as persistent per-item defaults that are group-scoped (\verb|\begingroup \propoptions{...} \endgroup| scopes the effect as usual).
+%   \item In the optional argument of \texttt{prop} or \texttt{inlineprop}: the key applies to \emph{that environment only}.  A list-dimension key (\autoref{sect:keys-dims}) sizes that list; an item-level key acts as a default for that environment's own \cs{item}s.  Neither reaches a nested \texttt{prop}: an argument does not cascade.
+%   \item Via \refCom{propoptions} or as a \cs{usepackage} option: the key sets a default for \emph{every subsequent} \texttt{prop}/\texttt{inlineprop}, nested ones included.  A list-dimension key applies to each such list; an item-level key (\autoref{sect:keys-item}) is a default before each \cs{item} at every level.  The effect is group-scoped (\verb|\begingroup \propoptions{...} \endgroup| scopes it as usual).
 % \end{itemize}
-% When the same key is set in multiple contexts, the environment arg overrides \refCom{propoptions}; the style preset overrides both; and explicit item-level keys override everything.  The \texttt{equations} key is global only (\autoref{sect:keys-equations}).
+% So to style a whole tree of nested environments, use \refCom{propoptions}; to style just one environment, use its argument.  When the same key is set several ways, precedence is: explicit item key $>$ environment argument $>$ \refCom{propoptions} $>$ style preset.  The \texttt{equations} key is global only (\autoref{sect:keys-equations}).
 %
 % \subsection{Item-level keys}\label{sect:keys-item}
 %
@@ -420,24 +421,20 @@
 %   Insert arbitrary \meta{code} immediately before \verb|\begin{list}| and
 %   immediately after \verb|\end{list}|, so that the whole list is wrapped in
 %   another environment.  These keys act at the environment level: they fire
-%   once around the entire list, not once per \cs{item}.  When \texttt{prop}
-%   environments are nested, an \emph{inherited} wrapper is not repeated---the
-%   outer box is not drawn again around each sublist---but a sublist that sets a
-%   wrapper of its own (via its own \texttt{style=}, or a \refCom{propoptions}
-%   issued inside the enclosing environment) is wrapped separately, nested inside.
-%   They may be set in the
-%   optional argument of \texttt{prop}/\texttt{inlineprop}, via
-%   \refCom{propoptions}, or---most usefully---inside a \refCom{SetPropStyle}
-%   definition.  Like the list dimensions, a setting made in the environment
-%   argument is local to that environment and a \cs{propoptions} setting is a
-%   group-scoped default for subsequent environments; at item level the keys are
-%   ignored.
+%   once around the entire list, not once per \cs{item}.  They follow the usual
+%   rule (\autoref{sect:keys}): set in a \texttt{prop} argument (or its
+%   \texttt{style=}) a wrapper frames \emph{that one list} and does not reach a
+%   nested \texttt{prop}; set via \refCom{propoptions} it frames \emph{every}
+%   subsequent list, nested ones included.  So a \texttt{framed} sublist inside a
+%   \texttt{framed} list nests only when the sublist asks for it; and to frame a
+%   whole tree of lists at once, use \refCom{propoptions}.  At item level the keys
+%   are ignored.
 % \end{docKeys}
 %
 % The package provides a ready-made \texttt{framed} style
-% (\autoref{sect:builtin-styles}) that frames the list with \textsf{mdframed}, or
-% \textsf{tcolorbox} if that is loaded instead; one of those packages must be
-% loaded.  To frame a list, just write \verb|\begin{prop}[style=framed]|.
+% (\autoref{sect:builtin-styles}) that frames the list with \textsf{tcolorbox}
+% (which must be loaded).  To frame a list, just write
+% \verb|\begin{prop}[style=framed]|.
 %
 % To build your own wrapper style, set \texttt{wrapper begin} / \texttt{wrapper
 % end} directly.  Brace any value that contains a comma (such as \textsf{mdframed}
@@ -456,8 +453,7 @@
 % again within a group, set the keys to empty
 % (\texttt{wrapper begin\,=\,\{\}, wrapper end\,=\,\{\}}).
 %
-% The built-in \texttt{framed} style in action (this manual loads \textsf{tcolorbox},
-% so the fallback frame is used):
+% The built-in \texttt{framed} style in action:
 % \begin{codebox}
 % \begin{prop}[style=framed]
 %   \item A framed proposition.
@@ -469,6 +465,15 @@
 %   \item And a second one. \label{wx:b}
 % \end{prop}
 % See \ref{wx:a} and \ref{wx:b}.
+%
+% \begin{docCommand}{propoperativeleftmargin}{}
+%   A read-only length giving the \texttt{leftmargin} an ordinary (unframed)
+%   \texttt{prop} would use at the current nesting level---the ambient
+%   \refCom{propoptions}/class value, resolved per level.  It is recomputed at
+%   every \verb|\begin{prop}|, so it is valid inside a wrapper (before the
+%   environment's own \texttt{leftmargin} has taken effect), which is how the
+%   built-in \texttt{framed} style positions its frame to match an unframed list.
+% \end{docCommand}
 %
 % \subsection{Default styles}\label{sect:keys-defaults}
 %
@@ -493,8 +498,10 @@
 % \subsection{Environment-level style and item defaults}\label{sect:keys-env}
 %
 % Any key from \autoref{sect:keys-item} may appear in the optional argument of \texttt{prop} or
-% \texttt{inlineprop}.  It is then applied as a default before each \cs{item} that does not set
-% that key explicitly.  An item-level key always overrides the environment default.
+% \texttt{inlineprop}.  It is then applied as a default before each \cs{item} of \emph{that}
+% environment that does not set the key explicitly.  An item-level key always overrides the
+% environment default, and the default does not reach the \cs{item}s of a nested environment (an
+% argument styles only its own environment; use \refCom{propoptions} for a cascading default).
 %
 % \textbf{Important ordering note.}
 % Style selection (which decides whether an item is ``named'' or ``nameless'') is based solely on
@@ -505,7 +512,7 @@
 % \verb|\begin{prop}[style=proposition, name=foo]\item bar|.
 %
 % \begin{docKey}{style}{=\meta{style}}{no default}
-%   Sets a default style for all \cs{item}s in this environment.  The style's list-dimension keys (|leftmargin|, |labelwidth|, etc.) take effect immediately for the whole list; item-level keys are applied as defaults for each \cs{item}.  An explicit |style=| on an individual \cs{item} overrides this default.  This key is also accepted by \cs{propoptions}, where it acts as a persistent default across all subsequent environments (group-scoped, overridden by the env arg, and overridden by per-item \texttt{style=}).
+%   Sets a default style for all \cs{item}s in this environment.  The style's list-dimension keys (|leftmargin|, |labelwidth|, etc.) size this list; its item-level keys are applied as defaults for each of this environment's \cs{item}s.  An explicit |style=| on an individual \cs{item} overrides this default, and (like any argument key) the style does not cascade into a nested \texttt{prop}.  This key is also accepted by \cs{propoptions}, where it \emph{does} cascade: it becomes the default style for all subsequent environments at every level (group-scoped, overridden by the env arg, and overridden by per-item \texttt{style=}).  So \verb|\begin{prop}[style=framed]| frames one list, whereas \verb|\propoptions{style=framed}| frames every following list.
 % \end{docKey}
 %
 % \subsection{Equation numbering}\label{sect:keys-equations}
@@ -724,16 +731,16 @@
 % \subsubsection*{Framed style}
 %
 % \begin{description}
-% \item[\texttt{framed}] Frames the whole list (see \autoref{sect:keys-wrapper}).
-%   Requires \textsf{mdframed} or, failing that, \textsf{tcolorbox}; the choice is
-%   made at \verb|\begin{document}|, so either package may be loaded before or
-%   after \textsf{propositions}.  Items are set \texttt{flush} and the list runs
-%   at \texttt{leftmargin\,=\,0} inside the frame, so the contents keep the
-%   current level's effective left margin (the one an unboxed list would use,
-%   honouring any \refCom{propoptions} \texttt{leftmargin}) while the frame is
-%   centred with its rule one padding (\(6\,\)pt) to the left of them.  Because it
-%   is an ordinary style, it can be inherited:
-%   \verb|\SetPropStyle{myframe}{style=framed, format=\textbf{#1}}|.
+% \item[\texttt{framed}] Frames the whole list in a \textsf{tcolorbox} (which
+%   must be loaded).  Items are set \texttt{flush} and the list runs at
+%   \texttt{leftmargin\,=\,0} inside the frame, so the contents keep the current
+%   level's effective left margin (read via \refCom{propoperativeleftmargin}, so
+%   it honours any \refCom{propoptions} \texttt{leftmargin}) while the frame is
+%   centred with its rule one \cs{propframepad} (default \(6\,\)pt) to the left of
+%   them.  The whole geometry lives in the style definition, so it is easy to copy
+%   and adapt; and being an ordinary style it can be inherited,
+%   \verb|\SetPropStyle{myframe}{style=framed, format=\textbf{#1}}|.  Change the
+%   padding with \verb|\setlength\propframepad{...}|.
 % \begin{prop}[style=framed]
 %   \item[name=Note] A framed list, with a flush label and a plain paragraph.
 %   \item[counter=none] The unlabelled line sits flush at the same edge.
@@ -898,7 +905,7 @@
 % \section{Package options}\label{sect:global}
 %
 % \begin{docCommand}{propoptions}{\marg{keys}}
-%   Sets package-level keys (see \autoref{sect:keys}).  List-dimension keys take effect globally.  Item-level keys (\autoref{sect:keys-item})---including \texttt{style=}---act as persistent per-item defaults: they are applied before each \cs{item} in every subsequent \texttt{prop} or \texttt{inlineprop}, but can be overridden by the environment arg or by explicit item-level keys.  In particular, \verb|\propoptions{style=thesis}| makes every subsequent \texttt{prop} env use \texttt{thesis} style by default.  Because the underlying storage uses a local \LaTeX3 variable, the effect is group-scoped: \verb|\begingroup \propoptions{style=thesis} ... \endgroup| applies the default only within the group.  The same keys can also be set in the optional argument of \texttt{prop} or \texttt{inlineprop} (local to that environment), or as options to \cs{usepackage} (global, but group-scoped from the preamble group).
+%   Sets cascading defaults (see \autoref{sect:keys}).  Every key---list dimensions and item-level keys (\autoref{sect:keys-item}) alike, including \texttt{style=}---becomes a default for \emph{every subsequent} \texttt{prop}/\texttt{inlineprop}, nested ones included, until overridden by an environment argument or an explicit item key.  In particular, \verb|\propoptions{style=thesis}| makes every subsequent \texttt{prop} (at any depth) use \texttt{thesis} by default.  The effect is group-scoped: \verb|\begingroup \propoptions{style=thesis} ... \endgroup| applies the default only within the group.  This is the counterpart to an environment argument, which sets the same keys for a \emph{single} environment without cascading (\autoref{sect:keys-env}); package options behave like a preamble-level \cs{propoptions}.
 % \end{docCommand}
 %
 % \section{Compatibility}
@@ -1000,8 +1007,15 @@
 \bool_new:N \l__props_ptag_bool          %% true during \ptag processing
 \bool_new:N \l__props_titlecase_bool    %% true when \Ref etc. want titlecasing
 \bool_new:N \l__props_reset_bool        %% true (default) = reset sub-level counter on \item
-\tl_new:N  \l__props_defaults_tl        %% cascade base: style=X entries + item-level keys from
-                                        %%   \propoptions and env arg, in priority order (lowest first)
+%% Two layers of item-level defaults.  The cascading layer (\l__props_defaults_tl)
+%% is fed by \propoptions and is inherited by nested environments; the env-local
+%% layer (\l__props_env_defaults_tl) is fed by a prop's own optional argument and
+%% is reset at the start of every environment, so an argument styles only that
+%% environment's items, not those of any sub-environment.  \l__props_env_arg_bool
+%% routes keys to the right layer (true while a prop argument is being read).
+\tl_new:N  \l__props_defaults_tl
+\tl_new:N  \l__props_env_defaults_tl
+\bool_new:N \l__props_env_arg_bool
 \bool_new:N \l__props_loading_defaults_bool %% true during the single processing pass so style= loads immediately
 \int_new:N \l__props_env_items_int      %% items=n key (default 1; used by preview computation)
 \int_set:Nn \l__props_env_items_int { 1 }
@@ -1584,12 +1598,17 @@
     \tl_if_empty:NF \l__props_style_tl { \__props_style_load: }
 
     %% --- Single processing pass over defaults + per-item keys ---
-    %% Copy \l__props_defaults_tl into a local scratch tl and append the
-    %% per-item argument.  The per-item keys come last so they naturally
-    %% override everything earlier.  With \l__props_loading_defaults_bool
-    %% set, each style= entry in the list triggers an immediate style load,
-    %% cascading on top of whatever came before.
+    %% Scratch list = cascading defaults (\propoptions) then env-local defaults
+    %% (this environment's argument) then the per-item argument.  Later entries
+    %% override earlier ones, giving the precedence item > env-arg > \propoptions.
+    %% With \l__props_loading_defaults_bool set, each style= entry triggers an
+    %% immediate style load, cascading on top of whatever came before.
     \tl_set_eq:NN \l_tmpa_tl \l__props_defaults_tl
+    \tl_if_empty:NF \l__props_env_defaults_tl
+      {
+        \tl_if_empty:NF \l_tmpa_tl { \tl_put_right:Nn \l_tmpa_tl { , } }
+        \tl_put_right:NV \l_tmpa_tl \l__props_env_defaults_tl
+      }
     \tl_if_empty:nF { #1 }
       {
         \tl_if_empty:NF \l_tmpa_tl { \tl_put_right:Nn \l_tmpa_tl { , } }
@@ -2390,9 +2409,6 @@
 \tl_new:N \l__props_itemindent_tl
 \tl_new:N \l__props_listparindent_tl
 \tl_new:N \l__props_labelindent_tl
-%% Mirror of the user's leftmargin (see the framed style); declared here because
-%% the props/global leftmargin handler feeds it, possibly at package-option time.
-\tl_new:N \l__props_frame_ref_leftmargin_tl
 
 %<doc>%% --- Wrapper (environment-level) ---
 %<doc>%% Code injected immediately before \begin{list} (wrap begin) and
@@ -2462,6 +2478,68 @@
       }
   }
 
+%<doc>%% ====================================================================
+%<doc>%% Env-local list configuration: save/restore
+%<doc>%% ====================================================================
+%<doc>%% The list-dimension and wrapper variables below hold the configuration a
+%<doc>%% prop applies to its own list.  A prop argument may override them, but the
+%<doc>%% override must not reach nested environments (an argument configures just
+%<doc>%% this environment).  So each prop snapshots these into \l__props_ambient_*
+%<doc>%% before reading its argument, and restores them inside the list group after
+%<doc>%% \begin{list} --- the list itself has already used the argument values,
+%<doc>%% while nested props see the restored (cascading / \propoptions) values.
+%<doc>%% The ambient snapshot also feeds the operative-dimension interface.
+\clist_const:Nn \c__props_env_dims_clist
+  {
+    leftmargin , rightmargin , topsep , partopsep , itemsep , parsep ,
+    labelsep , itemindent , listparindent , labelwidth , labelindent ,
+    wrap_begin , wrap_end
+  }
+\cs_generate_variant:Nn \tl_set_eq:NN { cc }
+\clist_map_inline:Nn \c__props_env_dims_clist
+  { \tl_new:c { l__props_ambient_ #1 _tl } }
+\cs_new_protected:Nn \__props_env_snapshot:
+  {
+    \clist_map_inline:Nn \c__props_env_dims_clist
+      { \tl_set_eq:cc { l__props_ambient_ ##1 _tl } { l__props_ ##1 _tl } }
+    \__props_set_operative_leftmargin:
+  }
+\cs_new_protected:Nn \__props_env_restore:
+  {
+    \clist_map_inline:Nn \c__props_env_dims_clist
+      { \tl_set_eq:cc { l__props_ ##1 _tl } { l__props_ambient_ ##1 _tl } }
+  }
+
+%<doc>%% Operative-dimension interface.  \propoperativeleftmargin is a read-only
+%<doc>%% length holding the leftmargin an ordinary (unframed) prop would use at the
+%<doc>%% current nesting level: the ambient \propoptions/class value, resolved per
+%<doc>%% level exactly as \__props_apply_dim: does (single value for all levels; a
+%<doc>%% comma list picks the level's item, an empty/out-of-range item falling back
+%<doc>%% to the class default \leftmargin<level>).  It is recomputed from the ambient
+%<doc>%% snapshot at every \begin{prop}, so it is valid inside a prop's wrapper code
+%<doc>%% (before that environment's own leftmargin override has taken effect).
+\newlength \propoperativeleftmargin
+\cs_new_protected:Nn \__props_set_operative_leftmargin:
+  {
+    \setlength \propoperativeleftmargin
+      { \proplevelchoice { \leftmargini , \leftmarginii , \leftmarginiii ,
+          \leftmarginiv , \leftmarginv , \leftmarginvi } }
+    \tl_if_empty:NF \l__props_ambient_leftmargin_tl
+      {
+        \seq_set_split:NnV \l__props_dim_split_seq
+          { , } \l__props_ambient_leftmargin_tl
+        \int_compare:nNnTF { \seq_count:N \l__props_dim_split_seq } > { 1 }
+          {
+            \tl_set:Nx \l_tmpa_tl
+              { \seq_item:Nn \l__props_dim_split_seq { \g__props_level_int } }
+            \tl_if_empty:NF \l_tmpa_tl
+              { \setlength \propoperativeleftmargin { \l_tmpa_tl } }
+          }
+          { \setlength \propoperativeleftmargin
+              { \l__props_ambient_leftmargin_tl } }
+      }
+  }
+
 \NewDocumentEnvironment { prop } { O{} }
   {
     \stepcounter { prop }
@@ -2472,12 +2550,19 @@
     \bool_gset_true:N \g__props_display_mode_bool
     %% Reset per-env items= counter (not part of defaults tl).
     \int_set:Nn  \l__props_env_items_int { 1 }
-    %% Apply per-environment overrides.  Known global keys (dims, tightspacing,
-    %% etc.) are set directly; unknown item-level keys and style= are appended
-    %% to \l__props_defaults_tl (local assignment, so scoped to this env).
-    %% Global-only keys (equations) are filtered out with a warning.
+    %% Snapshot the cascading list configuration, and start this environment with
+    %% an empty env-local item-default layer (so the argument, read next, styles
+    %% only this environment).
+    \__props_env_snapshot:
+    \tl_clear:N \l__props_env_defaults_tl
+    %% Apply the argument.  Known global keys (dims, tightspacing, wrapper) go to
+    %% the live list-config variables; unknown item-level keys and style= are
+    %% routed to the env-local layer by \l__props_env_arg_bool.  Global-only keys
+    %% (equations) are filtered out with a warning.
+    \bool_set_true:N \l__props_env_arg_bool
     \keys_set_filter:nnnN { props / global } { global-only }
       { #1 } \l_tmpa_tl
+    \bool_set_false:N \l__props_env_arg_bool
     \tl_if_empty:NF \l_tmpa_tl
       {
         \msg_warning:nnx { props } { global-only-keys }
@@ -2643,11 +2728,13 @@
     %% nested list (the dispatcher keys off \makelabel; see its definition).
     %% Local to the list group; undone automatically by \end{list}.
     \cs_set_eq:NN \item \__props_item_dispatch:
-    %% Clear the wrapper variables inside the list group: nested props inherit
-    %% no wrapper (so an inherited box is not repeated), and \end{list} restores
-    %% these to the values this env fired with, for the matching wrap-end code.
-    \tl_clear:N \l__props_wrap_begin_tl
-    \tl_clear:N \l__props_wrap_end_tl
+    %% Restore the cascading list configuration inside the list group.  \begin{list}
+    %% above has already consumed this environment's argument values, so nested
+    %% props now see the cascading (\propoptions) values, not this environment's
+    %% overrides --- e.g. an argument leftmargin/wrapper does not reach sublists.
+    %% \end{list} reverts the restore, so the end code still sees this env's own
+    %% wrapper for the matching wrap-end.
+    \__props_env_restore:
   }
   {
     %% Save this list's \itemsep+\parsep as the TARGET spacing for the
@@ -2702,9 +2789,14 @@
     \seq_gpush:NV \g__props_parent_cnt_seq \g__props_last_cnt_tl
     %% Reset per-env items= counter (not part of defaults tl).
     \int_set:Nn  \l__props_env_items_int { 1 }
-    %% Apply per-environment overrides (same routing as prop).
+    %% Snapshot cascading config and reset the env-local item layer (same as prop).
+    \__props_env_snapshot:
+    \tl_clear:N \l__props_env_defaults_tl
+    %% Apply the argument (env-local routing on).
+    \bool_set_true:N \l__props_env_arg_bool
     \keys_set_filter:nnnN { props / global } { global-only }
       { #1 } \l_tmpa_tl
+    \bool_set_false:N \l__props_env_arg_bool
     \tl_if_empty:NF \l_tmpa_tl
       {
         \msg_warning:nnx { props } { global-only-keys }
@@ -2715,12 +2807,11 @@
     %% Wrapper: open the surrounding environment around the inline content.
     \tl_if_empty:NF \l__props_wrap_begin_tl { \l__props_wrap_begin_tl }
     %% inlineprop opens no list, so provide an explicit group to play the list
-    %% group's role: clearing the wrapper variables inside it stops nested props
-    %% inheriting the wrapper, and \group_end: in the end-code restores them for
-    %% the matching wrap-end (same mechanism as prop; see the wrapper declarations).
+    %% group's role: restoring the cascading config inside it stops nested props
+    %% inheriting this environment's overrides, and \group_end: in the end-code
+    %% reverts the restore so the matching wrap-end sees this env's own wrapper.
     \group_begin:
-    \tl_clear:N \l__props_wrap_begin_tl
-    \tl_clear:N \l__props_wrap_end_tl
+    \__props_env_restore:
     %% Bind \item to the dispatcher.  inlineprop opens no list, so set \makelabel
     %% to the prop label maker by hand (it is what the dispatcher keys off); a
     %% nested list resets \makelabel and the dispatcher reverts to ambient \item.
@@ -2927,6 +3018,24 @@
       }
   }
 
+%<doc>%% Append an item-level key entry to the active item-default layer: the
+%<doc>%% env-local layer while a prop argument is being read, the cascading layer
+%<doc>%% (\propoptions) otherwise.
+\cs_new_protected:Nn \__props_defaults_append:n
+  {
+    \bool_if:NTF \l__props_env_arg_bool
+      {
+        \tl_if_empty:NF \l__props_env_defaults_tl
+          { \tl_put_right:Nn \l__props_env_defaults_tl { , } }
+        \tl_put_right:Nn \l__props_env_defaults_tl { #1 }
+      }
+      {
+        \tl_if_empty:NF \l__props_defaults_tl
+          { \tl_put_right:Nn \l__props_defaults_tl { , } }
+        \tl_put_right:Nn \l__props_defaults_tl { #1 }
+      }
+  }
+
 %<doc>%% ====================================================================
 %<doc>%% \propoptions — global configuration
 %<doc>%% ====================================================================
@@ -2948,12 +3057,10 @@
     style             .code:n      =
       {
         %% Apply dim keys from the style chain eagerly (they affect \begin{prop}).
-        %% Store style=X lazily in defaults for item-time lazy evaluation
-        %% (\proplevelchoice resolves at the correct nesting depth).
+        %% Store style=X lazily in the active item-default layer for item-time
+        %% evaluation (\proplevelchoice resolves at the correct nesting depth).
         \__props_style_apply_dims:n { #1 }
-        \tl_if_empty:NF \l__props_defaults_tl
-          { \tl_put_right:Nn \l__props_defaults_tl { , } }
-        \tl_put_right:Nn \l__props_defaults_tl { style = { #1 } }
+        \__props_defaults_append:n { style = { #1 } }
       } ,
     items             .int_set:N   = \l__props_env_items_int ,
     tightspacing      .code:n      =
@@ -2976,13 +3083,7 @@
     partopsep         .tl_set:N    = \l__props_partopsep_tl ,
     itemsep           .tl_set:N    = \l__props_itemsep_tl ,
     parsep            .tl_set:N    = \l__props_parsep_tl ,
-    %% leftmargin is also mirrored (only here, not in props/dims-only) so the
-    %% framed style can recover the user's leftmargin after setting its own to 0.
-    leftmargin        .code:n      =
-      {
-        \tl_set:Nn \l__props_leftmargin_tl { #1 }
-        \tl_set:Nn \l__props_frame_ref_leftmargin_tl { #1 }
-      } ,
+    leftmargin        .tl_set:N    = \l__props_leftmargin_tl ,
     rightmargin       .tl_set:N    = \l__props_rightmargin_tl ,
     labelwidth        .tl_set:N    = \l__props_labelwidth_tl ,
     labelsep          .tl_set:N    = \l__props_labelsep_tl ,
@@ -2993,15 +3094,11 @@
     %% \l__props_wrap_begin_tl).  Settable directly here or via a style.
     wrapper~begin     .tl_set:N    = \l__props_wrap_begin_tl ,
     wrapper~end       .tl_set:N    = \l__props_wrap_end_tl ,
-    %% Unknown keys are item-level keys: accumulate in \l__props_defaults_tl.
-    %% Local assignment keeps them group-scoped; \propoptions and \begin{prop}
-    %% keys both go here (env-arg keys are appended after propoptions keys,
-    %% so they override them when processed at item time).
+    %% Unknown keys are item-level keys: route to the active item-default layer
+    %% (env-local for a prop argument, cascading for \propoptions).
     unknown           .code:n      =
       {
-        \tl_if_empty:NF \l__props_defaults_tl
-          { \tl_put_right:Nn \l__props_defaults_tl { , } }
-        \tl_put_right:Nx \l__props_defaults_tl
+        \exp_args:Nx \__props_defaults_append:n
           { \str_use:N \l_keys_key_str = { \exp_not:n { #1 } } }
       } ,
   }
@@ -3020,7 +3117,11 @@
   }
 
 \NewDocumentCommand \propoptions { m }
-  { \keys_set:nn { props / global } { #1 } }
+  {
+    %% \propoptions feeds the cascading layer (env-local routing off).
+    \bool_set_false:N \l__props_env_arg_bool
+    \keys_set:nn { props / global } { #1 }
+  }
 
 %<doc>%% ====================================================================
 %<doc>%% Default global settings (set before options so user options override)
@@ -3189,115 +3290,46 @@
   }
 
 %<doc>%% ====================================================================
-%<doc>%% framed: wrap the list in a frame (mdframed, or tcolorbox as a fallback)
+%<doc>%% framed: wrap the list in a tcolorbox
 %<doc>%% ====================================================================
-%<doc>%% Geometry.  Inside the frame the list runs at leftmargin=0 with flush
-%<doc>%% items, so the contents keep the level's normal effective left margin and
-%<doc>%% labels sit at the content edge rather than hanging.  The frame is centred
-%<doc>%% with its rule one padding to the left of the contents --- i.e. at the
-%<doc>%% current level's leftmargin minus the padding, clamped so it never crosses
-%<doc>%% the surrounding margin.  That leftmargin is the one an unboxed list would
-%<doc>%% use: the user's \propoptions/env-arg value (a single length or a per-level
-%<doc>%% comma list, mirrored in \l__props_frame_ref_leftmargin_tl and so immune to
-%<doc>%% the style's own leftmargin=0), falling back to the class default
-%<doc>%% \leftmargin<level>.  Which frame package to use is resolved at
-%<doc>%% \begin{document}, so it may be loaded before or after propositions.
+%<doc>%% Requires \textsf{tcolorbox}.  The whole geometry lives in the style below,
+%<doc>%% so it can be copied and adapted.  Inside the frame the list runs flush at
+%<doc>%% \texttt{leftmargin\,=\,0}, so the contents keep the level's effective left
+%<doc>%% margin --- read via \cs{propoperativeleftmargin} --- while the frame is
+%<doc>%% centred with its rule one \cs{propframepad} to the left of the contents.
 
-\msg_new:nnn { props } { no-frame-package }
-  { Style~'framed'~needs~mdframed~or~tcolorbox~loaded;~list~left~unframed. }
+\newlength \propframepad
+\setlength \propframepad { 6pt }  %% padding between contents and rule (adjustable)
 
-\dim_new:N \l__props_frame_pad_dim           %% padding between contents and rule
-\dim_set:Nn \l__props_frame_pad_dim { 6pt }
-\dim_new:N \l__props_frame_margin_dim        %% frame outer margin, computed per level
+\msg_new:nnn { props } { no-tcolorbox }
+  { Style~'framed'~needs~the~tcolorbox~package;~list~left~unframed. }
 
-\cs_new_protected:Nn \__props_frame_set_margin:
-  {
-    %% Natural leftmargin for this level: the class default unless the user set
-    %% one (mirrored above), resolved per level exactly as \__props_apply_dim:
-    %% would (single value for all levels; a comma list picks the level-th item,
-    %% an empty or out-of-range item falling back to the class default).
-    \dim_set:Nn \l__props_frame_margin_dim
-      { \proplevelchoice
-          { \leftmargini , \leftmarginii , \leftmarginiii ,
-            \leftmarginiv , \leftmarginv , \leftmarginvi } }
-    \tl_if_empty:NF \l__props_frame_ref_leftmargin_tl
-      {
-        \seq_set_split:NnV \l__props_dim_split_seq
-          { , } \l__props_frame_ref_leftmargin_tl
-        \int_compare:nNnTF { \seq_count:N \l__props_dim_split_seq } > { 1 }
-          {
-            \tl_set:Nx \l_tmpa_tl
-              { \seq_item:Nn \l__props_dim_split_seq { \g__props_level_int } }
-            \tl_if_empty:NF \l_tmpa_tl
-              { \dim_set:Nn \l__props_frame_margin_dim { \l_tmpa_tl } }
-          }
-          { \dim_set:Nn \l__props_frame_margin_dim
-              { \l__props_frame_ref_leftmargin_tl } }
-      }
-    %% Frame outer margin = that leftmargin - padding, clamped >= 0.
-    \dim_set:Nn \l__props_frame_margin_dim
-      { \dim_max:nn { \c_zero_dim }
-          { \l__props_frame_margin_dim - \l__props_frame_pad_dim } }
-  }
+%% Definition given in ordinary catcodes so the tcolorbox keys read naturally.
+\ExplSyntaxOff
+\SetPropStyle{framed}{
+  align = flush, leftmargin = 0pt, rightmargin = 0pt,
+  wrapper begin = {\begin{tcolorbox}[
+      colback = white, colframe = black,
+      boxrule = 0.4pt, arc = 0pt, boxsep = 0pt,
+      left skip  = \dimexpr\propoperativeleftmargin-\propframepad\relax,
+      right skip = \dimexpr\propoperativeleftmargin-\propframepad\relax,
+      left = \propframepad, right = \propframepad,
+      top  = \propframepad, bottom = \propframepad]},
+  wrapper end = {\end{tcolorbox}},
+}
+\ExplSyntaxOn
 
-\cs_new_protected:Nn \__props_frame_begin_mdframed:
-  {
-    \begin { mdframed }
-      [
-        linewidth = 0.4pt ,
-        leftmargin = \l__props_frame_margin_dim ,
-        rightmargin = \l__props_frame_margin_dim ,
-        innerleftmargin = \l__props_frame_pad_dim ,
-        innerrightmargin = \l__props_frame_pad_dim ,
-        innertopmargin = \l__props_frame_pad_dim ,
-        innerbottommargin = \l__props_frame_pad_dim ,
-        skipabove = \topsep , skipbelow = \topsep
-      ]
-  }
-
-\cs_new_protected:Nn \__props_frame_begin_tcolorbox:
-  {
-    \begin { tcolorbox }
-      [
-        colback = white , colframe = black ,
-        boxrule = 0.4pt , arc = 0pt , boxsep = 0pt ,
-        left~skip = \l__props_frame_margin_dim ,
-        right~skip = \l__props_frame_margin_dim ,
-        left = \l__props_frame_pad_dim , right = \l__props_frame_pad_dim ,
-        top = \l__props_frame_pad_dim , bottom = \l__props_frame_pad_dim
-      ]
-  }
-
-%% Defaults before \begin{document}: warn if used with no frame package.
-\cs_new_protected:Nn \__props_frame_begin: { \msg_warning:nn { props } { no-frame-package } }
-\cs_new_protected:Nn \__props_frame_end:   { }
-
+%% Without tcolorbox, keep the flush layout but warn instead of framing.
 \AtBeginDocument
   {
-    \IfPackageLoadedTF { mdframed }
+    \IfPackageLoadedTF { tcolorbox } { }
       {
-        \cs_set_protected:Nn \__props_frame_begin:
-          { \__props_frame_set_margin: \__props_frame_begin_mdframed: }
-        \cs_set_protected:Nn \__props_frame_end: { \end { mdframed } }
-      }
-      {
-        \IfPackageLoadedTF { tcolorbox }
+        \SetPropStyle { framed }
           {
-            \cs_set_protected:Nn \__props_frame_begin:
-              { \__props_frame_set_margin: \__props_frame_begin_tcolorbox: }
-            \cs_set_protected:Nn \__props_frame_end: { \end { tcolorbox } }
+            wrapper~begin = { \msg_warning:nn { props } { no-tcolorbox } } ,
+            wrapper~end   = { } ,
           }
-          { }
       }
-  }
-
-%% The style itself is defined now, so it can be inherited or customised; the
-%% wrapper defers to \__props_frame_begin:/end:, finalised at \begin{document}.
-\SetPropStyle { framed }
-  {
-    align = flush , leftmargin = 0pt , rightmargin = 0pt ,
-    wrapper~begin = { \__props_frame_begin: } ,
-    wrapper~end   = { \__props_frame_end: } ,
   }
 
 %    \end{macrocode}
