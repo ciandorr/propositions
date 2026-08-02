@@ -694,4 +694,47 @@ Argument keys do NOT reach the sublist (outer flush + 5em; inner is normal):
 \end{prop}
 \endgroup
 
+\section{The \texttt{standard} style undoes a cascading style's geometry}
+
+A style applies the keys it names and leaves the rest alone, so asking for a
+different style does not restore what an earlier \verb|\propoptions{style=...}|
+did to the margins.  \verb|standard| is the way back.  Every list below must
+report the same dimensions as the first.
+
+\newcommand\envdims{\texttt{LM=\the\leftmargin\ LW=\the\labelwidth\
+  TS=\the\topsep}}
+
+\begin{prop}[name=Reference]
+  \item Baseline, no options: \envdims
+\end{prop}
+
+\begingroup
+\propoptions{style=outerfit, topsep=20pt}
+\begin{prop}[name=Reference]
+  \item Under \verb|outerfit| and \verb|topsep=20pt| (must differ): \envdims
+\end{prop}
+\begin{prop}[name=Reference, style=proposition]
+  \item Another style does \emph{not} revert it (still differs): \envdims
+\end{prop}
+\begin{prop}[name=Reference, style=standard]
+  \item \verb|style=standard| reverts it (must match the baseline): \envdims
+\end{prop}
+\endgroup
+
+The label above must still be bold: \verb|standard| resets the geometry, not
+the appearance, so the \verb|named style| still applies.  Were it to reset
+formats as well it would have to wipe that bold, since the named style is
+loaded before the argument's keys rather than after them.
+
+\begingroup
+\propoptions{style=framed}
+\begin{prop}[name=Reference, style=standard, align=left]
+  \item Reverting \verb|framed|: no frame, and the baseline dimensions again.
+  \verb|align=left| is needed alongside, because \verb|framed| sets
+  \verb|align=flush| as an item key and \verb|standard| leaves item keys
+  alone: without it this list sits a \verb|\leftmargin| further right.
+  \envdims
+\end{prop}
+\endgroup
+
 \end{document}

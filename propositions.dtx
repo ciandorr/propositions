@@ -890,6 +890,31 @@
 %   Unlike \texttt{fitmargin} this style does not set \texttt{align}, which is
 %   \texttt{left} by default in any case: a style in force at every level
 %   should not overrule an alignment chosen further in.
+%
+% \item[\texttt{standard}] Puts the list geometry back to the document class's
+%   own, for a single environment.  Setting a style with \refCom{propoptions}
+%   is easy; unsetting it is not, because a style applies the keys it names and
+%   leaves the rest alone---so asking for a \emph{different} style does not
+%   restore what the first one did to the margins.  Under
+%   \texttt{\cs{propoptions}\{style = outerfit\}}, for instance,
+%   \verb|\begin{prop}[name=Aside, style=proposition]| still gets the fitted
+%   margin.  \texttt{standard} is the way back:
+% \begin{codebox}
+% \begin{prop}[name=Aside, style=standard]
+% \end{codebox}
+%   It sets every list dimension, every spacing key and \refKey{labelindent} to
+%   \texttt{*}, clears \refKey{wrapper begin} and \refKey{wrapper end}, and
+%   restores \refKey{continue}.
+%
+%   Geometry only: the label keeps whatever appearance its \refKey{named style}
+%   or \refKey{nameless style} gives it, so a named proposition reverted this
+%   way is still bold.  That is a consequence of the order in which an item is
+%   resolved---the style chosen by \texttt{name} is loaded first, and the
+%   argument's keys are applied on top of it---so a style cannot reset a format
+%   without wiping the base style's formatting too.  For the same reason
+%   item-level layout keys survive: to undo a style that also set
+%   \refKey{align}, as \texttt{framed} does, add it to the argument:
+%   \verb|[style=standard, align=left]|.
 % \end{description}
 %
 %
@@ -3765,6 +3790,37 @@
     labelwidth = \proplevelchoice { \widthof{\propwidestlabel} , * } ,
     leftmargin =
       \proplevelchoice { \widthof{\propwidestlabel} + \labelsep , * } ,
+  }
+
+% ====================================================================
+% standard: undo a cascading style's geometry
+% ====================================================================
+% A style can set list dimensions, spacing and wrappers, but until now nothing
+% could unset them.  \__props_style_apply_dims: applies the keys a style names
+% and leaves every other one alone, so asking for a different style in a prop's
+% argument does not restore what an earlier \propoptions{style = ...} put in
+% force: there is no clearing step for it to go through.  This style is that
+% step, naming every list-level key and giving each the value that means "as if
+% never set" --- which is what the * sentinel is for.
+%
+% Geometry only, deliberately.  Appearance cannot be reverted the same way,
+% because of the order in which an item resolves: the base style chosen by
+% \texttt{name} is loaded first, and the argument's keys are applied on top of
+% it.  A format reset here would therefore wipe the bold of a named
+% proposition rather than the cascading style's own formatting --- it cannot
+% tell the two apart.  Item-level layout keys are left alone for the same
+% reason; \begin{prop}[style = standard, align = left] completes the revert of
+% a style, such as framed, that also set align.
+%
+% Keep in step with props/dims-only: a list-level key added there and not here
+% will quietly survive the revert.
+
+\SetPropStyle { standard }
+  {
+    topsep     = * , partopsep     = * , itemsep    = * , parsep = * ,
+    leftmargin = * , rightmargin   = * , labelwidth = * , labelsep = * ,
+    itemindent = * , listparindent = * , labelindent = * ,
+    wrapper~begin = , wrapper~end = , continue = true ,
   }
 
 % ====================================================================
