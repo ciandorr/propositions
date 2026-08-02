@@ -1,0 +1,67 @@
+\documentclass{article}
+\usepackage[style=outerfit]{propositions}
+
+%% Keys given in \usepackage's optional argument.
+%%
+%% A style named there must take effect.  The style= key applies the style's
+%% dimension keys as it reads them, and \__props_style_apply_dims: does nothing
+%% for a style it has not heard of, so the option has to be processed after the
+%% built-in styles are defined.  Processed before them, this document would
+%% come out with the class's margins and no complaint.
+%%
+%% Two restrictions on this argument are inherent to LaTeX rather than to this
+%% package, since \usepackage \edef-expands its option list:
+%%
+%%   * a value containing # raises "Illegal parameter number", which rules out
+%%     every ...format key (format, display format, ref format, counter
+%%     format, label format, name format, gloss format, shorthand format);
+%%
+%%   * a value containing a macro is expanded on the spot, so anything not yet
+%%     defined fails --- including \widthof (calc is loaded by this package,
+%%     hence later) and the package's own \proplevelchoice, \propformlabel and
+%%     \propwidestlabel.
+%%
+%% Both work in \propoptions, which runs after the package is loaded.  Neither
+%% can be exercised here: a document testing them would not compile.
+
+\newcommand\dims{\texttt{LM=\the\leftmargin\ LW=\the\labelwidth}}
+
+\begin{document}
+
+\section{A style set in \texttt{\textbackslash usepackage}}
+
+\verb|\usepackage[style=outerfit]{propositions}| must fit the outer level's
+margin to its label and leave deeper levels at the class defaults.
+
+\noindent\rule{\textwidth}{0.3pt}
+\begin{prop}[name=A rather long name]
+  \item Outer, named: \dims
+  \begin{prop}
+    \item Nested: \dims
+    \begin{prop}
+      \item Third level: \dims
+    \end{prop}
+  \end{prop}
+\end{prop}
+\begin{prop}
+  \item Outer, numbered: \dims
+\end{prop}
+\noindent\rule{\textwidth}{0.3pt}
+
+Expected: both outer items fitted to their own labels, with the label starting
+at the left rule; \texttt{LM=22.0pt} at level two and \texttt{LM=18.7pt} at
+level three, the \texttt{article} defaults.  Were the option processed before
+the styles existed, every one of these would read \texttt{LM=25.0pt}.
+
+\section{Other options are unaffected}
+
+\verb|\propoptions| still overrides what the package option set, and reverts to
+the class geometry with \verb|standard|:
+
+\begin{prop}[style=standard]
+  \item Reverted: \dims
+\end{prop}
+
+Expected: \texttt{LM=25.0pt}, the class default.
+
+\end{document}

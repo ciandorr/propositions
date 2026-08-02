@@ -3555,12 +3555,6 @@
 \tl_set:Nn \l__props_nameless_style_tl { numbered }
 
 % ====================================================================
-% Package options (processed via l3keys)
-% ====================================================================
-
-\ProcessKeyOptions [ props / global ]
-
-% ====================================================================
 % Default type declarations
 % ====================================================================
 
@@ -3873,6 +3867,23 @@
           }
       }
   }
+
+% ====================================================================
+% Package options (processed via l3keys)
+% ====================================================================
+% Last, after the styles exist.  The style= key applies a style's dimension
+% keys as it reads them, and \__props_style_apply_dims: does nothing for a
+% style it has never heard of --- so processed any earlier,
+% \usepackage[style=framed] would silently produce an unframed list, the
+% geometry lost and only the item-level keys surviving.
+%
+% Nothing between here and the top of the package reads a value an option can
+% set: the defaults are established well above, and the one piece of state an
+% option shares with the style definitions --- the equation hooks, which
+% \SetPropStyle{equation} syncs when they are already active --- is synced
+% again at \begin{document} regardless.
+
+\ProcessKeyOptions [ props / global ]
 
 %    \end{macrocode}
 %</package>
