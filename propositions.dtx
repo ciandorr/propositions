@@ -421,20 +421,23 @@
 %   }
 %   Override the standard \LaTeX{} list dimensions.  Accept the same values as \cs{setlength}, including rubber lengths (e.g.\ \texttt{itemsep=4pt plus 2pt}).
 %
-% Each also accepts the value~\texttt{*}, which means \emph{as if the key had not been set}: the dimension takes the document class's default, or---where \texttt{labelindent} makes the five label-area dimensions over-determined---is left free for the package to derive from the others.  This is the same convention \textsf{enumitem} uses, and it is chiefly useful for confining an override to some levels of nesting, since a value is resolved afresh at each level:
+% Each also accepts the value~\texttt{*}, which means \emph{as if the key had not been set}: the dimension takes the document class's default, or---where \refKey{labelindent} makes the five label-area dimensions over-determined---is left free for the package to derive from the others.  This is the same convention \textsf{enumitem} uses, and it is chiefly useful for confining an override to some levels of nesting, since a value is resolved afresh at each level:
 % \begin{codebox}
 % \propoptions{leftmargin = \proplevelchoice{2.5em, 0em, *}}
 % \end{codebox}
 % gives level~1 2.5em, level~2 0em, and every deeper level the class default.  Without the \texttt{*} the last entry would apply at every level below the second, since \refCom{proplevelchoice} clamps rather than running out.
 %
-% When used with a \texttt{prop} environment, the values of these keys can contain the special |\propformlabel| macro: see below.
+% When used with a \refEnv{prop} environment, the values of these keys can contain the special \refCom{propformlabel} macro: see below.
 % \end{docKeys}
 %
 % \begin{docCommand}{propformlabel}{}
 %   Expands to the formatted label of the (approximately) \texttt{items}-th item in this
 %   environment, computed at \verb|\begin{prop}| \emph{before} the list dimensions are applied,
 %   so it can be used directly in dimension expressions.
-%   Updated after each \cs{item} to reflect the most recently output label.
+%   It keeps that value for the whole environment: a dimension key is read
+%   again for each item's label area, and a prediction that changed as the
+%   list went along would size each item's label box to its predecessor's
+%   label.
 %   Typical use:
 %   \begin{codebox}
 %   \begin{prop}[items=20, 
@@ -926,65 +929,12 @@
 %   vertical glue already in place, which for a framed list is the
 %   \textsf{tcolorbox}'s own spacing.
 %
-% \item[\texttt{fitmargin}] Fits the left margin to the width of the label, so
-%   that each item's body begins where its label ends and the label sits in the
-%   hanging indent.
-% \begin{codebox}
-% \SetPropStyle{fitmargin}{
-%   align      = left,
-%   labelwidth = \widthof{\propwidestlabel},
-%   leftmargin = \widthof{\propwidestlabel} + \labelsep}
-% \end{codebox}
-%   This is what \refCom{propformlabel} is for: it is the label this
-%   environment's items are expected to produce, computed once at
-%   \verb|\begin{prop}| and therefore usable in the dimension keys that size the
-%   list.  Both keys need it---\texttt{leftmargin} to place the body, and
-%   \texttt{labelwidth} to make the label box wide enough that the label starts
-%   at the enclosing margin rather than overflowing a box of the class default
-%   width.  What they measure is \refCom{propwidestlabel}, the same label with
-%   its digits widened, so that a run of numbered environments does not shift
-%   its margin every time the numbers change width.
-%
-%   Since the name is set for the environment, every \cs{item} of the list
-%   carries the same label, so this style is meant for a list of one item; a
-%   numbered variant would want \refKey{items} as well, so that the width is
-%   computed for the last expected label rather than the first.
-%
-% \item[\texttt{outerfit}] \texttt{fitmargin} at the outer level only, and
-%   nothing at all below it.  Intended to be set once, for a document that
-%   wants all of its top-level propositions numbered in the manner of
-%   \textsf{linguex}:
-% \begin{codebox}
-% \propoptions{style = outerfit}
-% \end{codebox}
-%   Fitting the margin to the label is wanted at the outer level and unwanted
-%   inside it, where a nested list's roman numerals or letters would drag the
-%   margin about as they changed width.  So each dimension takes a value that
-%   varies with the nesting level, using \refCom{proplevelchoice}:
-% \begin{codebox}
-% \SetPropStyle{outerfit}{
-%   labelwidth = \proplevelchoice{
-%     \widthof{\propwidestlabel}, *},
-%   leftmargin = \proplevelchoice{
-%     \widthof{\propwidestlabel} + \labelsep, *}}
-% \end{codebox}
-%   A dimension key's value is resolved where it is used, so
-%   \cs{proplevelchoice} picks the entry for the level actually being set up,
-%   and the~\texttt{*} leaves every level below the first exactly as it would
-%   have been had the keys never been set: the document class's own dimensions,
-%   level by level.  Nothing is frozen, and the same construction will scope any
-%   dimension to any range of levels.
-%
-%   Unlike \texttt{fitmargin} this style does not set \texttt{align}, which is
-%   \texttt{left} by default in any case: a style in force at every level
-%   should not overrule an alignment chosen further in.
-%
 % \item[\texttt{standard}] Puts the list geometry back to the document class's
 %   own, for a single environment.  Setting a style with \refCom{propoptions}
 %   is easy; unsetting it is not, because a style applies the keys it names and
 %   leaves the rest alone---so asking for a \emph{different} style does not
 %   restore what the first one did to the margins.  Under
-%   \texttt{\cs{propoptions}\{style = outerfit\}}, for instance,
+%   \texttt{\refCom{propoptions}\{style = outerfit\}}, for instance,
 %   \verb|\begin{prop}[name=Aside, style=proposition]| still gets the fitted
 %   margin.  \texttt{standard} is the way back:
 % \begin{codebox}
@@ -2095,8 +2045,15 @@
           { \setcounter { numpropv } { 0 } }
       }
     \__props_output_item:
-    %% Update \propformlabel to reflect the label just produced.
-    \protected@edef \propformlabel { \l__props_item_output_tl }
+    %% \propformlabel is deliberately NOT updated here to the label just
+    %% produced.  It exists to predict the label an environment's items will
+    %% carry, so that the dimension keys can be sized to it; and a style's
+    %% dimension keys are read again for every item's label area, where they
+    %% would then measure the previous item's label instead of the preview.
+    %% Under style=fitmargin that gave each item after the first a label box
+    %% sized for its predecessor, so a label that had grown a digit overflowed
+    %% and shoved its own first line sideways.  Constant for the whole
+    %% environment is both what the style needs and what the name says.
     \__props_set_ref:
     \tl_if_empty:NF \l__props_label_tl
       { \exp_args:NV \label \l__props_label_tl }
@@ -2565,6 +2522,38 @@
 % \texttt{itemindent}, \texttt{labelsep},
 % \texttt{leftmargin} (frozen per-item),
 % \texttt{labelwidth}, \texttt{labelindent}.
+% Emit the item with its label placed as \l__props_alignment_tl asks.  Covers
+% the alignments that keep the label on the item's own line: left, center and
+% right place it within the label box, flush pushes it past the box to the text
+% margin.  nextline and flush-nextline are not handled here --- they emit a
+% blank item and set the label as a paragraph of its own, and are routed
+% straight to \__props_output_item_align: before any of this.
+%
+% Shared by both emitting paths.  The per-item path used to emit the label
+% directly, which silently ignored align: an item carrying any per-item
+% dimension came out left-aligned whatever was asked for, and since a style's
+% labelwidth or labelindent is a per-item key, that was every item of a
+% fitmargin list.
+\cs_new_protected:Nn \__props_emit_aligned_item:
+  {
+    \str_if_eq:VnTF \l__props_alignment_tl { flush }
+      {
+        %% Push label past the label area so it sits at the text margin.
+        \__props_list_item: [ \hspace{\labelwidth} \hspace{\labelsep}
+                \l__props_item_output_tl \hspace{\labelsep} ]
+      }
+      {
+        %% Centred and right-aligned labels differ from the default only in
+        %% how \makelabel fills the box, so set that, emit, and put it back.
+        \str_if_eq:VnT \l__props_alignment_tl { center }
+          { \cs_set:Nn \__props_display_label:n { \hss \mbox{##1} \hss } }
+        \str_if_eq:VnT \l__props_alignment_tl { right }
+          { \cs_set:Nn \__props_display_label:n { \hss \mbox{##1} } }
+        \__props_list_item: [ \l__props_item_output_tl ]
+        \cs_set:Nn \__props_display_label:n { \mbox{##1} \hfill }
+      }
+  }
+
 \cs_new_protected:Nn \__props_output_item_pidim:
   {
     %% Save current list dimensions.
@@ -2666,8 +2655,8 @@
               { \dim_sub:Nn \labelwidth { \l_tmpb_dim } }
           }
       }
-    %% Emit list item with resolved dimensions.
-    \__props_list_item: [ \l__props_item_output_tl ]
+    %% Emit list item with resolved dimensions, placed as align asks.
+    \__props_emit_aligned_item:
     %% Restore original dimensions.
     \setlength { \labelwidth } { \l__props_save_labelwidth_dim }
     \setlength { \labelsep }   { \l__props_save_labelsep_dim }
@@ -2675,32 +2664,28 @@
   }
 
 % Alignment-based label placement (no per-item dim overrides).
+% The two alignments that give the label a line of its own are handled here;
+% everything else is \__props_emit_aligned_item:, shared with the per-item
+% path so that the two cannot disagree about what an alignment means.
 \cs_new_protected:Nn \__props_output_item_align:
   {
-    \str_if_eq:VnTF \l__props_alignment_tl { flush }
+    \str_if_eq:VnTF \l__props_alignment_tl { nextline }
       {
-        %% Push label past the label area so it sits at the text margin
-        \__props_list_item: [ \hspace{\labelwidth} \hspace{\labelsep}
-                \l__props_item_output_tl \hspace{\labelsep} ]
+        %% Label on own line(s).  When per-item labelindent is set,
+        %% the label starts at that distance from the enclosing margin.
+        %% Otherwise, the label starts at the standard label position
+        %% (which already reflects any global labelindent setting).
+        \__props_list_item: []
+        { \tl_if_empty:NTF \l__props_pi_labelindent_tl
+            { \leftskip = \dimexpr \itemindent
+                - \labelwidth - \labelsep \relax }
+            { \leftskip = \dimexpr \l__props_pi_labelindent_tl
+                - \leftmargin \relax }
+          \l__props_item_output_tl \par }
+        \vspace { -\parsep } \noindent
+        \bool_set_true:N \l__props_nextline_bool
       }
       {
-        \str_if_eq:VnTF \l__props_alignment_tl { nextline }
-          {
-            %% Label on own line(s).  When per-item labelindent is set,
-            %% the label starts at that distance from the enclosing margin.
-            %% Otherwise, the label starts at the standard label position
-            %% (which already reflects any global labelindent setting).
-            \__props_list_item: []
-            { \tl_if_empty:NTF \l__props_pi_labelindent_tl
-                { \leftskip = \dimexpr \itemindent
-                    - \labelwidth - \labelsep \relax }
-                { \leftskip = \dimexpr \l__props_pi_labelindent_tl
-                    - \leftmargin \relax }
-              \l__props_item_output_tl \par }
-            \vspace { -\parsep } \noindent
-            \bool_set_true:N \l__props_nextline_bool
-          }
-          {
         \str_if_eq:VnTF \l__props_alignment_tl { flush-nextline }
           {
             %% Label on own line(s), starting at the text margin.
@@ -2711,26 +2696,7 @@
             \vspace { -\parsep } \noindent
             \bool_set_true:N \l__props_nextline_bool
           }
-          {
-        \str_if_eq:VnTF \l__props_alignment_tl { center }
-          {
-            %% Center in label box (\hss absorbs space on both sides)
-            \cs_set:Nn \__props_display_label:n { \hss \mbox{##1} \hss }
-            \__props_list_item: [ \l__props_item_output_tl ]
-            \cs_set:Nn \__props_display_label:n { \mbox{##1} \hfill }
-          }
-          {
-        \str_if_eq:VnTF \l__props_alignment_tl { right }
-          {
-            %% Right-align in label box (like standard enumerate)
-            \cs_set:Nn \__props_display_label:n { \hss \mbox{##1} }
-            \__props_list_item: [ \l__props_item_output_tl ]
-            \cs_set:Nn \__props_display_label:n { \mbox{##1} \hfill }
-          }
-          { \__props_list_item: [ \l__props_item_output_tl ] }
-          }
-          }
-          }
+          { \__props_emit_aligned_item: }
       }
   }
 
@@ -3824,11 +3790,20 @@
 % environment's items are expected to produce, which is computed once at
 % \begin{prop} and is therefore only meaningful there.  Setting \leftmargin to
 % that width plus \labelsep makes the body of every item line up just past the
-% label, so the label sits in the hanging indent.  \labelwidth has to be set as
-% well: without it the label box keeps the class default (20pt), the label
-% overflows it, and the label starts one box-width short of the margin instead
-% of at it.  Use \texttt{items} when the items are numbered, so that the width
-% is computed for the widest label rather than the first.
+% label, so the label sits in the hanging indent.  Use \texttt{items} when the
+% items are numbered, so that the width is computed for the widest label rather
+% than the first.
+%
+% \labelwidth must come out as \leftmargin - \labelsep, or the label box keeps
+% the class default (20pt) and the label starts a box-width short of the
+% margin.  Rather than say so, labelindent = 0pt says where the label box
+% begins --- at the enclosing margin --- and lets the constraint resolver
+% derive \labelwidth from LI + LW + LS = LM + II.  Same number, and it stays
+% right if \leftmargin is overridden.
+%
+% align is not set.  left is the default, and right or center are reasonable
+% things to want from a fitted margin: the box spans from the margin to
+% \leftmargin - \labelsep whichever way the label is placed inside it.
 %
 % What is measured is \propwidestlabel rather than \propformlabel, so that the
 % margin depends on how many digits the label has and not on which ones: a run
@@ -3837,9 +3812,8 @@
 
 \SetPropStyle { fitmargin }
   {
-    align      = left ,
-    labelwidth = \widthof{\propwidestlabel} ,
-    leftmargin = \widthof{\propwidestlabel} + \labelsep ,
+    labelindent = 0pt ,
+    leftmargin  = \widthof{\propwidestlabel} + \labelsep ,
   }
 
 % ====================================================================

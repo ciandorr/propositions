@@ -170,6 +170,48 @@ inner one is free and must expand.
 \endgroup
 
 %%------------------------------------------------------------
+\subsection{Alignment survives a per-item dimension}
+
+Placing the label is one job and sizing its box is another, but the per-item
+path used to do the second and silently skip the first: any item carrying a
+per-item dimension came out left-aligned whatever \texttt{align} asked for.
+That took in every item of a \texttt{fitmargin} list, since a style's
+\texttt{labelwidth} or \texttt{labelindent} is a per-item key.
+
+The labels below are plain rather than framed with \verb|\flabel|: that helper
+pads its content to fill the label box, which would hide exactly what is being
+tested.  Each list below sets one geometry for all four of its items and then varies
+only the code path: the last two items carry \texttt{labelsep=5pt}, which is
+the value already in force, so it changes no dimension but does route the item
+through the per-item path.  All four labels must therefore be placed
+identically --- right edges level under \texttt{right}, midpoints level under
+\texttt{center}.
+
+\begin{prop}[align=right, labelwidth=4em]
+  \item[name=x] right, ordinary path.
+  \item[name=xxxxx] right, ordinary path.
+  \item[name=x, labelsep=5pt] right, per-item path.
+  \item[name=xxxxx, labelsep=5pt] right, per-item path.
+\end{prop}
+
+\begin{prop}[align=center, labelwidth=4em]
+  \item[name=x] centre, ordinary path.
+  \item[name=xxxxx] centre, ordinary path.
+  \item[name=x, labelsep=5pt] centre, per-item path.
+  \item[name=xxxxx, labelsep=5pt] centre, per-item path.
+\end{prop}
+
+\begin{prop}[align=flush, labelwidth=4em]
+  \item[name=x] flush, ordinary path.
+  \item[name=x, labelsep=5pt] flush, per-item path.
+\end{prop}
+
+The \texttt{flush} pair must have both labels at the text margin, each followed
+by its body one \texttt{labelsep} later --- not tucked into the label box.
+Before the fix the per-item item of each pair came out left-aligned, and the
+\texttt{flush} one lost its outdent entirely.
+
+%%------------------------------------------------------------
 \subsection{All three per-item: fallback to default priority}
 
 When labelwidth, labelsep, and itemindent are all set per-item, and

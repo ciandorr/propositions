@@ -754,8 +754,15 @@
           { \setcounter { numpropv } { 0 } }
       }
     \__props_output_item:
-    %% Update \propformlabel to reflect the label just produced.
-    \protected@edef \propformlabel { \l__props_item_output_tl }
+    %% \propformlabel is deliberately NOT updated here to the label just
+    %% produced.  It exists to predict the label an environment's items will
+    %% carry, so that the dimension keys can be sized to it; and a style's
+    %% dimension keys are read again for every item's label area, where they
+    %% would then measure the previous item's label instead of the preview.
+    %% Under style=fitmargin that gave each item after the first a label box
+    %% sized for its predecessor, so a label that had grown a digit overflowed
+    %% and shoved its own first line sideways.  Constant for the whole
+    %% environment is both what the style needs and what the name says.
     \__props_set_ref:
     \tl_if_empty:NF \l__props_label_tl
       { \exp_args:NV \label \l__props_label_tl }
@@ -1086,6 +1093,26 @@
       }
   }
 
+\cs_new_protected:Nn \__props_emit_aligned_item:
+  {
+    \str_if_eq:VnTF \l__props_alignment_tl { flush }
+      {
+        %% Push label past the label area so it sits at the text margin.
+        \__props_list_item: [ \hspace{\labelwidth} \hspace{\labelsep}
+                \l__props_item_output_tl \hspace{\labelsep} ]
+      }
+      {
+        %% Centred and right-aligned labels differ from the default only in
+        %% how \makelabel fills the box, so set that, emit, and put it back.
+        \str_if_eq:VnT \l__props_alignment_tl { center }
+          { \cs_set:Nn \__props_display_label:n { \hss \mbox{##1} \hss } }
+        \str_if_eq:VnT \l__props_alignment_tl { right }
+          { \cs_set:Nn \__props_display_label:n { \hss \mbox{##1} } }
+        \__props_list_item: [ \l__props_item_output_tl ]
+        \cs_set:Nn \__props_display_label:n { \mbox{##1} \hfill }
+      }
+  }
+
 \cs_new_protected:Nn \__props_output_item_pidim:
   {
     %% Save current list dimensions.
@@ -1187,8 +1214,8 @@
               { \dim_sub:Nn \labelwidth { \l_tmpb_dim } }
           }
       }
-    %% Emit list item with resolved dimensions.
-    \__props_list_item: [ \l__props_item_output_tl ]
+    %% Emit list item with resolved dimensions, placed as align asks.
+    \__props_emit_aligned_item:
     %% Restore original dimensions.
     \setlength { \labelwidth } { \l__props_save_labelwidth_dim }
     \setlength { \labelsep }   { \l__props_save_labelsep_dim }
@@ -1197,30 +1224,23 @@
 
 \cs_new_protected:Nn \__props_output_item_align:
   {
-    \str_if_eq:VnTF \l__props_alignment_tl { flush }
+    \str_if_eq:VnTF \l__props_alignment_tl { nextline }
       {
-        %% Push label past the label area so it sits at the text margin
-        \__props_list_item: [ \hspace{\labelwidth} \hspace{\labelsep}
-                \l__props_item_output_tl \hspace{\labelsep} ]
+        %% Label on own line(s).  When per-item labelindent is set,
+        %% the label starts at that distance from the enclosing margin.
+        %% Otherwise, the label starts at the standard label position
+        %% (which already reflects any global labelindent setting).
+        \__props_list_item: []
+        { \tl_if_empty:NTF \l__props_pi_labelindent_tl
+            { \leftskip = \dimexpr \itemindent
+                - \labelwidth - \labelsep \relax }
+            { \leftskip = \dimexpr \l__props_pi_labelindent_tl
+                - \leftmargin \relax }
+          \l__props_item_output_tl \par }
+        \vspace { -\parsep } \noindent
+        \bool_set_true:N \l__props_nextline_bool
       }
       {
-        \str_if_eq:VnTF \l__props_alignment_tl { nextline }
-          {
-            %% Label on own line(s).  When per-item labelindent is set,
-            %% the label starts at that distance from the enclosing margin.
-            %% Otherwise, the label starts at the standard label position
-            %% (which already reflects any global labelindent setting).
-            \__props_list_item: []
-            { \tl_if_empty:NTF \l__props_pi_labelindent_tl
-                { \leftskip = \dimexpr \itemindent
-                    - \labelwidth - \labelsep \relax }
-                { \leftskip = \dimexpr \l__props_pi_labelindent_tl
-                    - \leftmargin \relax }
-              \l__props_item_output_tl \par }
-            \vspace { -\parsep } \noindent
-            \bool_set_true:N \l__props_nextline_bool
-          }
-          {
         \str_if_eq:VnTF \l__props_alignment_tl { flush-nextline }
           {
             %% Label on own line(s), starting at the text margin.
@@ -1231,26 +1251,7 @@
             \vspace { -\parsep } \noindent
             \bool_set_true:N \l__props_nextline_bool
           }
-          {
-        \str_if_eq:VnTF \l__props_alignment_tl { center }
-          {
-            %% Center in label box (\hss absorbs space on both sides)
-            \cs_set:Nn \__props_display_label:n { \hss \mbox{##1} \hss }
-            \__props_list_item: [ \l__props_item_output_tl ]
-            \cs_set:Nn \__props_display_label:n { \mbox{##1} \hfill }
-          }
-          {
-        \str_if_eq:VnTF \l__props_alignment_tl { right }
-          {
-            %% Right-align in label box (like standard enumerate)
-            \cs_set:Nn \__props_display_label:n { \hss \mbox{##1} }
-            \__props_list_item: [ \l__props_item_output_tl ]
-            \cs_set:Nn \__props_display_label:n { \mbox{##1} \hfill }
-          }
-          { \__props_list_item: [ \l__props_item_output_tl ] }
-          }
-          }
-          }
+          { \__props_emit_aligned_item: }
       }
   }
 
@@ -2139,9 +2140,8 @@
 
 \SetPropStyle { fitmargin }
   {
-    align      = left ,
-    labelwidth = \widthof{\propwidestlabel} ,
-    leftmargin = \widthof{\propwidestlabel} + \labelsep ,
+    labelindent = 0pt ,
+    leftmargin  = \widthof{\propwidestlabel} + \labelsep ,
   }
 
 

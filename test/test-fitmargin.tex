@@ -113,6 +113,35 @@ A label with no digits is unaffected, and formatting survives the widening:
 must still be bold, and of \textsc{Prop}~1a is \propwidest{\textsc{Prop}~1a},
 which must still be small caps with the space intact.
 
+\section{Labels that change width within one list}
+
+\verb|\propformlabel| predicts the label this environment's items will carry,
+and keeps that value for the whole environment.  It must not be updated to the
+label just produced: a style's dimension keys are read again for every item's
+label area, so a changing prediction sizes each item's label box to its
+\emph{predecessor's} label, and a label that has grown a digit then overflows
+and shoves its own first line sideways.
+
+Nothing else here catches that.  A named environment gives every item the same
+label, and \verb|items=20| above numbers two items \texttt{(2)} and
+\texttt{(4)} --- equal widths either way.  It takes a list that crosses a
+digit boundary.
+
+\setcounter{numpropi}{8}
+\noindent\rule{\textwidth}{0.3pt}
+\begin{prop}[items=2, style=fitmargin]
+  \item Label (9), one digit.
+  \item Label (10), two digits: this item's body must start at exactly the
+  same place as the one above.
+\end{prop}
+\noindent\rule{\textwidth}{0.3pt}
+\setcounter{numpropi}{0}
+
+Both bodies must begin at the same horizontal position, and both labels at the
+left rule.  With the prediction refreshed per item, the second body sat
+4.6pt --- the width difference between \texttt{(9)} and \texttt{(10)} ---
+further right than the first.
+
 \section{\texttt{outerfit}: the outer level only}
 
 \verb|outerfit| is \verb|fitmargin| at level one and nothing below it, so that
