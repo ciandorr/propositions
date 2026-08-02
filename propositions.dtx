@@ -23,41 +23,52 @@
 \usepackage{amsmath}
 \usepackage[most]{tcolorbox}
 \tcbuselibrary{documentation}
-\usepackage[equations, tightspacing, leftmargin=1em, labelindent=0em]{propositions}
+\usepackage[equations, tightspacing]{propositions}
 \usepackage{cleveref}
 \usepackage{fancyvrb}
 \VerbatimFootnotes
 
 \hypersetup{colorlinks,linkcolor=blue!60!black,urlcolor=blue!60!black}
 
-%% Side-by-side example environment (fancyvrb-based, works inside \DocInput).
+%% Live examples: the code above, its result below, in a two-tone tcolorbox.
+%% The body is written out verbatim and then used twice --- listed with
+%% gobble=2, which strips the "% " that every documentation line carries, and
+%% \input to produce the result (there % is still catcode 9, so it needs no
+%% stripping).  fancyvrb does the listing rather than tcolorbox's own
+%% \dispExample because listings' gobble is silently ignored by
+%% \lstinputlisting, which is what \dispExample uses.
 \newenvironment{example}
   {\VerbatimEnvironment
    \begin{VerbatimOut}{\jobname-ex.tex}}
   {\end{VerbatimOut}%
-   \par\medskip\noindent
-   \begin{minipage}[t]{0.52\linewidth}%
-     \small\VerbatimInput[gobble=2,frame=leftline,
-       framerule=0.4pt,framesep=1.5em]{\jobname-ex.tex}%
-   \end{minipage}\hfill
-   \begin{minipage}[t]{0.44\linewidth}%
+   \begin{tcolorbox}[propexample]
+     \VerbatimInput[gobble=2]{\jobname-ex.tex}%
+   \tcblower
      \input{\jobname-ex.tex}%
-   \end{minipage}%
-   \par\medskip}
+   \end{tcolorbox}}
 
-%% Code-only display (no execution).  Strips leading "% " via gobble=2.
+%% Code-only display (no execution): the same box without a lower part.
 \newenvironment{codebox}
   {\VerbatimEnvironment
    \begin{VerbatimOut}{\jobname-cb.tex}}
   {\end{VerbatimOut}%
-   \par\smallskip\noindent
-   \small\VerbatimInput[gobble=2,frame=leftline,
-     framerule=0.4pt,framesep=1.5em]{\jobname-cb.tex}%
-   \par\smallskip}
+   \begin{tcolorbox}[propexample]
+     \VerbatimInput[gobble=2]{\jobname-cb.tex}%
+   \end{tcolorbox}}
 
 \tcbset{
   color command=red!60!black,
   color key=green!50!black,
+  %% ExampleFrame/ExampleBack are tcolorbox's own documentation colours.
+  propexample/.style={
+    enhanced, breakable,
+    colframe=ExampleFrame, colback=ExampleBack,
+    skin=bicolor, colbacklower=white,
+    arc=1pt, boxrule=0.6pt,
+    left=1em, right=1em, top=0.5em, bottom=0.5em,
+    before skip=\medskipamount, after skip=\medskipamount,
+    fontupper=\small, fontlower=\small,
+  },
   docexample/.style={
     colframe=blue!50!black,
     colback=blue!3!white,
@@ -79,10 +90,9 @@
 %
 % \GetFileInfo{propositions.sty}
 %
-% \title{The \textsf{propositions} package\thanks{This document describes
-%   version~\fileversion, dated~\filedate.}}
+% \title{The \textsf{propositions} package}
 % \author{Cian Dorr (with help from Claude)\\ \texttt{ciandorr@gmail.com}}
-% \date{\filedate}
+% \date{Version 1.0: \filedate}
 %
 % \maketitle
 %
@@ -126,33 +136,27 @@
 % hope others will find it as useful as I have. 
 % 
 % \section{Basic usage}
-% Load the package with |\usepackage{propositions}| or |\usepackage|\oarg{options}|{propositions}| (see \autoref{sect:global} below for valid package options).
+% Load the package with |\usepackage{propositions}| or |\usepackage|\oarg{options}|{propositions}| (see \autoref{sect:keys-global} below for valid package options).
 %
 % The |prop| environment generates a list of propositions, each introduced by |\item|.  |\item| with an optional argument gives a |description|-like label:
 % \begin{example}
 % \begin{prop}
-%   \item[Physicalism] Everything is
-%   physical. \label{phys}
-%   \item[Idealism] Everything is
-%   mental. \label{ideal}
+%   \item[Physicalism] Everything is physical. \label{phys}
+%   \item[Idealism] Everything is mental. \label{ideal}
 % \end{prop}
 % \end{example}
-% Unlike the standard |description| environment, one can refer back to these propositions using the standard |\ref| command:
+% Unlike the standard |description| environment, one can refer back to these propositions using the standard |\ref| command (or with new cross-referencing commands described in \cref{sect:xref}):
 % \begin{example}
-% \ref{phys} is more plausible
-% than \ref{ideal}.
+% \ref{phys} is more plausible than \ref{ideal}.
 % \end{example}
 % With no optional argument, |\item| will by default generate numbered items similar to |enumerate|, but with numbering that persists across the document:
 % \begin{example}
 % \begin{prop}
-%   \item Every atom is physical.
-%   \label{atoms}
+%   \item Every atom is physical. \label{atoms}
 % \end{prop}
-% \ref{phys} follows from the
-% conjunction of \ref{atoms} and
+% \ref{phys} follows from the conjunction of \ref{atoms} and
 % \begin{prop}
-%   \item Everything is an atom.
-%   \label{atomism}
+%   \item Everything is an atom. \label{atomism}
 % \end{prop}
 % \end{example}
 % As with |enumerate|, the
@@ -162,14 +166,12 @@
 % \begin{prop}
 %   \item \label{dual}
 %   \begin{prop}
-%     \item Some things are physical.
-%     \label{some}
-%     \item Some things are not
-%     physical. \label{notall}
+%     \item Some things are physical. \label{some}
+%     \item Some things are not physical. \label{notall}
 %   \end{prop}
 % \end{prop}
-% Without \ref{some}, \ref{dual}
-% would be consistent with \ref{ideal}.
+% Without \ref{some}, \ref{dual} would be consistent
+% with \ref{ideal}.
 % \end{example}
 %
 % \section{Advanced usage}
@@ -178,36 +180,25 @@
 % \begin{example}
 % \begin{prop}
 %   \item[No Overlap,
-%     align=flush,
-%     display format=\textsc{#1},
-%     ref format=\textit{#1}]
-%   Nothing mental is
-%   physical. \label{incomp}
+%         align=flush,
+%         display format=\textsc{#1},
+%         ref format=\textit{#1}]
+%     Nothing mental is physical. \label{incomp}
 % \end{prop}
-% Is \ref{incomp} consistent
-% with \ref{phys}?
+% Is \ref{incomp} consistent with \ref{phys}?
 % \end{example}
 % The prop environment can also take an optional argument with a list of keys:
 % \begin{example}
-% \begin{prop}[leftmargin=2em,
-%     rightmargin=2em,
-%     display format=[#1]]
-%   \item
-%   Every mental thing
-%   is physical.
+% \begin{prop}[leftmargin=5em, display format=[#1]]
+%   \item Every mental thing is physical. 
 % \end{prop}
 % \end{example}
 % Preset styles can be declared and used in place of a set of key-value pairs:
 % \begin{example}
 % \begin{prop}
-%   \item[Nihilism,
-%     style=thesis]
-%     There is nothing.
-%     \label{nihilism}
+%   \item[Nihilism, style=thesis] There is nothing. \label{nihilism}
 % \end{prop}
-% Does \ref{nihilism} imply
-% \ref{phys}, \ref{dual}, or
-% both?  Discuss.
+% Does \ref{nihilism} imply \ref{phys}, \ref{dual}, or both?  Discuss.
 % \end{example}
 % Shortcut commands---e.g., |\titem[|\meta{keys}|]| for |\item[style=thesis, |\meta{keys}|]|---can also be defined.  The package loads with a range of predefined styles (listed in \cref{sect:builtin-styles}).
 %
@@ -216,13 +207,10 @@
 % with the |leqno| option to |\documentclass|.)
 % \begin{example}
 % \begin{equation}
-%   \exists x (\text{Mental}(x)
-%   \wedge \text{Physical}(x))
+%   \exists x (\text{Mental}(x) \wedge \text{Physical}(x))
 % \end{equation}
 % \begin{prop}
-%   \item
-%   There is overlap between
-%   the mental and the physical.
+%   \item There is overlap between the mental and the physical.
 % \end{prop}
 % \end{example}
 % The |\ptag| command (requires \textsf{amsmath})
@@ -234,8 +222,7 @@
 %   \ptag[Monism] \label{mon}
 %   \exists x \forall y(y = x)
 % \end{equation}
-% Is \ref{mon} compatible with
-% \ref{dual}?
+% Is \ref{mon} compatible with \ref{dual}?
 % \end{example}
 %
 % \section{Basic environments and commands}
@@ -295,8 +282,23 @@
 % \begin{docKey}{align}{=\meta{value}}{no default}
 %   How the label should be positioned.  Possible values: \texttt{left} (standard left-aligned label, offset controlled by \cs{labelwidth} and \cs{labelsep}), \texttt{right} (right-aligned, like \texttt{enumerate}), \texttt{center} (centered within the label box), \texttt{flush} (aligned with left margin of item text), \texttt{nextline} (label on its own line), and \texttt{flush-nextline}.
 %   Has no effect inside \texttt{inlineprop} or \cs{ptag}.
-%   For left-margin alignment, use \texttt{labelindent=0em} instead.
 % \end{docKey}
+% 
+% \begin{example}
+% \begin{prop}
+%   \item[A, align=left] Left aligned label.
+%   \item[A, align=center] Center aligned label.
+%   \item[A, align=right] Right aligned label.
+%   \item[Long label, align=center] As in standard \LaTeX\ lists, 
+%       longer labels expand to fill the label box and then push
+%       the following text along to make room for themsselves.
+%   \item[A, align=flush] Flush aligned label.
+%   \item[But sometimes a long label deserves its own line,
+%       align=nextline] Nextline aligned label.  
+%   \item[Another rather long label,
+%       align=flush-nextline] Flush-nextline aligned label.
+% \end{prop}
+% \end{example}
 % 
 % \begin{docKey}{name}{=\meta{text}}{no default}
 %   The proposition's name.  A bare string (without \texttt{=}) is equivalent to \texttt{name=}\meta{text}.  (To be precise: if the optional argument contains no \texttt{=} at all, the whole of it is the name; otherwise, it is read as a key list, and any entry of it without an \texttt{=} is the name, so a bare name can be combined with other keys, as in |\item[No Overlap, align=flush]|.  In that case a name containing a comma must be braced---|\item[{Alpha, Beta}, align=flush]|---and a name containing an \texttt{=} needs the explicit \texttt{name=}|{|\meta{text}|}| form.)
@@ -353,10 +355,6 @@
 %   Equivalent to a trailing \cs{label}\marg{label}.
 % \end{docKey}
 %
-% \begin{docKey}{crefname}{=\meta{type}}{no default}
-%   When \textsf{cleveref} is loaded, assigns an arbitrary reference type to this proposition.  For example, \texttt{crefname=lemma} causes \cs{cref} to use the names defined by \cs{crefname}\texttt{\{lemma\}\{...\}\{...\}} instead of the default (private) \texttt{prop} type.  The \meta{type} must be known to \textsf{cleveref}; new types can be declared with \cs{crefname}.
-% \end{docKey}
-%
 % \begin{docKey}{reset}{=\meta{boolean}}{initially \texttt{true}}
 %   When \texttt{true} (the default), processing an \cs{item} resets the
 %   sub-level counter one nesting depth below the current level
@@ -364,7 +362,11 @@
 %   left off across consecutive parent items. 
 % \end{docKey}
 %
-% Four of the list-dimension keys documented in the next section---\texttt{labelwidth}, \texttt{labelsep}, \texttt{itemindent} and \texttt{labelindent}---may also be given to an individual \cs{item}, where they reposition the label of that item alone, overriding the value in force for the rest of the list.  The other dimension keys, have no effect at item level.
+% \begin{docKey}{crefname}{=\meta{type}}{no default}
+%   When \textsf{cleveref} is loaded, assigns an arbitrary reference type to this proposition.  For example, \texttt{crefname=lemma} causes \cs{cref} to use the names defined by \cs{crefname}\texttt{\{lemma\}\{...\}\{...\}} instead of the default (private) \texttt{prop} type.  The \meta{type} must be known to \textsf{cleveref}; new types can be declared with \cs{crefname}.
+% \end{docKey}
+%
+% Four of the list-dimension keys documented in the next section---\texttt{labelwidth}, \texttt{labelsep}, \texttt{itemindent} and \texttt{labelindent}---may also be given to an individual \cs{item}, where they reposition the label of that item alone, overriding the value in force for the rest of the list.  (The other dimension keys have no effect at item level.)
 % 
 % \subsection{Keys for \texttt{prop} environments}\label{sect:keys-dims}
 %
@@ -395,7 +397,7 @@
 %     { doc name = listparindent },
 %   }
 %   Override the standard \LaTeX{} list dimensions.  Accept the same values as \cs{setlength}, including rubber lengths (e.g.\ \texttt{itemsep=4pt plus 2pt}).  
-% Each of these keys may also be assigned a comma-separated list of dimensions: e.g.\ \texttt{leftmargin=\{2.5em, 0em\}}.  When the value of a keyis such a list, the first dimension in the list applies at level~1, the second at level~2, etc.  (Gaps in the list (e.g.\ \texttt{leftmargin=\{, 0em\}}) cause the class default to be used for that level, as do levels past the end of the list.)
+% Each of these keys may also be assigned a comma-separated list of dimensions: e.g.\ \texttt{leftmargin=\{2.5em, 0em\}}.  When the value of a key is such a list, the first dimension in the list applies at level~1, the second at level~2, etc.  (Gaps in the list (e.g.\ \texttt{leftmargin=\{, 0em\}}) cause the class default to be used for that level, as do levels past the end of the list.)
 % 
 % When used with a \texttt{prop} environment, the values of these keys can contain the special |\propformlabel| macro: see below.
 % \end{docKeys}
@@ -406,11 +408,21 @@
 %   so it can be used directly in dimension expressions.
 %   Updated after each \cs{item} to reflect the most recently output label.
 %   Typical use:
-%   \begin{verbatim}
+%   \begin{codebox}
 %   \begin{prop}[items=20, 
 %     leftmargin=\widthof{\propformlabel}+0.5em]
-%   \end{verbatim}
+%   \end{codebox}
 %   sizes the left margin to accommodate labels up to the 20th item.
+% \end{docCommand}
+%
+% \begin{docCommand}{propwidestlabel}{}
+%   \refCom{propformlabel} with every digit replaced by the digit that makes the label widest (an~\texttt{8} in the usual case, where all digits have the same width).  Using it in place of \cs{propformlabel} in a dimension expression makes the dimension depend on how many digits the label has rather than on which digits they are, so that a run of numbered environments keeps a steady margin instead of shifting at every change of number: \texttt{(9)} and \texttt{(10)} differ in width by 5pt in the default font, where \texttt{(8)} and \texttt{(88)} differ only by as much as an extra digit requires.  (The substitution is used for measurement only; the labels themselves are untouched.)  This is what the \texttt{fitmargin} style measures.
+% \end{docCommand}
+%
+% \begin{docCommand}{propwidest}{\marg{label}}
+%   The filter that \refCom{propwidestlabel} applies: expands \meta{label} and replaces all of its digits by whichever single digit makes it widest, leaving formatting, letters and spaces alone.  Use it on a label of your own, e.g.\ \verb|\widthof{\propwidest{(\ref{lastitem})}}|.
+%
+%   The widest digit is found by measurement rather than assumed, since it depends on the font: with tabular figures every digit has the same width and the choice is immaterial, but with proportional (usually oldstyle) figures it is not, and \texttt{8} is then often not the widest---in \textsf{EB~Garamond}'s oldstyle figures it is only the sixth widest, narrower than \texttt{0} by half a point per digit, enough for a margin reserved for \texttt{(88)} to let \texttt{(00)} overflow it.  The measurement costs eleven boxes, incurred only where \cs{propwidest} is used.
 % \end{docCommand}
 %
 % \begin{docKey}{items}{=\meta{n}}{initially \texttt{1}}
@@ -445,7 +457,7 @@
 % The keys in this section have effect in both the \texttt{prop} and \texttt{inlineprop} environments.  They can also be used with |\propoptions|, |\usepackage|, and |\SetPropStyle|, just like the keys in the previous subsection.  
 % 
 % \begin{docKey}{named style}{=\meta{style}}{initially \texttt{proposition}}
-%   The style when an |\item| or |\ptag| has a value for \texttt{name} or \texttt{counter}, but no explicit \texttt{style}.
+%   The style when an |\item| or |\ptag| has a value for \texttt{name} but no explicit \texttt{style}.
 % \end{docKey}
 %
 % \begin{docKey}{named ptag style}{=\meta{style}}{initially empty}
@@ -453,19 +465,19 @@
 % \end{docKey}
 %
 % \begin{docKey}{nameless style}{=\meta{style}}{initially \texttt{numbered}}
-%   The style used when \cs{item} or \cs{ptag} has no optional argument (no name, counter, or style).
+%   The style used when \cs{item} or \cs{ptag} has no value for \texttt{name} and no explicit \texttt{style}.  A \texttt{counter} does not affect the choice: it says how the item is numbered, and this is the style meant to look right around a number.
 % \end{docKey}
 %
 % \begin{docKey}{nameless ptag style}{=\meta{style}}{initially empty}
 %   If set, overrides \texttt{nameless style} for \cs{ptag} items only.
 % \end{docKey}
 % 
-% Note that the automatic assignment of a default style to an |\item| is based solely on
-% the item's \emph{own} optional argument.  Consequently,
-% \verb|\begin{prop}[name=foo]\item bar| produces a \emph{nameless}-style item with label
-% \texttt{(foo)}: the environment default \texttt{name=foo} is not seen during style resolution.  
-% To get the equivalent of \verb|\item[name=foo]| (named style, bold), use
-% \verb|\begin{prop}[style=proposition, name=foo]\item bar|.
+% The choice between them turns on \texttt{name} alone, read from the whole key
+% list---\refCom{propoptions}, then the environment argument, then the item's
+% own argument.  An item counts as named if a name reaches it from any of those,
+% so \verb|\begin{prop}[name=foo]\item bar| gives the same result as
+% \verb|\begin{prop}\item[name=foo] bar|.  An explicit \texttt{style} overrides
+% the choice wherever it is set.
 % 
 % \begin{docKeys}[
 %     doc parameter = {=\meta{code}},
@@ -477,11 +489,15 @@
 %   Insert arbitrary \meta{code} immediately before the beginning and after the end of the environment, so that the whole list can (for example) be wrapped in another environment. 
 % 
 % Any value that contains a comma (such as a comma-separated list of options to an environment) must be enclosed in braces, so that the comma is not read as a key separator:
-% \begin{codebox}
-% \SetPropStyle{redbox}{
-%   wrapper begin = {\begin{mdframed}[linecolor=red, linewidth=2pt]},
-%   wrapper end   = {\end{mdframed}}}
-% \end{codebox}
+% \begin{example}
+% \begin{prop}[
+%   wrapper begin = {\begin{tcolorbox}[
+%       colframe = red, colback = white]},
+%   wrapper end   = {\end{tcolorbox}}]
+%   \item[Red] A proposition in a red frame.
+%   \item And a second one, in the same frame.
+% \end{prop}
+% \end{example}
 % The wrapping environment must be one that can be split into separate begin and end
 % code---that is, it must not read its body as a macro argument via \cs{collect@body} or similar.
 % \end{docKeys}
@@ -495,7 +511,7 @@
 % \subsection{Global keys}
 % \label{sect:keys-global}
 %
-% The following key can only be set in the optional argument of |\usepackage|, or in the preamble with |\propoptions|.  In the optional argument of \texttt{prop} or \texttt{inlineprop} it is ignored, with a warning.  Setting it after \verb|\begin{document}| is worse than useless: the equation hooks are installed at \verb|\begin{document}|, so only the \texttt{nameless style\,=\,eqnum} half of the key takes effect, and \cs{item}s start using the \texttt{equation} counter while the equations themselves keep the standard formatting.
+% The following key can only be set in the optional argument of |\usepackage|, or in the preamble with |\propoptions|.  
 % \begin{docKey}{equations}{}{no value, \textbf{global only}}
 %   Installs hooks so that the \LaTeX\ and \textsf{amstex} displayed equation environments (such as \texttt{equation} and \texttt{align}) use the same formatting as the special \texttt{equation} prop style.  The \texttt{equation} style's \texttt{display format} and \texttt{ref format} keys are used for generating equation numbers and cross-references to them.  
 % 
@@ -536,19 +552,15 @@
 %
 % \begin{example}
 % \SetPropStyle{angle}{
-%   labelindent = 0em,
-%   display format =
-%     \textbf{$\langle$#1$\rangle$},
-%   ref format     =
-%     $\langle$#1$\rangle$,
-%   macro = \angitem
+%   labelindent    = 0em,
+%   display format = \textbf{$\langle$#1$\rangle$},
+%   ref format     = $\langle$#1$\rangle$,
+%   macro          = \angitem
 % }
 % \begin{prop}
-%   \angitem[Angle thesis]
-%   Everything is angular.
+%   \angitem[Angle thesis] Everything is angular.
 % \end{prop}
-% No further discussion of
-% \lastref{} is needed.
+% No further discussion of \lastref{} is needed.
 % \end{example}
 %
 % \begin{docCommand}{DeclareNumberedStyle}{\marg{name}\oarg{keys}}
@@ -562,52 +574,65 @@
 % \begin{example}
 % \DeclareNumberedStyle{P}
 % \begin{prop}
-%   \item[counter=P] First premise.
-%   \label{p1}
-%   \item[counter=P] Second premise.
-%   \label{p2}
+%   \item[counter=P] First premise. \label{p1}
+%   \item[counter=P] Second premise. \label{p2}
 % \end{prop}
 % From \ref{p1} and \ref{p2}\ldots
 % \end{example}
 %
 % \begin{docCommand}{proplevelchoice}{\marg{item1, item2, \ldots}}
-%   Picks the entry at the current nesting depth (1-indexed, clamped to the list length).  At depth~0 (outside any \texttt{prop} environment), returns the first entry.  This macro is fully expandable and can be used in the \texttt{name}, \texttt{format}, and \texttt{style} keys of \cs{SetPropStyle} to create depth-dependent styles.
+%   Picks the entry from the list depending on the current nesting depth (1-indexed, last element will be used if the list is too short).  At depth~0 (outside any \texttt{prop} environment), returns the first entry.  This macro is expandable, and designed to be used within \cs{SetPropStyle} to create styles that produce different results depending on the nesting depth of the |\item| in which they are used.
 % \end{docCommand}
 %
+% Special counters \docCounter{leveltwo}, \docCounter{levelthree}, \docCounter{levelfour}, \docCounter{levelfive} are provided, whose values are automatically reset each time an |\item| is processed at a lower nesting level.  These are especially useful in combination with \cs{proplevelchoice}, to generate hierarchically numbered styles: for examples, see the built-in \texttt{numbered}, \texttt{eqnum}, and \texttt{hierarchical} styles in the next section.
+% 
 % \section{Built-in styles}\label{sect:builtin-styles}
 %
 % The following prop styles are predefined.
-% Each entry shows the defining code (using user-facing commands)
-% and a live example.  All styles can be modified with \refCom{SetPropStyle}.
+% Each entry shows the defining code (using user-facing commands),
+% and each group of styles ends with a live example.
+% All styles can be modified with \refCom{SetPropStyle}; the definitions are reproduced here to facilitate modification.
 %
 % \subsubsection*{Text styles}
 %
+% \begin{example}
+% \begin{prop}
+%   \item[One, style=plain] \label{bs:plain}
+%   A proposition in style |plain|, cited as \ref{bs:plain}.
+%   \item[Two, style=proposition] \label{bs:prop}
+%   A proposition in style |proposition|, cited as \ref{bs:prop}.
+%   \titem[Three] \label{bs:thesis}
+%   A proposition in style |thesis|, cited as \ref{bs:thesis}.
+%   \item[Four, style=vignette] \label{bs:vignette}
+%   A proposition in style |vignette|, cited as \ref{bs:vignette}.
+%   \bitem \label{bs:bullet}
+%   A proposition in style |bullet|, cited as \ref{bs:bullet}---though
+%   it is not often that one would want to cite an item in this style.
+% \end{prop}
+% \end{example}
+% 
 % \begin{description}
 % \item[\texttt{plain}] Unformatted text label.
 % \begin{codebox}
 % \SetPropStyle{plain}{format = #1}
 % \end{codebox}
-% \begin{prop}\item[style=plain, name=Claim] An unformatted item.\end{prop}
 %
-% \item[\texttt{proposition}] Bold text label.  Auto-selected when |\item| has a name but no \texttt{style}.
+% \item[\texttt{proposition}] Bold text label and reference.  Auto-selected when |\item| has a name but no \texttt{style}.
 % \begin{codebox}
 % \SetPropStyle{proposition}{format = \textbf{#1}}
 % \end{codebox}
-% \begin{prop}\item[Thesis] A bold-formatted item.\end{prop}
 %
 % \item[\texttt{thesis}] Small-caps name at the text margin (\texttt{flush} alignment).  Shortcut: |\titem|.
 % \begin{codebox}
-% \SetPropStyle{thesis}{format = \textsc{#1},
-%   align = flush, macro = \titem}
+% \SetPropStyle{thesis}{display format = \textsc{#1},
+%   ref format=#1, align = flush, macro = \titem}
 % \end{codebox}
-% \begin{prop}\titem[Hypothesis] A flush-aligned item.\end{prop}
 %
 % \item[\texttt{vignette}] Italic name at the text margin with a colon in the label.
 % \begin{codebox}
 % \SetPropStyle{vignette}{ref format = \textit{#1},
 %   align = flush, label format = \textit{#1:}}
 % \end{codebox}
-% \begin{prop}\item[style=vignette, name=Example] A vignette item.\end{prop}
 %
 % \item[\texttt{bullet}] Bullet symbol varying by depth (like |\itemize|).  Shortcut: |\bitem|.
 % \begin{codebox}
@@ -617,85 +642,125 @@
 %     \textperiodcentered},
 %   display format = #1, macro = \bitem}
 % \end{codebox}
-% \begin{prop}\bitem A bullet item.\end{prop}
 % \end{description}
 %
-% \subsubsection*{Numbered styles with dedicated counters}
+% \subsubsection*{Numbered styles}
 %
+% \begin{example}
+% \begin{prop}
+%   \ritem \label{bs:roman}
+%   In style |roman|, cited as \ref{bs:roman}.
+%   \begin{prop}
+%     \ritem The same style in a sublist: the
+%     numbering restarts under each parent item.
+%     \ritem A second sub-item.
+%   \end{prop}
+%   \aitem \label{bs:alph}
+%   In style |alph|, cited as \ref{bs:alph}.
+%   \item[style=equation] \label{bs:equation}
+%   In style |equation|, cited as \ref{bs:equation}.
+% \end{prop}
+% \end{example}
+% 
 % \begin{description}
-% \item[\texttt{roman}] Roman-numeral counter, resets per section.  Shortcut: |\ritem|.
+% \item[\texttt{roman}] Roman numerals.  Shortcut: |\ritem|.
 % \begin{codebox}
 % \DeclareNumberedStyle{roman}[parent = section,
 %   counter format = \roman{#1}, format = (#1), macro = \ritem]
+% \SetPropStyle{roman}{counter = \proplevelchoice{
+%   roman, numpropii, numpropiii, numpropiv, numpropv}}
 % \end{codebox}
-% \begin{prop}\ritem A roman-numbered item.\end{prop}
 %
-% \item[\texttt{alph}] Alphabetic counter, resets per section.  Shortcut: |\aitem|.
+% \item[\texttt{alph}] Letters.  Shortcut: |\aitem|.
 % \begin{codebox}
 % \DeclareNumberedStyle{alph}[parent = section,
-%   counter format = \alph{#1}, format = (#1), macro = \aitem]
-% \end{codebox}
-% \begin{prop}\aitem An alphabetic item.\end{prop}
-% \end{description}
-%
-% \subsubsection*{Level-specific styles}
-%
-% These styles are used by the \texttt{numbered} and \texttt{eqnum}
-% dispatcher styles (below).  They share the counters
-% |numpropi|\,--\,|numpropv|, which reset automatically when an
-% |\item| at the next lower level is processed.
-%
-% \begin{description}
-% \item[\texttt{levelone}] Level-1 numbered items: arabic in parentheses.
-% \begin{codebox}
-% \SetPropStyle{levelone}{counter = numpropi, format = (#1)}
+%   counter format = \alph{#1}, display format=#1., 
+%   ref format = (#1), macro = \aitem]
+% \SetPropStyle{alph}{counter = \proplevelchoice{
+%   alph, numpropii, numpropiii, numpropiv, numpropv}}
 % \end{codebox}
 %
-% \item[\texttt{leveltwo}] Level-2: lowercase alphabetic with dot.
-% \begin{codebox}
-% \SetPropStyle{leveltwo}{counter = numpropii,
-%   display format = #1., ref format = \parentref{#1}}
-% \end{codebox}
+%   \refCom{DeclareNumberedStyle} gives a style the counter of the same name,
+%   which is what is wanted at level one: a sequence running through the
+%   document, reset at each \cs{section}.  It is not what is wanted deeper down,
+%   where a sublist should start again under each parent item, so both styles
+%   override \texttt{counter} afterwards (a later key wins) to pick up the
+%   shared level counters instead.  Either style can therefore number a sublist
+%   as well as a top-level list.  Two consequences worth knowing: below level one
+%   the numbering is shared with any other style using those counters, and the
+%   reference to a sub-item is just its own numeral, since the style's
+%   \texttt{format} applies at every level---unlike \texttt{leveltwo} and its
+%   siblings, whose \texttt{ref format} prefixes the parent.
 %
-% \item[\texttt{levelthree}] Level-3: lowercase roman in parentheses.
-% \begin{codebox}
-% \SetPropStyle{levelthree}{counter = numpropiii,
-%   display format = (#1), ref format = \parentref{.#1}}
-% \end{codebox}
-%
-% \item[\texttt{levelfour}] Level-4: uppercase alphabetic with dot.
-% \begin{codebox}
-% \SetPropStyle{levelfour}{counter = numpropiv,
-%   display format = #1., ref format = \parentref{#1}}
-% \end{codebox}
-%
-% \item[\texttt{levelfive}] Level-5: uppercase roman in parentheses.
-% \begin{codebox}
-% \SetPropStyle{levelfive}{counter = numpropv,
-%   display format = (#1), ref format = \parentref{.#1}}
-% \end{codebox}
-%
-% \item[\texttt{equation}] Uses the |equation| counter.  When the |equations| option is active, \cs{SetPropStyle}\texttt{\{equation\}\{...\}} automatically updates the \cs{tagform@} and \cs{ref} hooks for all equations.
+% \item[\texttt{equation}] Uses the |equation| counter.  This style has a special behavior when the |equations| option is active: changing its \texttt{display format} and \texttt{ref format} keys (or both, by setting \texttt{format}) will also change the corresponding hooks used to create the tags for numbered equations make the \texttt{equation} environment and \textsf{amstex} environments like \texttt{gather}.
 % \begin{codebox}
 % \SetPropStyle{equation}{counter = equation, format = (#1)}
 % \end{codebox}
 % \end{description}
 %
-% \subsubsection*{Dispatcher styles}
+% \medskip\noindent
+% The remaining numbered styles select one of the others according to the
+% current nesting level.
 %
-% These styles use \cs{proplevelchoice} to select a level-specific style depending on the current nesting level
+% % \begin{example}
+% \begingroup
+% \propoptions{style = hierarchical}
+% \begin{prop}
+%   \item \label{bs:h1} The world is everything that is the case.
+%   \begin{prop}
+%     \item \label{bs:h2} From \ref{bs:h1}, it follows that the 
+%     underworld is everything that is not the case.
+%   \end{prop}
+% \end{prop}
+% \endgroup
+% \begin{prop}
+%   \item \label{bs:d1} Outside the group, this manual's own 
+%   \texttt{eqnum} default for nameless items is back in effect.  
+%   At this outermost level, it has the same effect as 
+%   \texttt{equation}.  This item can be referenced as \ref{bs:d1}.
+%   \begin{prop}
+%     \item \label{bs:d2} Since this item (referenced as 
+%     \ref{bs:d2}) is at level two, \texttt{eqnum} dispatches 
+%     to \texttt{leveltwo}. 
+%     \begin{prop}
+%       \item \label{bs:d3} Since this item (referenced as 
+%       \ref{bs:d3}) is at level three, \texttt{eqnum} 
+%       dispatches to \texttt{levelthree}.
+%     \end{prop}
+%   \end{prop}
+% \end{prop}
+% \end{example}
+% 
+% These styles use \cs{proplevelchoice} to select a style depending on the
+% current nesting level.  Each is defined together with the level-specific
+% styles it dispatches to.  Those helper styles share the counters
+% |numpropi|\,--\,|numpropv|, which reset automatically when an |\item| at the
+% next lower level is processed.
 %
 % \begin{description}
-% \item[\texttt{numbered}] The default nameless style.  Dispatches to
-%   |levelone|\,--\,|levelfive| by nesting depth.
+% \item[\texttt{numbered}] The default nameless style.  Dispatches by nesting
+%   depth to \texttt{levelone} (arabic in parentheses), \texttt{leveltwo}
+%   (lowercase alphabetic with a dot), \texttt{levelthree} (lowercase roman in
+%   parentheses), \texttt{levelfour} (uppercase alphabetic with a dot) and
+%   \texttt{levelfive} (uppercase roman in parentheses).
 % \begin{codebox}
 % \SetPropStyle{numbered}{style = \proplevelchoice{
 %   levelone, leveltwo, levelthree, levelfour, levelfive}}
+% \SetPropStyle{levelone}{counter = numpropi, format = (#1)}
+% \SetPropStyle{leveltwo}{counter = numpropii,
+%   display format = #1., ref format = \parentref{#1}}
+% \SetPropStyle{levelthree}{counter = numpropiii,
+%   display format = (#1), ref format = \parentref{.#1}}
+% \SetPropStyle{levelfour}{counter = numpropiv,
+%   display format = #1., ref format = \parentref{#1}}
+% \SetPropStyle{levelfive}{counter = numpropv,
+%   display format = (#1), ref format = \parentref{.#1}}
 % \end{codebox}
 %
 % \item[\texttt{eqnum}] Like |numbered|, but uses |equation| at level~1.
 %   Activated by the |equations| package option (which sets
-%   |nameless style = eqnum|).
+%   |nameless style = eqnum|), and therefore the style in force for the
+%   unnamed items of this manual.
 % \begin{codebox}
 % \SetPropStyle{eqnum}{style = \proplevelchoice{
 %   equation, leveltwo, levelthree, levelfour, levelfive}}
@@ -706,7 +771,8 @@
 %   Defined via two helper styles:
 % \begin{codebox}
 % \SetPropStyle{h-base}{counter = numpropi,
-%   counter format = \arabic{#1}, format = #1}
+%   counter format = \arabic{#1}, ref format = #1, 
+%   display format = #1.}
 % \SetPropStyle{h-sub}{
 %   counter = \proplevelchoice{numpropi, numpropii,
 %     numpropiii, numpropiv, numpropv},
@@ -717,8 +783,24 @@
 % \end{codebox}
 % \end{description}
 %
-% \subsubsection*{Wrapper style}
+% Note that since the optional arguments of the \texttt{prop} and \texttt{inlineprop} environment only affect the |\item|s in the \emph{immediate} scope of that environment (not of any nested environments), dispatcher styles are most useful when either set as defaults using keys like \refKey{nameless style}, or set with \refCom{propoptions} (whose scope can be controlled by creating a \TeX{} group).
 %
+% \subsubsection*{Environment-level styles}
+%
+% These styles are designed to be used in 
+% the optional argument of \texttt{prop} or \texttt{inlineprop}.
+% 
+% \begin{example}
+% \begin{prop}[style=framed, style=thesis]
+%   \item[Central Doctrine] This thesis is so incredibly 
+%   important that it deserves to be put in its own box!
+% \end{prop}
+% \begin{prop}[name=Fitted Margin, style=fitmargin]
+%   \item The name is set for the environment, and the
+%   body of the item begins where the label ends.
+% \end{prop}
+% \end{example}
+% 
 % \begin{description}
 % \item[\texttt{framed}] Frames a list in a \texttt{tcolorbox} (requires the \textsf{tcolorbox}
 %   package to be loaded).  Change the
@@ -726,6 +808,7 @@
 % \begin{codebox}
 % \SetPropStyle{framed}{
 %   align = flush, leftmargin = 0pt, rightmargin = 0pt,
+%   labelindent = {}, continue = false,
 %   wrapper begin = {\begin{tcolorbox}[
 %       colback = white, colframe = black,
 %       boxrule = 0.4pt, arc = 0pt, boxsep = 0pt,
@@ -738,15 +821,75 @@
 %   wrapper end = {\end{tcolorbox}},
 % }
 % \end{codebox}
-%   The list runs at \texttt{leftmargin\,=\,0} inside the frame, so
-%   \refCom{propoperativeleftmargin} is what keeps the contents at the left
-%   margin an unframed list would have used, with the frame rule one
+%   The \texttt{leftmargin\,=\,0} key means that the left margin \emph{inside} the frame is zero.  But the use of 
+%   \refCom{propoperativeleftmargin} indents the whole \texttt{tcolorbox} environment by the right amount for the  the
+% left margin of the enclosed material to appear at the same position that would have been used for a list without the \texttt{frame} style, with the frame rule one
 %   \cs{propframepad} further out.
-% \begin{prop}[style=framed]
-%   \item[name=Note] A framed list, with a flush label and a plain paragraph.
-%   \item[counter=none] The unlabelled line sits flush at the same edge.
-% \end{prop}
+%
+%   \texttt{continue\,=\,false} keeps the frame clear of any list immediately
+%   before or after it.  Joining does not merely retune the gap: it cancels the
+%   vertical glue already in place, which for a framed list is the
+%   \textsf{tcolorbox}'s own spacing.
+%
+% \item[\texttt{fitmargin}] Fits the left margin to the width of the label, so
+%   that each item's body begins where its label ends and the label sits in the
+%   hanging indent.
+% \begin{codebox}
+% \SetPropStyle{fitmargin}{
+%   align      = left,
+%   labelwidth = \widthof{\propwidestlabel},
+%   leftmargin = \widthof{\propwidestlabel} + \labelsep}
+% \end{codebox}
+%   This is what \refCom{propformlabel} is for: it is the label this
+%   environment's items are expected to produce, computed once at
+%   \verb|\begin{prop}| and therefore usable in the dimension keys that size the
+%   list.  Both keys need it---\texttt{leftmargin} to place the body, and
+%   \texttt{labelwidth} to make the label box wide enough that the label starts
+%   at the enclosing margin rather than overflowing a box of the class default
+%   width.  What they measure is \refCom{propwidestlabel}, the same label with
+%   its digits widened, so that a run of numbered environments does not shift
+%   its margin every time the numbers change width.
+%
+%   Since the name is set for the environment, every \cs{item} of the list
+%   carries the same label, so this style is meant for a list of one item; a
+%   numbered variant would want \refKey{items} as well, so that the width is
+%   computed for the last expected label rather than the first.
+%
+% \item[\texttt{outerfit}] \texttt{fitmargin} at the outer level only, and
+%   nothing at all below it.  Intended to be set once, for a document that
+%   wants all of its top-level propositions numbered in the manner of
+%   \textsf{linguex}:
+% \begin{codebox}
+% \propoptions{style = outerfit}
+% \end{codebox}
+%   Fitting the margin to the label is wanted at the outer level and unwanted
+%   inside it, where a nested list's roman numerals or letters would drag the
+%   margin about as they changed width.  So each dimension takes a value that
+%   varies with the nesting level, using \refCom{proplevelchoice}:
+% \begin{codebox}
+% \SetPropStyle{outerfit}{
+%   labelwidth = \proplevelchoice{
+%     \widthof{\propwidestlabel}, \labelwidth},
+%   leftmargin = \proplevelchoice{
+%     \widthof{\propwidestlabel} + \labelsep, \leftmargin}}
+% \end{codebox}
+%   A dimension key's value is stored unexpanded and evaluated where it is
+%   used, so \cs{proplevelchoice} resolves at the level actually being set up;
+%   and \enquote{leave this level alone} is expressible as the self-assignment
+%   \cs{setlength}\texttt{\{\cs{leftmargin}\}\{\cs{leftmargin}\}}, which is what
+%   the second entry amounts to.  Nothing is frozen by this: the value read back
+%   is the one in force for the list being set up, so the deeper levels keep the
+%   document class's own per-level dimensions, level by level.  The same
+%   technique will scope any dimension to any range of levels.  (The per-level list form, \texttt{leftmargin\,=\,\{2em,
+%   0em\}}, will not serve here: it is understood when the list's geometry is
+%   set up but not when the label area of an individual item is, where the
+%   value reaches \cs{setlength} unsplit.)
+%
+%   Unlike \texttt{fitmargin} this style does not set \texttt{align}, which is
+%   \texttt{left} by default in any case: a style in force at every level
+%   should not overrule an alignment chosen further in.
 % \end{description}
+%
 %
 % \section{Cross-referencing commands}\label{sect:xref}
 %
@@ -779,19 +922,16 @@
 % |\nref| can be useful in the argument of |\item|, when the
 % the name of one proposition should depend on that of another:
 % \begin{example}
-% \SetPropStyle{proposition}{format=(#1)}
+% \SetPropStyle{proposition}{format=(\textbf{#1})}
 % \begin{prop}
-%   \item[Phys]
-%   Everything is physical.
-%   \label{phys2}
-%   \item[\nref{phys2}*]
-%   Almost everything is physical.
+%   \item[Phys] Everything is physical. \label{phys2}
+%   \item[\nref{phys2}*] Almost everything is physical.
 %   \label{newphys2}
-%   \item[\ref{phys2}*]
-%   This one has two sets of parentheses,
-%   which is probably not desired.
-%   \ref{newphys2} avoided this by using
-%   |\nref|.
+%   \item[\ref{phys2}*] This one has two sets of parentheses,
+%   which is probably not desired!  Note that 
+%   the previous proposition \ref{newphys2} avoided this by using
+%   |\nref| in the optional argument
+%    of |\item|.
 % \end{prop}
 % \end{example}
 % 
@@ -818,17 +958,15 @@
 % \begin{example}
 % \begin{prop}
 %   \label{premise}
-%   \item[style=plain,name=\oref[*]{phys2}]
-%   This will use boldface and
-%   parentheses because the original
-%   referenced item did.
+%   \item[style=plain, name=\oref[*]{phys2}]
+%   This will use boldface and parentheses because the
+%   original referenced item did.
 % \end{prop}
 % \end{example}
 % 
 % Another handy use for |\oref| is in combination with |\nref| to refer to ranges:
 % \begin{example}
-% The first two numbered examples in
-% this document were 
+% The first two numbered examples in this document
 % were \oref[--\nref{atomism}]{atoms}.
 % \end{example}
 %
@@ -867,20 +1005,14 @@
 %   counter format=\alph{inner},
 %   display format=#1.]
 % \begin{prop}
-%   \item[OI] Outer item.
-%   \label{outer2}
+%   \item[OI] Outer item. \label{outer2}
 %   \begin{prop}
+%     \item[style=inner, format=\parentref{.#1}] \label{dsub1}
+%     Ref: \ref{dsub1}, naked: \nref{dsub1}.
 %     \item[style=inner,
-%       format=\parentref{.#1}]
-%     \label{dsub1}
-%     Ref: \ref{dsub1},
-%     naked: \nref{dsub1}.
-%     \item[style=inner,
-%       display format=#1.,
-%       ref format=\parentref{.#1}]
+%           display format=#1., ref format=\parentref{.#1}]
 %     \label{dsub2}
-%     Ref: \ref{dsub2},
-%     naked: \nref{dsub2}.
+%     Ref: \ref{dsub2}, naked: \nref{dsub2}.
 %   \end{prop}
 % \end{prop}
 % \end{example}
@@ -910,7 +1042,7 @@
 %    \item 
 %    \textsf{amsmath} is required for |\ptag| and the |equations| option.  
 %    \item 
-%    With \textsf{hyperref}, all cross-referencing 
+%    With \textsf{hyperref} loaded, all cross-referencing 
 %    commands generate hyperlinks, as usual.  
 %    \item
 %    With \textsf{cleveref} loaded, all proposition items are assigned to a private |prop| ``reference type'', which by default has no special name, so |\cref| and |\ref| will generate the same output.  The |crefname| key can override this.  
@@ -923,7 +1055,7 @@
 % still apply---\textsf{hyperref} late, and \textsf{cleveref} after
 % \textsf{hyperref}---which gives:
 % \begin{Verbatim}[gobble=2]
-% \usepackage{amsmath}      % if using \ptag
+% \usepackage{amsmath}      % if using \ptag or the equations option
 % \usepackage{tcolorbox}    % if using the framed style
 % \usepackage{hyperref}
 % \usepackage{propositions}
@@ -1014,8 +1146,11 @@
 \tl_new:N   \l__props_ref_text_tl        %% what goes into \@currentlabel
 \tl_new:N   \l__props_item_output_tl     %% formatted display (displayfmt + shorthand + gloss)
 \tl_new:N   \l__props_item_arg_tl        %% per-item argument, bare name normalised to name={...}
+\tl_new:N   \l__props_keylist_tl        %% the three default layers plus the item argument, assembled
 \bool_new:N \l__props_valueless_key_bool %% true when an entry of that argument is a key given without a value
 \bool_new:N \l__props_ptag_bool          %% true during \ptag processing
+\bool_new:N \l__props_nextline_bool     %% true when an align=nextline label has already started the body
+\bool_new:N \l__props_counter_stepped_bool %% true if this item stepped its counter
 \bool_new:N \l__props_titlecase_bool    %% true when \Ref etc. want titlecasing
 \bool_new:N \l__props_reset_bool        %% true (default) = reset sub-level counter on \item
 %% Two layers of item-level defaults.  The cascading layer (\l__props_defaults_tl)
@@ -1552,12 +1687,14 @@
     unknown     .code:n = {} ,
   }
 
-%% Minimal keyspace used only for the named/nameless peek: reads name= and
-%% counter= from the per-item arg without any other side effects.
+%% Minimal keyspace used only for the named/nameless peek: reads name= from the
+%% assembled key list without any other side effects.  The name is the whole
+%% test.  A counter says how an item is numbered, not that it has a name to
+%% display, and the nameless style is the one designed to look right around a
+%% number --- so a counter, wherever it is set, leaves the choice alone.
 \keys_define:nn { props / item-peek }
   {
     name    .tl_set:N = \l__props_name_tl ,
-    counter .tl_set:N = \l__props_counter_tl ,
     unknown .code:n   = {} ,
   }
 
@@ -1582,16 +1719,23 @@
 % alongside other keys (|\item[No Overlap, align=flush]|).
 \cs_new_protected:Nn \__props_normalize_item_arg:Nn
   {
-    \tl_if_in:nnTF { #2 } { = }
+    \tl_clear:N #1
+    %% A blank argument must stay blank.  \item and \item[] both arrive here
+    %% with nothing to say, and wrapping that as name={} would append an empty
+    %% name to the key list --- overriding, rather than inheriting, a name set
+    %% for the environment or by \propoptions.
+    \tl_if_blank:nF { #2 }
       {
-        \tl_clear:N #1
-        \clist_map_inline:nn { #2 }
+        \tl_if_in:nnTF { #2 } { = }
           {
-            \tl_if_empty:NF #1 { \tl_put_right:Nn #1 { , } }
-            \__props_normalize_entry:Nn #1 { ##1 }
+            \clist_map_inline:nn { #2 }
+              {
+                \tl_if_empty:NF #1 { \tl_put_right:Nn #1 { , } }
+                \__props_normalize_entry:Nn #1 { ##1 }
+              }
           }
+          { \__props_normalize_entry:Nn #1 { #2 } }
       }
-      { \tl_clear:N #1 \__props_normalize_entry:Nn #1 { #2 } }
   }
 
 % Append one key-list entry to #1, wrapping it as \texttt{name=\{...\}}
@@ -1627,35 +1771,59 @@
   {
     %% --- Normalise the argument: a bare name becomes name={...} ---
     \__props_normalize_item_arg:Nn \l__props_item_arg_tl { #1 }
+    %% Whether this item ends up stepping its counter.  Only the environment
+    %% preview needs to know (see \__props_compute_env_preview:), and it cannot
+    %% work it out in advance: which counter is used, and whether a name
+    %% suppresses the step, are both settled during resolution.
+    \bool_set_false:N \l__props_counter_stepped_bool
 
-    %% --- Peek: determine named vs. nameless ---
-    %% Clear sentinels so we can detect whether #1 provides a name or counter.
-    \tl_clear:N \l__props_name_tl
-    \tl_clear:N \l__props_counter_tl
+    %% --- Assemble the key list ---
+    %% Cascading defaults (\propoptions) then env-local defaults (this
+    %% environment's argument) then the per-item argument.  Later entries
+    %% override earlier ones, giving the precedence item > env-arg >
+    %% \propoptions.  Built here rather than just before the key pass because
+    %% the peek below has to see all three layers.
+    \tl_set_eq:NN \l__props_keylist_tl \l__props_defaults_tl
+    \tl_if_empty:NF \l__props_env_defaults_tl
+      {
+        \tl_if_empty:NF \l__props_keylist_tl
+          { \tl_put_right:Nn \l__props_keylist_tl { , } }
+        \tl_put_right:NV \l__props_keylist_tl \l__props_env_defaults_tl
+      }
     \tl_if_empty:NF \l__props_item_arg_tl
       {
+        \tl_if_empty:NF \l__props_keylist_tl
+          { \tl_put_right:Nn \l__props_keylist_tl { , } }
+        \tl_put_right:NV \l__props_keylist_tl \l__props_item_arg_tl
+      }
+
+    %% --- Peek: determine named vs. nameless ---
+    %% A name counts wherever it comes from --- \propoptions, the environment
+    %% argument or the item's own --- so that the style an item gets and the
+    %% label it carries come from the same information.
+    \tl_clear:N \l__props_name_tl
+    \tl_if_empty:NF \l__props_keylist_tl
+      {
         \exp_args:NnV \keys_set_known:nnN
-          { props / item-peek } \l__props_item_arg_tl \l_tmpa_tl
+          { props / item-peek } \l__props_keylist_tl \l_tmpb_tl
       }
 
     %% --- Select base style (named or nameless) ---
     %% Always determined; used as the first (lowest-priority) cascade layer.
-    \bool_lazy_or:nnTF
-      { ! \tl_if_empty_p:N \l__props_name_tl }
-      { ! \tl_if_empty_p:N \l__props_counter_tl }
-      {
-        \bool_lazy_and:nnTF
-          { \l__props_ptag_bool }
-          { ! \tl_if_empty_p:N \l__props_named_ptag_style_tl }
-          { \tl_set_eq:NN \l__props_style_tl \l__props_named_ptag_style_tl }
-          { \tl_set_eq:NN \l__props_style_tl \l__props_named_style_tl }
-      }
+    \tl_if_empty:NTF \l__props_name_tl
       {
         \bool_lazy_and:nnTF
           { \l__props_ptag_bool }
           { ! \tl_if_empty_p:N \l__props_nameless_ptag_style_tl }
           { \tl_set_eq:NN \l__props_style_tl \l__props_nameless_ptag_style_tl }
           { \tl_set_eq:NN \l__props_style_tl \l__props_nameless_style_tl }
+      }
+      {
+        \bool_lazy_and:nnTF
+          { \l__props_ptag_bool }
+          { ! \tl_if_empty_p:N \l__props_named_ptag_style_tl }
+          { \tl_set_eq:NN \l__props_style_tl \l__props_named_ptag_style_tl }
+          { \tl_set_eq:NN \l__props_style_tl \l__props_named_style_tl }
       }
 
     %% --- Reset item locals to structural defaults ---
@@ -1665,28 +1833,14 @@
     \tl_set:Nx \l__props_style_tl { \l__props_style_tl }
     \tl_if_empty:NF \l__props_style_tl { \__props_style_load: }
 
-    %% --- Single processing pass over defaults + per-item keys ---
-    %% Scratch list = cascading defaults (\propoptions) then env-local defaults
-    %% (this environment's argument) then the per-item argument.  Later entries
-    %% override earlier ones, giving the precedence item > env-arg > \propoptions.
+    %% --- Single processing pass over the key list assembled above ---
     %% With \l__props_loading_defaults_bool set, each style= entry triggers an
     %% immediate style load, cascading on top of whatever came before.
-    \tl_set_eq:NN \l_tmpa_tl \l__props_defaults_tl
-    \tl_if_empty:NF \l__props_env_defaults_tl
-      {
-        \tl_if_empty:NF \l_tmpa_tl { \tl_put_right:Nn \l_tmpa_tl { , } }
-        \tl_put_right:NV \l_tmpa_tl \l__props_env_defaults_tl
-      }
-    \tl_if_empty:NF \l__props_item_arg_tl
-      {
-        \tl_if_empty:NF \l_tmpa_tl { \tl_put_right:Nn \l_tmpa_tl { , } }
-        \tl_put_right:NV \l_tmpa_tl \l__props_item_arg_tl
-      }
-    \tl_if_empty:NF \l_tmpa_tl
+    \tl_if_empty:NF \l__props_keylist_tl
       {
         \bool_set_true:N \l__props_loading_defaults_bool
         \exp_args:NnV \keys_set_known:nnN
-          { props / item } \l_tmpa_tl \l_tmpb_tl
+          { props / item } \l__props_keylist_tl \l_tmpb_tl
         \bool_set_false:N \l__props_loading_defaults_bool
       }
 
@@ -1720,6 +1874,7 @@
                       { \stepcounter { \l__props_counter_tl } }
                   }
                   { \stepcounter { \l__props_counter_tl } }
+                \bool_set_true:N \l__props_counter_stepped_bool
                 \__props_format_label_from_counter:
               }
               { }  %% Explicit name — skip counter step entirely.
@@ -1771,8 +1926,17 @@
 % gloss, and label format.  Shared between resolve and preview.
 \cs_new_protected:Nn \__props_build_item_output:
   {
-    \protected@edef \l__props_item_output_tl
-      { \l__props_displayfmt:n { \l__props_display_text_tl } }
+    %% An item with nothing to display contributes nothing, rather than an
+    %% empty display format: \item[counter=none] with no name would otherwise
+    %% come out as the format's decoration wrapped around nothing --- "()" under
+    %% the default nameless style.  A shorthand or gloss is still appended
+    %% below, so \item[counter=none, gloss=g] keeps its gloss.
+    \tl_if_empty:NTF \l__props_display_text_tl
+      { \tl_clear:N \l__props_item_output_tl }
+      {
+        \protected@edef \l__props_item_output_tl
+          { \l__props_displayfmt:n { \l__props_display_text_tl } }
+      }
     \tl_if_empty:NF \l__props_shorthand_tl
       {
         \protected@edef \l_tmpa_tl
@@ -1820,6 +1984,15 @@
     \__props_set_ref:
     \tl_if_empty:NF \l__props_label_tl
       { \exp_args:NV \label \l__props_label_tl }
+    %% An align=nextline label ends with \noindent, so the item body has already
+    %% begun: the space that follows \item[...] in the source would be typeset.
+    %% \ignorespaces has to be the last token this command leaves behind, which
+    %% is why it is issued here and not where the label was output.  For the
+    %% other alignments the body has not started yet and TeX drops the space
+    %% itself, in vertical mode --- and in inlineprop that space is wanted, as
+    %% it separates the inline label from the text.
+    \bool_if:NT \l__props_nextline_bool
+      { \bool_set_false:N \l__props_nextline_bool \ignorespaces }
   }
 
 % Save the ambient (kernel) \item at load time.  When a wrapper environment
@@ -1847,9 +2020,9 @@
 % nested list (itemize, enumerate, description, quote, ...) or other
 % \item-using environment.
 %
-% Detection: a prop sets \makelabel to \__props_display_label:n.  Every
+% Detection: a prop sets \makelabel to \__props_makelabel:n.  Every
 % \LaTeX \list / \trivlist resets \makelabel (to \@mklab or {#1->#1}), so
-% inside any nested list \makelabel no longer equals \__props_display_label:n
+% inside any nested list \makelabel no longer equals \__props_makelabel:n
 % and we defer to the ambient \item; only a (nested) prop sets it back.
 % Unlike \@listdepth (which \texttt{minipage} reinitialises to zero, see
 % latex.ltx), \makelabel is purely group-local, so this is robust even when
@@ -1858,7 +2031,7 @@
 % (incompatible) optional-arg scan.
 \cs_new_protected:Nn \__props_item_dispatch:
   {
-    \cs_if_eq:NNTF \makelabel \__props_display_label:n
+    \cs_if_eq:NNTF \makelabel \__props_makelabel:n
       { \__props_item_cmd: }
       { \__props_kernel_item: }
   }
@@ -2385,7 +2558,8 @@
                 { \leftskip = \dimexpr \l__props_pi_labelindent_tl
                     - \leftmargin \relax }
               \l__props_item_output_tl \par }
-            \vspace { -\parsep } \noindent \ignorespaces
+            \vspace { -\parsep } \noindent
+            \bool_set_true:N \l__props_nextline_bool
           }
           {
         \str_if_eq:VnTF \l__props_alignment_tl { flush-nextline }
@@ -2395,7 +2569,8 @@
             %% then cancel the inter-paragraph space.
             \__props_list_item: []
             \l__props_item_output_tl \par
-            \vspace { -\parsep } \noindent \ignorespaces
+            \vspace { -\parsep } \noindent
+            \bool_set_true:N \l__props_nextline_bool
           }
           {
         \str_if_eq:VnTF \l__props_alignment_tl { center }
@@ -2433,6 +2608,85 @@
 \NewDocumentCommand \propformlabel { } { }
 
 % ====================================================================
+% \propwidest — widen a label's digits, for measurement only
+% ====================================================================
+% A margin sized to \widthof{\propformlabel} tracks the label exactly, so
+% consecutive environments shift back and forth as the numbers change width:
+% "(9)" and "(10)" differ by 5pt in the default font.  linguex avoids this by
+% measuring not the label but the widest label with the same number of digits.
+% \propwidest does the same to an already-formatted label, replacing all of its
+% digits by whichever single digit makes the label widest and leaving formatting
+% macros, spaces and letters alone.  The result is only ever measured, never
+% typeset, so the substitution is invisible.
+%
+% Which digit that is has to be found rather than assumed.  With tabular
+% figures --- Computer Modern and most text fonts --- every digit has the same
+% width and it makes no difference; but with proportional (usually oldstyle)
+% figures it very much does, and 8 is not generally the answer: in EB Garamond's
+% oldstyle figures 8 is only the sixth widest, 0.55pt narrower than 0, so a
+% margin reserved for "(88)" leaves "(00)" to overflow it and shove the first
+% line of the item body sideways --- exactly the jitter this is meant to remove.
+% So each of the ten digits is tried in turn and the widest result kept.  This
+% costs eleven \hbox measurements, but only where \propwidest is actually used:
+% once or twice per environment, and not at all in a document that never asks
+% for it.  Measuring whole variants rather than bare digits also gets the label
+% measured in its own font, whatever \displayformat put it in.
+%
+% \protected@edef, not \tl_set:Nx: a label may contain robust commands, and
+% under a plain \edef \textbf expands to \protect\textbf\space, which then
+% takes the rest of the list as its argument.  And a regex, not \tl_map_...:
+% expl3's tl mapping skips spaces, silently narrowing any label with one.
+
+\tl_new:N  \l__props_widen_tl      %% the label, as given
+\tl_new:N  \l__props_widen_var_tl  %% one digit-variant of it
+\tl_new:N  \l__props_widest_tl     %% the widest variant so far
+\box_new:N \l__props_widen_box
+\dim_new:N \l__props_widen_dim
+
+% Build the variant of \l__props_widen_tl whose digits are all #1, and keep it
+% if it is wider than the widest so far.
+\cs_new_protected:Nn \__props_widen_try:n
+  {
+    \tl_set_eq:NN \l__props_widen_var_tl \l__props_widen_tl
+    \regex_replace_all:nnN { \d } { #1 } \l__props_widen_var_tl
+    \hbox_set:Nn \l__props_widen_box { \l__props_widen_var_tl }
+    \dim_compare:nNnT
+      { \box_wd:N \l__props_widen_box } > { \l__props_widen_dim }
+      {
+        \dim_set:Nn \l__props_widen_dim { \box_wd:N \l__props_widen_box }
+        \tl_set_eq:NN \l__props_widest_tl \l__props_widen_var_tl
+      }
+  }
+
+\NewDocumentCommand \propwidest { m }
+  {
+    \group_begin:
+      \protected@edef \l__props_widen_tl {#1}
+      \tl_set_eq:NN \l__props_widest_tl \l__props_widen_tl
+      \dim_zero:N \l__props_widen_dim
+      %% A label with no digits in it is its own widest variant, and measuring
+      %% it eleven times to discover that would be a waste.
+      \regex_match:nVTF { \d } \l__props_widen_tl
+        {
+          %% 8 is tried first so that it wins a tie, which is every tie in a
+          %% font with tabular figures: there the substitution is a no-op on
+          %% the width, and 8 is the traditional choice.
+          \__props_widen_try:n { 8 }
+          \int_step_inline:nnn { 0 } { 9 }
+            { \__props_widen_try:n { ##1 } }
+        }
+        { }
+      \tl_use:N \l__props_widest_tl
+    \group_end:
+  }
+
+% The preview label, widened: what a style measures to get a margin that does
+% not jitter.  \widthof{\propwidestlabel} in place of \widthof{\propformlabel}
+% is the whole of the difference.
+
+\NewDocumentCommand \propwidestlabel { } { \propwidest { \propformlabel } }
+
+% ====================================================================
 % \__props_compute_env_preview: — compute \propformlabel at env open.
 % Resolves what a bare \item would produce with the current env defaults,
 % accounting for items=n (preview shows the n-th item label so that
@@ -2459,9 +2713,17 @@
                   \protected@edef \l__props_display_text_tl { \l__props_name_tl }
                   \__props_build_item_output:
                 }
-              %% Undo all counter steps (total: items steps).
+              %% Undo exactly the steps that were made: (items-1) above, plus
+              %% the one \__props_resolve_item:n made unless the item is named,
+              %% in which case it made none.
               \exp_args:Nxx \addtocounter { \l__props_counter_tl }
-                { \int_eval:n { -\l__props_env_items_int } }
+                {
+                  \int_eval:n
+                    {
+                      - \l__props_env_items_int
+                      + \bool_if:NTF \l__props_counter_stepped_bool { 0 } { 1 }
+                    }
+                }
             }
         }
       %% Save preview label globally so it survives group end.
@@ -2509,7 +2771,17 @@
 \tl_new:N \l__props_wrap_end_tl
 
 % \makelabel for prop lists: left-aligns the label and prevents line breaks.
+% \__props_output_item_align: swaps this definition for align=center and
+% align=right, so \makelabel must be bound to the indirection below rather
+% than to this macro itself: \list copies \makelabel's meaning once, when the
+% list is created, and would otherwise freeze the left-aligned version for
+% every item in it.
 \cs_new:Nn \__props_display_label:n { \mbox{#1} \hfill }
+
+% What \makelabel is actually bound to.  Its own meaning never changes, which
+% is what the item dispatcher tests for; the label alignment can vary from
+% item to item because the call is resolved when the label is typeset.
+\cs_new:Nn \__props_makelabel:n { \__props_display_label:n {#1} }
 
 % --- Consecutive-list (continue) state ---
 % \l__props_continue_bool: true (default) = participate in consecutive joining.
@@ -2685,7 +2957,7 @@
       {
         %% \makelabel set by \cs_set_eq: (not a wrapper) so the item dispatcher
         %% can recognise a prop list by \makelabel's identity.
-        \cs_set_eq:NN \makelabel \__props_display_label:n
+        \cs_set_eq:NN \makelabel \__props_makelabel:n
         %% Establish the standard \labelwidth for this list depth.  \list sets
         %% \itemindent, \rightmargin and \listparindent itself, and \@listii and
         %% deeper set \labelwidth, but at depth one \@listi does not: such a list
@@ -2696,12 +2968,16 @@
         %% --- and with it the \labelsep gap after a flush label.)  itemize,
         %% enumerate and description each set \labelwidth for themselves; this is
         %% prop doing the same, using the same value \@listii would.
-        \tl_if_empty:NT \l__props_labelwidth_tl
-          {
-            \dim_set:Nn \labelwidth { \leftmargin - \labelsep }
-            \dim_compare:nNnT \labelwidth < \c_zero_dim
-              { \dim_zero:N \labelwidth }
-          }
+        %%
+        %% Done unconditionally, not just when no labelwidth override follows.
+        %% An override normally overwrites this outright, so the work is wasted
+        %% --- except when the override's value reads \labelwidth itself, which
+        %% is how a style says "leave this level alone" (see outerfit).  Such an
+        %% override needs a sane value to read back, and at depth one there is
+        %% none until this has run.
+        \dim_set:Nn \labelwidth { \leftmargin - \labelsep }
+        \dim_compare:nNnT \labelwidth < \c_zero_dim
+          { \dim_zero:N \labelwidth }
         %% Apply dimension overrides.  Each value may be a single length
         %% (applied at all levels) or a comma-list of per-level lengths.
         %% Empty = inherit the document class default.
@@ -2867,6 +3143,8 @@
       { \bool_gset_false:N \g__props_display_mode_bool }
     %% Signal that the next prop may join seamlessly (cleared by
     %% \begin{prop} or by the para/begin hook if text intervenes).
+    %% continue=false suppresses it, which is how the framed style keeps a
+    %% frame clear of whatever follows it.
     \bool_if:NT \l__props_continue_bool
       { \bool_gset_true:N \g__props_last_was_prop_bool }
   }
@@ -2910,7 +3188,7 @@
     %% Bind \item to the dispatcher.  inlineprop opens no list, so set \makelabel
     %% to the prop label maker by hand (it is what the dispatcher keys off); a
     %% nested list resets \makelabel and the dispatcher reverts to ambient \item.
-    \cs_set_eq:NN \makelabel \__props_display_label:n
+    \cs_set_eq:NN \makelabel \__props_makelabel:n
     \cs_set_eq:NN \item \__props_item_dispatch:
   }
   {
@@ -3247,13 +3525,15 @@
 
 \SetPropStyle { thesis }
   {
-    format         = \textsc{#1} ,
+    display~format = \textsc{#1} ,
+    ref~format     = #1 ,
     align          = flush ,
     macro          = \titem ,
   }
 
 \SetPropStyle { vignette }
   {
+    display~format = #1 ,
     ref~format     = \textit{#1} ,
     align          = flush ,
     label~format   = \textit{#1:} ,
@@ -3307,6 +3587,14 @@
 % Default numbered styles
 % ====================================================================
 
+% \DeclareNumberedStyle gives a style the counter of the same name, which is
+% what is wanted at level 1: a document-wide sequence, reset per section.  It is
+% not what is wanted deeper down, where a sublist should start again under each
+% parent item.  Overriding \texttt{counter} afterwards (a later key wins) hands
+% the deeper levels the shared level counters, which reset by themselves, so
+% these styles can number a sublist as well as a top-level list.  The counters
+% named here are created further below; nothing expands until an item uses them.
+
 \DeclareNumberedStyle { roman }
   [
     parent         = section ,
@@ -3315,15 +3603,26 @@
     macro          = \ritem ,
   ]
 \cs_gset:Npn \theroman { \roman { roman } }
+\SetPropStyle { roman }
+  {
+    counter = \proplevelchoice { roman , numpropii , numpropiii ,
+                                 numpropiv , numpropv } ,
+  }
 
 \DeclareNumberedStyle { alph }
   [
     parent         = section ,
     counter~format = \alph{#1} ,
-    format         = (#1) ,
+    display~format = #1. ,
+    ref~format     = (#1) ,
     macro          = \aitem ,
   ]
 \cs_gset:Npn \thealph { \alph { alph } }
+\SetPropStyle { alph }
+  {
+    counter = \proplevelchoice { alph , numpropii , numpropiii ,
+                                 numpropiv , numpropv } ,
+  }
 
 \newcounter { numpropii }
 \cs_gset:Npn \thenumpropii { \alph { numpropii } }
@@ -3367,7 +3666,8 @@
   {
     counter        = numpropi ,
     counter~format = \arabic{#1} ,
-    format         = #1 ,
+    display~format = #1. ,
+    ref~format     = #1 ,
   }
 
 \SetPropStyle { h-sub }
@@ -3385,6 +3685,66 @@
   }
 
 % ====================================================================
+% fitmargin: left margin fitted to the label
+% ====================================================================
+% An environment-level style: it reads \propformlabel, the label this
+% environment's items are expected to produce, which is computed once at
+% \begin{prop} and is therefore only meaningful there.  Setting \leftmargin to
+% that width plus \labelsep makes the body of every item line up just past the
+% label, so the label sits in the hanging indent.  \labelwidth has to be set as
+% well: without it the label box keeps the class default (20pt), the label
+% overflows it, and the label starts one box-width short of the margin instead
+% of at it.  Use \texttt{items} when the items are numbered, so that the width
+% is computed for the widest label rather than the first.
+%
+% What is measured is \propwidestlabel rather than \propformlabel, so that the
+% margin depends on how many digits the label has and not on which ones: a run
+% of numbered environments then keeps a steady margin instead of shifting at
+% every change of number.
+
+\SetPropStyle { fitmargin }
+  {
+    align      = left ,
+    labelwidth = \widthof{\propwidestlabel} ,
+    leftmargin = \widthof{\propwidestlabel} + \labelsep ,
+  }
+
+% ====================================================================
+% outerfit: fitmargin at the outer level only
+% ====================================================================
+% Meant to be set once, with \propoptions{style = outerfit}, by a document
+% that wants linguex-like examples throughout.  Fitting the margin to the
+% label is wanted at the outer level and unwanted below it, where a nested
+% list's roman numerals or letters would drag the margin about; so each
+% dimension is given a value that varies with the nesting level.
+%
+% A dimension key's value is stored unexpanded and evaluated by \setlength at
+% the point of use --- at \begin{list} for the list's own geometry, and again
+% per item for the label area --- and \g__props_level_int is right at both
+% points.  So \proplevelchoice resolves at the level that is actually being
+% set up, and "leave this level alone" can be written as the self-assignment
+% \setlength{\leftmargin}{\leftmargin}, which is what the second entry does.
+%
+% The per-level comma-list form of these keys (leftmargin = {2em, 0em}) will
+% not do here: it is understood by the list-dimension keyspace but not by the
+% per-item one, which passes the value to \setlength unsplit and so meets a
+% comma where calc wants a length.  A \proplevelchoice value needs no
+% splitting by anyone, only expanding.
+%
+% align is deliberately not set, though fitmargin sets it: it is the default
+% anyway (see \__props_decl_reset:), and a style that is in force at every
+% level should not quietly overrule an alignment chosen further in.
+
+\SetPropStyle { outerfit }
+  {
+    labelwidth =
+      \proplevelchoice { \widthof{\propwidestlabel} , \labelwidth } ,
+    leftmargin =
+      \proplevelchoice
+        { \widthof{\propwidestlabel} + \labelsep , \leftmargin } ,
+  }
+
+% ====================================================================
 % framed: wrap the list in a tcolorbox
 % ====================================================================
 % Requires \textsf{tcolorbox}.  The whole geometry lives in the style below,
@@ -3392,6 +3752,13 @@
 % \texttt{leftmargin\,=\,0}, so the contents keep the level's effective left
 % margin --- read via \cs{propoperativeleftmargin} --- while the frame is
 % centred with its rule one \cs{propframepad} to the left of the contents.
+%
+% labelindent is cleared because inside the frame the label is flush at the
+% text margin, so there is no label box to indent.  Left set, an ambient
+% labelindent would make the constraint resolver satisfy
+% LI + LW + LS = LM + II with a positive itemindent (LM being 0 here), and
+% that itemindent is exactly where a flush label lands: the whole list would
+% be pushed a leftmargin's worth to the right of the frame it sits in.
 
 \newlength \propframepad
 \setlength \propframepad { 6pt }  %% padding between contents and rule (adjustable)
@@ -3403,6 +3770,7 @@
 \ExplSyntaxOff
 \SetPropStyle{framed}{
   align = flush, leftmargin = 0pt, rightmargin = 0pt,
+  labelindent = {}, continue = false,
   wrapper begin = {\begin{tcolorbox}[
       colback = white, colframe = black,
       boxrule = 0.4pt, arc = 0pt, boxsep = 0pt,

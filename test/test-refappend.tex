@@ -319,6 +319,18 @@ start at the left of the label box; centered labels are centered in it.
   \item[name={N}, align=left] Normal left alignment, for comparison.
 \end{prop}
 
+A nextline label ends by starting the item's paragraph, so unlike every other
+alignment the space that follows \verb|\item[...]| in the source is typeset
+rather than dropped in vertical mode.  All four bodies below must begin at the
+same x, whether or not there is a space after the bracket.
+
+\begin{prop}
+  \item[{Nextline, with a space}, align=nextline] body begins here.
+  \item[{Nextline, no space}, align=nextline]body begins here.
+  \item[{Flush-nextline, with a space}, align=flush-nextline] body begins here.
+  \item[{Flush-nextline, no space}, align=flush-nextline]body begins here.
+\end{prop}
+
 \section{Continuing sub-item lettering with \texttt{reset=false}}
 
 Processing an \verb|\item| resets the counter of the level below it, so a sublist

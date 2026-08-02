@@ -1,0 +1,71 @@
+\documentclass{article}
+\usepackage[oldstyle]{ebgaramond}
+\usepackage{propositions}
+
+%% \propwidest with proportional (oldstyle) figures.  Computer Modern cannot
+%% exercise this: all of its digits have the same width, so any choice of
+%% substitute digit gives the same answer and a wrong choice cannot show up.
+%% EB Garamond's oldstyle figures are genuinely proportional --- 0 is the
+%% widest and 1 is 44% narrower --- so here the substitute has to be the widest
+%% digit and nothing else will do.  (Requires ebgaramond.)
+
+\newlength\wa \newlength\wb
+\newcommand\cmp[1]{%
+  \settowidth\wa{\rmfamily\normalsize(#1)}%
+  \settowidth\wb{\rmfamily\normalsize\propwidest{(#1)}}%
+  \texttt{(#1)}: actual \the\wa, reserved \the\wb,
+  \ifdim\wa>\wb \textbf{OVERFLOW by \the\dimexpr\wa-\wb\relax}%
+  \else slack \the\dimexpr\wb-\wa\relax\fi\par}
+
+\begin{document}
+
+\section{Nothing may overflow}
+
+The reserved width is what \verb|fitmargin| sets aside for the label.  Every
+line below must read \emph{slack}: a label wider than the space reserved for it
+overflows its box and pushes the first line of the item body sideways, which is
+the very jitter the widening exists to remove.  Reserving for \texttt{(88)}
+rather than for the widest variant fails here on every label containing a
+\texttt{0}, \texttt{4}, \texttt{6}, \texttt{9} or \texttt{7}.
+
+{\ttfamily\footnotesize
+\cmp{1}\cmp{5}\cmp{8}\cmp{9}\cmp{0}
+\cmp{11}\cmp{99}\cmp{00}\cmp{40}\cmp{88}
+\cmp{100}\cmp{999}\cmp{000}
+}
+
+Exactly one line in each group must show zero slack --- the all-widest-digit
+label itself, which is what was measured.
+
+\section{Equal digit counts, equal margins}
+
+\noindent\rule{\textwidth}{0.3pt}
+\setcounter{numpropi}{10}
+\begin{prop}[style=fitmargin]
+  \item Label (11): the two narrowest digits, and the loosest gap.
+\end{prop}
+\setcounter{numpropi}{98}
+\begin{prop}[style=fitmargin]
+  \item Label (99): must begin at exactly the same place as the item above,
+  even though its label is 3.5pt wider.
+\end{prop}
+\setcounter{numpropi}{999}
+\begin{prop}[style=fitmargin]
+  \item Label (1000): four digits, so this one is indented further.
+\end{prop}
+\noindent\rule{\textwidth}{0.3pt}
+\setcounter{numpropi}{0}
+
+The bodies of the first two items must start at the same horizontal position;
+the third starts further right.  Reserving for \texttt{(88)} instead leaves the
+second one 0.28pt out.
+
+\section{Non-digits are untouched}
+
+\verb|\propwidest| of \textbf{(3.147)} is \propwidest{\textbf{(3.147)}}, still
+bold and with the point still in place; of \textsc{Prop}~1a it is
+\propwidest{\textsc{Prop}~1a}, still small caps with the space intact; and of a
+label with no digits at all, \emph{Nihilism}, it is \propwidest{\emph{Nihilism}}
+--- unchanged, and measured no times at all.
+
+\end{document}

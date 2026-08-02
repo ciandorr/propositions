@@ -67,36 +67,27 @@ Refs: \ref{eb:1}, \ref{eb:2}.
 % and applied in phase 2.5 (BEFORE style_load).  This means the style can
 % override them.  Keys that the style does not set survive to display time.
 
-\subsection{Important ordering note}
+\subsection{A name chooses the named style at any level}
 
-% The style resolution step only sees keys set in phase 1 (the item's own
-% optional arg), not the env defaults (phase 2.5).  So:
-%
-%   \begin{prop}[name=foo]\item bar
-%
-% resolves to the NAMELESS style (because name is empty in phase 1), then
-% applies name=foo in phase 2.5.  Result: name "foo" formatted as "(foo)"
-% by the levelone style.  The counter is NOT stepped (name non-empty).
-%
-%   \begin{prop}\item[name=foo] bar
-%
-% resolves to the NAMED style (proposition, bold) because name is set in
-% phase 1.  Result: \textbf{foo}.
-%
-% These are different!  To get the same result as item-level name=foo,
-% combine with an explicit env-level style=:
+% Style resolution looks at the whole key list --- \propoptions, then the
+% environment argument, then the item's own argument --- so an item counts as
+% "named" if a name reaches it from any of them.  All three lists below must
+% therefore come out the same: \textbf{foo}, in the named style, with the
+% counter not stepped.  (Before, only the item's own argument was consulted,
+% and the first list came out as "(foo)" in the nameless style.)
 
-``\verb|\begin{prop}[name=foo]|'' (nameless style chosen; counter not stepped):
+``\verb|\begin{prop}[name=foo]|'' (named style; proposition bold):
 \begin{prop}[name=foo]
   \item bar
 \end{prop}
 
-``\verb|\begin{prop}\item[name=foo]|'' (named style; proposition bold):
+``\verb|\begin{prop}\item[name=foo]|'' (the same):
 \begin{prop}
   \item[name=foo] bar
 \end{prop}
 
-``\verb|\begin{prop}[style=proposition, name=foo]|'' (same as item-level):
+``\verb|\begin{prop}[style=proposition, name=foo]|'' (also the same, and no
+longer the only way to get it):
 \begin{prop}[style=proposition, name=foo]
   \item bar
 \end{prop}

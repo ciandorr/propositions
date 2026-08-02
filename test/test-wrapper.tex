@@ -237,4 +237,28 @@ into the item text with no gap.
   \item[name=Note, align=flush] A flush label needs a gap before this text.
 \end{prop}
 
+\section{A frame is not indented by an ambient \texttt{labelindent}}
+
+With \texttt{labelindent} set, the resolver must satisfy
+LI\,+\,LW\,+\,LS\,=\,LM\,+\,II\@.  The framed style sets \texttt{leftmargin=0},
+so a non-zero \texttt{itemindent} is the only way to balance that---and a
+flush label lands exactly at \texttt{itemindent}, which would push the whole
+list a left margin's worth to the right of the frame around it.  The style
+therefore clears \texttt{labelindent} for itself; \texttt{II} must be 0pt in
+both lists below, and their labels must start at the same distance from the
+frame.
+
+\begingroup
+\propoptions{labelindent=0em}
+\begin{prop}[style=framed]
+  \item[name=Note] With \verb|\propoptions{labelindent=0em}|:
+    \texttt{LM=\the\leftmargin\ II=\the\itemindent}
+\end{prop}
+\endgroup
+
+\begin{prop}[style=framed]
+  \item[name=Note] Without it:
+    \texttt{LM=\the\leftmargin\ II=\the\itemindent}
+\end{prop}
+
 \end{document}

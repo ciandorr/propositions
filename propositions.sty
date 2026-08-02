@@ -79,8 +79,11 @@
 \tl_new:N   \l__props_ref_text_tl        %% what goes into \@currentlabel
 \tl_new:N   \l__props_item_output_tl     %% formatted display (displayfmt + shorthand + gloss)
 \tl_new:N   \l__props_item_arg_tl        %% per-item argument, bare name normalised to name={...}
+\tl_new:N   \l__props_keylist_tl        %% the three default layers plus the item argument, assembled
 \bool_new:N \l__props_valueless_key_bool %% true when an entry of that argument is a key given without a value
 \bool_new:N \l__props_ptag_bool          %% true during \ptag processing
+\bool_new:N \l__props_nextline_bool     %% true when an align=nextline label has already started the body
+\bool_new:N \l__props_counter_stepped_bool %% true if this item stepped its counter
 \bool_new:N \l__props_titlecase_bool    %% true when \Ref etc. want titlecasing
 \bool_new:N \l__props_reset_bool        %% true (default) = reset sub-level counter on \item
 %% Two layers of item-level defaults.  The cascading layer (\l__props_defaults_tl)
@@ -496,12 +499,14 @@
     unknown     .code:n = {} ,
   }
 
-%% Minimal keyspace used only for the named/nameless peek: reads name= and
-%% counter= from the per-item arg without any other side effects.
+%% Minimal keyspace used only for the named/nameless peek: reads name= from the
+%% assembled key list without any other side effects.  The name is the whole
+%% test.  A counter says how an item is numbered, not that it has a name to
+%% display, and the nameless style is the one designed to look right around a
+%% number --- so a counter, wherever it is set, leaves the choice alone.
 \keys_define:nn { props / item-peek }
   {
     name    .tl_set:N = \l__props_name_tl ,
-    counter .tl_set:N = \l__props_counter_tl ,
     unknown .code:n   = {} ,
   }
 
@@ -510,16 +515,23 @@
 
 \cs_new_protected:Nn \__props_normalize_item_arg:Nn
   {
-    \tl_if_in:nnTF { #2 } { = }
+    \tl_clear:N #1
+    %% A blank argument must stay blank.  \item and \item[] both arrive here
+    %% with nothing to say, and wrapping that as name={} would append an empty
+    %% name to the key list --- overriding, rather than inheriting, a name set
+    %% for the environment or by \propoptions.
+    \tl_if_blank:nF { #2 }
       {
-        \tl_clear:N #1
-        \clist_map_inline:nn { #2 }
+        \tl_if_in:nnTF { #2 } { = }
           {
-            \tl_if_empty:NF #1 { \tl_put_right:Nn #1 { , } }
-            \__props_normalize_entry:Nn #1 { ##1 }
+            \clist_map_inline:nn { #2 }
+              {
+                \tl_if_empty:NF #1 { \tl_put_right:Nn #1 { , } }
+                \__props_normalize_entry:Nn #1 { ##1 }
+              }
           }
+          { \__props_normalize_entry:Nn #1 { #2 } }
       }
-      { \tl_clear:N #1 \__props_normalize_entry:Nn #1 { #2 } }
   }
 
 \cs_new_protected:Nn \__props_normalize_entry:Nn
@@ -547,35 +559,59 @@
   {
     %% --- Normalise the argument: a bare name becomes name={...} ---
     \__props_normalize_item_arg:Nn \l__props_item_arg_tl { #1 }
+    %% Whether this item ends up stepping its counter.  Only the environment
+    %% preview needs to know (see \__props_compute_env_preview:), and it cannot
+    %% work it out in advance: which counter is used, and whether a name
+    %% suppresses the step, are both settled during resolution.
+    \bool_set_false:N \l__props_counter_stepped_bool
 
-    %% --- Peek: determine named vs. nameless ---
-    %% Clear sentinels so we can detect whether #1 provides a name or counter.
-    \tl_clear:N \l__props_name_tl
-    \tl_clear:N \l__props_counter_tl
+    %% --- Assemble the key list ---
+    %% Cascading defaults (\propoptions) then env-local defaults (this
+    %% environment's argument) then the per-item argument.  Later entries
+    %% override earlier ones, giving the precedence item > env-arg >
+    %% \propoptions.  Built here rather than just before the key pass because
+    %% the peek below has to see all three layers.
+    \tl_set_eq:NN \l__props_keylist_tl \l__props_defaults_tl
+    \tl_if_empty:NF \l__props_env_defaults_tl
+      {
+        \tl_if_empty:NF \l__props_keylist_tl
+          { \tl_put_right:Nn \l__props_keylist_tl { , } }
+        \tl_put_right:NV \l__props_keylist_tl \l__props_env_defaults_tl
+      }
     \tl_if_empty:NF \l__props_item_arg_tl
       {
+        \tl_if_empty:NF \l__props_keylist_tl
+          { \tl_put_right:Nn \l__props_keylist_tl { , } }
+        \tl_put_right:NV \l__props_keylist_tl \l__props_item_arg_tl
+      }
+
+    %% --- Peek: determine named vs. nameless ---
+    %% A name counts wherever it comes from --- \propoptions, the environment
+    %% argument or the item's own --- so that the style an item gets and the
+    %% label it carries come from the same information.
+    \tl_clear:N \l__props_name_tl
+    \tl_if_empty:NF \l__props_keylist_tl
+      {
         \exp_args:NnV \keys_set_known:nnN
-          { props / item-peek } \l__props_item_arg_tl \l_tmpa_tl
+          { props / item-peek } \l__props_keylist_tl \l_tmpb_tl
       }
 
     %% --- Select base style (named or nameless) ---
     %% Always determined; used as the first (lowest-priority) cascade layer.
-    \bool_lazy_or:nnTF
-      { ! \tl_if_empty_p:N \l__props_name_tl }
-      { ! \tl_if_empty_p:N \l__props_counter_tl }
-      {
-        \bool_lazy_and:nnTF
-          { \l__props_ptag_bool }
-          { ! \tl_if_empty_p:N \l__props_named_ptag_style_tl }
-          { \tl_set_eq:NN \l__props_style_tl \l__props_named_ptag_style_tl }
-          { \tl_set_eq:NN \l__props_style_tl \l__props_named_style_tl }
-      }
+    \tl_if_empty:NTF \l__props_name_tl
       {
         \bool_lazy_and:nnTF
           { \l__props_ptag_bool }
           { ! \tl_if_empty_p:N \l__props_nameless_ptag_style_tl }
           { \tl_set_eq:NN \l__props_style_tl \l__props_nameless_ptag_style_tl }
           { \tl_set_eq:NN \l__props_style_tl \l__props_nameless_style_tl }
+      }
+      {
+        \bool_lazy_and:nnTF
+          { \l__props_ptag_bool }
+          { ! \tl_if_empty_p:N \l__props_named_ptag_style_tl }
+          { \tl_set_eq:NN \l__props_style_tl \l__props_named_ptag_style_tl }
+          { \tl_set_eq:NN \l__props_style_tl \l__props_named_style_tl }
       }
 
     %% --- Reset item locals to structural defaults ---
@@ -585,28 +621,14 @@
     \tl_set:Nx \l__props_style_tl { \l__props_style_tl }
     \tl_if_empty:NF \l__props_style_tl { \__props_style_load: }
 
-    %% --- Single processing pass over defaults + per-item keys ---
-    %% Scratch list = cascading defaults (\propoptions) then env-local defaults
-    %% (this environment's argument) then the per-item argument.  Later entries
-    %% override earlier ones, giving the precedence item > env-arg > \propoptions.
+    %% --- Single processing pass over the key list assembled above ---
     %% With \l__props_loading_defaults_bool set, each style= entry triggers an
     %% immediate style load, cascading on top of whatever came before.
-    \tl_set_eq:NN \l_tmpa_tl \l__props_defaults_tl
-    \tl_if_empty:NF \l__props_env_defaults_tl
-      {
-        \tl_if_empty:NF \l_tmpa_tl { \tl_put_right:Nn \l_tmpa_tl { , } }
-        \tl_put_right:NV \l_tmpa_tl \l__props_env_defaults_tl
-      }
-    \tl_if_empty:NF \l__props_item_arg_tl
-      {
-        \tl_if_empty:NF \l_tmpa_tl { \tl_put_right:Nn \l_tmpa_tl { , } }
-        \tl_put_right:NV \l_tmpa_tl \l__props_item_arg_tl
-      }
-    \tl_if_empty:NF \l_tmpa_tl
+    \tl_if_empty:NF \l__props_keylist_tl
       {
         \bool_set_true:N \l__props_loading_defaults_bool
         \exp_args:NnV \keys_set_known:nnN
-          { props / item } \l_tmpa_tl \l_tmpb_tl
+          { props / item } \l__props_keylist_tl \l_tmpb_tl
         \bool_set_false:N \l__props_loading_defaults_bool
       }
 
@@ -640,6 +662,7 @@
                       { \stepcounter { \l__props_counter_tl } }
                   }
                   { \stepcounter { \l__props_counter_tl } }
+                \bool_set_true:N \l__props_counter_stepped_bool
                 \__props_format_label_from_counter:
               }
               { }  %% Explicit name — skip counter step entirely.
@@ -682,8 +705,17 @@
 
 \cs_new_protected:Nn \__props_build_item_output:
   {
-    \protected@edef \l__props_item_output_tl
-      { \l__props_displayfmt:n { \l__props_display_text_tl } }
+    %% An item with nothing to display contributes nothing, rather than an
+    %% empty display format: \item[counter=none] with no name would otherwise
+    %% come out as the format's decoration wrapped around nothing --- "()" under
+    %% the default nameless style.  A shorthand or gloss is still appended
+    %% below, so \item[counter=none, gloss=g] keeps its gloss.
+    \tl_if_empty:NTF \l__props_display_text_tl
+      { \tl_clear:N \l__props_item_output_tl }
+      {
+        \protected@edef \l__props_item_output_tl
+          { \l__props_displayfmt:n { \l__props_display_text_tl } }
+      }
     \tl_if_empty:NF \l__props_shorthand_tl
       {
         \protected@edef \l_tmpa_tl
@@ -726,6 +758,15 @@
     \__props_set_ref:
     \tl_if_empty:NF \l__props_label_tl
       { \exp_args:NV \label \l__props_label_tl }
+    %% An align=nextline label ends with \noindent, so the item body has already
+    %% begun: the space that follows \item[...] in the source would be typeset.
+    %% \ignorespaces has to be the last token this command leaves behind, which
+    %% is why it is issued here and not where the label was output.  For the
+    %% other alignments the body has not started yet and TeX drops the space
+    %% itself, in vertical mode --- and in inlineprop that space is wanted, as
+    %% it separates the inline label from the text.
+    \bool_if:NT \l__props_nextline_bool
+      { \bool_set_false:N \l__props_nextline_bool \ignorespaces }
   }
 
 \cs_new_eq:NN \__props_kernel_item: \item
@@ -739,7 +780,7 @@
 
 \cs_new_protected:Nn \__props_item_dispatch:
   {
-    \cs_if_eq:NNTF \makelabel \__props_display_label:n
+    \cs_if_eq:NNTF \makelabel \__props_makelabel:n
       { \__props_item_cmd: }
       { \__props_kernel_item: }
   }
@@ -1152,7 +1193,8 @@
                 { \leftskip = \dimexpr \l__props_pi_labelindent_tl
                     - \leftmargin \relax }
               \l__props_item_output_tl \par }
-            \vspace { -\parsep } \noindent \ignorespaces
+            \vspace { -\parsep } \noindent
+            \bool_set_true:N \l__props_nextline_bool
           }
           {
         \str_if_eq:VnTF \l__props_alignment_tl { flush-nextline }
@@ -1162,7 +1204,8 @@
             %% then cancel the inter-paragraph space.
             \__props_list_item: []
             \l__props_item_output_tl \par
-            \vspace { -\parsep } \noindent \ignorespaces
+            \vspace { -\parsep } \noindent
+            \bool_set_true:N \l__props_nextline_bool
           }
           {
         \str_if_eq:VnTF \l__props_alignment_tl { center }
@@ -1194,6 +1237,51 @@
 \NewDocumentCommand \propformlabel { } { }
 
 
+\tl_new:N  \l__props_widen_tl      %% the label, as given
+\tl_new:N  \l__props_widen_var_tl  %% one digit-variant of it
+\tl_new:N  \l__props_widest_tl     %% the widest variant so far
+\box_new:N \l__props_widen_box
+\dim_new:N \l__props_widen_dim
+
+\cs_new_protected:Nn \__props_widen_try:n
+  {
+    \tl_set_eq:NN \l__props_widen_var_tl \l__props_widen_tl
+    \regex_replace_all:nnN { \d } { #1 } \l__props_widen_var_tl
+    \hbox_set:Nn \l__props_widen_box { \l__props_widen_var_tl }
+    \dim_compare:nNnT
+      { \box_wd:N \l__props_widen_box } > { \l__props_widen_dim }
+      {
+        \dim_set:Nn \l__props_widen_dim { \box_wd:N \l__props_widen_box }
+        \tl_set_eq:NN \l__props_widest_tl \l__props_widen_var_tl
+      }
+  }
+
+\NewDocumentCommand \propwidest { m }
+  {
+    \group_begin:
+      \protected@edef \l__props_widen_tl {#1}
+      \tl_set_eq:NN \l__props_widest_tl \l__props_widen_tl
+      \dim_zero:N \l__props_widen_dim
+      %% A label with no digits in it is its own widest variant, and measuring
+      %% it eleven times to discover that would be a waste.
+      \regex_match:nVTF { \d } \l__props_widen_tl
+        {
+          %% 8 is tried first so that it wins a tie, which is every tie in a
+          %% font with tabular figures: there the substitution is a no-op on
+          %% the width, and 8 is the traditional choice.
+          \__props_widen_try:n { 8 }
+          \int_step_inline:nnn { 0 } { 9 }
+            { \__props_widen_try:n { ##1 } }
+        }
+        { }
+      \tl_use:N \l__props_widest_tl
+    \group_end:
+  }
+
+
+\NewDocumentCommand \propwidestlabel { } { \propwidest { \propformlabel } }
+
+
 \cs_new_protected:Nn \__props_compute_env_preview:
   {
     \group_begin:
@@ -1213,9 +1301,17 @@
                   \protected@edef \l__props_display_text_tl { \l__props_name_tl }
                   \__props_build_item_output:
                 }
-              %% Undo all counter steps (total: items steps).
+              %% Undo exactly the steps that were made: (items-1) above, plus
+              %% the one \__props_resolve_item:n made unless the item is named,
+              %% in which case it made none.
               \exp_args:Nxx \addtocounter { \l__props_counter_tl }
-                { \int_eval:n { -\l__props_env_items_int } }
+                {
+                  \int_eval:n
+                    {
+                      - \l__props_env_items_int
+                      + \bool_if:NTF \l__props_counter_stepped_bool { 0 } { 1 }
+                    }
+                }
             }
         }
       %% Save preview label globally so it survives group end.
@@ -1242,6 +1338,8 @@
 \tl_new:N \l__props_wrap_end_tl
 
 \cs_new:Nn \__props_display_label:n { \mbox{#1} \hfill }
+
+\cs_new:Nn \__props_makelabel:n { \__props_display_label:n {#1} }
 
 \bool_new:N \l__props_continue_bool
 \bool_set_true:N \l__props_continue_bool
@@ -1379,7 +1477,7 @@
       {
         %% \makelabel set by \cs_set_eq: (not a wrapper) so the item dispatcher
         %% can recognise a prop list by \makelabel's identity.
-        \cs_set_eq:NN \makelabel \__props_display_label:n
+        \cs_set_eq:NN \makelabel \__props_makelabel:n
         %% Establish the standard \labelwidth for this list depth.  \list sets
         %% \itemindent, \rightmargin and \listparindent itself, and \@listii and
         %% deeper set \labelwidth, but at depth one \@listi does not: such a list
@@ -1390,12 +1488,16 @@
         %% --- and with it the \labelsep gap after a flush label.)  itemize,
         %% enumerate and description each set \labelwidth for themselves; this is
         %% prop doing the same, using the same value \@listii would.
-        \tl_if_empty:NT \l__props_labelwidth_tl
-          {
-            \dim_set:Nn \labelwidth { \leftmargin - \labelsep }
-            \dim_compare:nNnT \labelwidth < \c_zero_dim
-              { \dim_zero:N \labelwidth }
-          }
+        %%
+        %% Done unconditionally, not just when no labelwidth override follows.
+        %% An override normally overwrites this outright, so the work is wasted
+        %% --- except when the override's value reads \labelwidth itself, which
+        %% is how a style says "leave this level alone" (see outerfit).  Such an
+        %% override needs a sane value to read back, and at depth one there is
+        %% none until this has run.
+        \dim_set:Nn \labelwidth { \leftmargin - \labelsep }
+        \dim_compare:nNnT \labelwidth < \c_zero_dim
+          { \dim_zero:N \labelwidth }
         %% Apply dimension overrides.  Each value may be a single length
         %% (applied at all levels) or a comma-list of per-level lengths.
         %% Empty = inherit the document class default.
@@ -1561,6 +1663,8 @@
       { \bool_gset_false:N \g__props_display_mode_bool }
     %% Signal that the next prop may join seamlessly (cleared by
     %% \begin{prop} or by the para/begin hook if text intervenes).
+    %% continue=false suppresses it, which is how the framed style keeps a
+    %% frame clear of whatever follows it.
     \bool_if:NT \l__props_continue_bool
       { \bool_gset_true:N \g__props_last_was_prop_bool }
   }
@@ -1601,7 +1705,7 @@
     %% Bind \item to the dispatcher.  inlineprop opens no list, so set \makelabel
     %% to the prop label maker by hand (it is what the dispatcher keys off); a
     %% nested list resets \makelabel and the dispatcher reverts to ambient \item.
-    \cs_set_eq:NN \makelabel \__props_display_label:n
+    \cs_set_eq:NN \makelabel \__props_makelabel:n
     \cs_set_eq:NN \item \__props_item_dispatch:
   }
   {
@@ -1878,13 +1982,15 @@
 
 \SetPropStyle { thesis }
   {
-    format         = \textsc{#1} ,
+    display~format = \textsc{#1} ,
+    ref~format     = #1 ,
     align          = flush ,
     macro          = \titem ,
   }
 
 \SetPropStyle { vignette }
   {
+    display~format = #1 ,
     ref~format     = \textit{#1} ,
     align          = flush ,
     label~format   = \textit{#1:} ,
@@ -1935,6 +2041,7 @@
   }
 
 
+
 \DeclareNumberedStyle { roman }
   [
     parent         = section ,
@@ -1943,15 +2050,26 @@
     macro          = \ritem ,
   ]
 \cs_gset:Npn \theroman { \roman { roman } }
+\SetPropStyle { roman }
+  {
+    counter = \proplevelchoice { roman , numpropii , numpropiii ,
+                                 numpropiv , numpropv } ,
+  }
 
 \DeclareNumberedStyle { alph }
   [
     parent         = section ,
     counter~format = \alph{#1} ,
-    format         = (#1) ,
+    display~format = #1. ,
+    ref~format     = (#1) ,
     macro          = \aitem ,
   ]
 \cs_gset:Npn \thealph { \alph { alph } }
+\SetPropStyle { alph }
+  {
+    counter = \proplevelchoice { alph , numpropii , numpropiii ,
+                                 numpropiv , numpropv } ,
+  }
 
 \newcounter { numpropii }
 \cs_gset:Npn \thenumpropii { \alph { numpropii } }
@@ -1995,7 +2113,8 @@
   {
     counter        = numpropi ,
     counter~format = \arabic{#1} ,
-    format         = #1 ,
+    display~format = #1. ,
+    ref~format     = #1 ,
   }
 
 \SetPropStyle { h-sub }
@@ -2013,6 +2132,24 @@
   }
 
 
+\SetPropStyle { fitmargin }
+  {
+    align      = left ,
+    labelwidth = \widthof{\propwidestlabel} ,
+    leftmargin = \widthof{\propwidestlabel} + \labelsep ,
+  }
+
+
+\SetPropStyle { outerfit }
+  {
+    labelwidth =
+      \proplevelchoice { \widthof{\propwidestlabel} , \labelwidth } ,
+    leftmargin =
+      \proplevelchoice
+        { \widthof{\propwidestlabel} + \labelsep , \leftmargin } ,
+  }
+
+
 \newlength \propframepad
 \setlength \propframepad { 6pt }  %% padding between contents and rule (adjustable)
 
@@ -2023,6 +2160,7 @@
 \ExplSyntaxOff
 \SetPropStyle{framed}{
   align = flush, leftmargin = 0pt, rightmargin = 0pt,
+  labelindent = {}, continue = false,
   wrapper begin = {\begin{tcolorbox}[
       colback = white, colframe = black,
       boxrule = 0.4pt, arc = 0pt, boxsep = 0pt,

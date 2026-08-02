@@ -1,4 +1,5 @@
 \documentclass{article}
+\usepackage[most]{tcolorbox}   % for the framed style, used below
 \usepackage[parsep=0em,itemsep=0em]{propositions}
 
 \begin{document}
@@ -121,6 +122,24 @@ Before text.
   \end{prop}
   \item Outer item 2.
 \end{prop}
+
+After text.
+
+\subsection{A \texttt{framed} list is not joined}
+
+The built-in \texttt{framed} style carries \texttt{continue=false}, so a frame
+is kept clear of any list immediately before or after it: joining would cancel
+the \textsf{tcolorbox}'s own spacing rather than merely retune the gap.  The
+first and third lists below must each be separated from the frame; the last two
+must still join each other, since \texttt{continue=false} belongs to the framed
+environment alone.
+
+Before text.
+
+\begin{prop}\item Before the frame.\end{prop}
+\begin{prop}[style=framed]\item A framed list.\end{prop}
+\begin{prop}\item After the frame.\end{prop}
+\begin{prop}\item Joins the list above.\end{prop}
 
 After text.
 

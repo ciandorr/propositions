@@ -1,0 +1,195 @@
+\documentclass{article}
+\usepackage{propositions}
+
+%% The built-in `fitmargin' style, and the environment-level machinery it rests
+%% on: an item-level key set for the environment, and \propformlabel.
+%%
+%% The rules mark the surrounding text margins.  In every list below the label
+%% must start at the left rule and the body must start one \labelsep past the
+%% end of the label, with continuation lines aligned under the body.
+
+\newcommand\dims{\texttt{LM=\the\leftmargin\ LW=\the\labelwidth\
+  LS=\the\labelsep}}
+
+\begin{document}
+
+\section{The style itself}
+
+\noindent\rule{\textwidth}{0.3pt}
+\begin{prop}[name=Name of the item, style=fitmargin]
+  \item Text of the item, which is long enough that we can see what happens
+  when it wraps to the next line.
+\end{prop}
+\noindent\rule{\textwidth}{0.3pt}
+\begin{prop}[name=A considerably longer name for the item, style=fitmargin]
+  \item Text of the item, which is long enough that we can see what happens
+  when it wraps to the next line.
+\end{prop}
+\noindent\rule{\textwidth}{0.3pt}
+
+The margin is sized to the label, so the second list is indented further than
+the first.  \texttt{LW} must equal the width of the label and \texttt{LM} must
+be \texttt{LW+LS}; if \texttt{LW} kept the class default (20pt) the label would
+overflow its box and start short of the margin.
+
+\begin{prop}[name=Short, style=fitmargin]
+  \item \dims
+\end{prop}
+
+\section{Numbered items and \texttt{items}}
+
+Without \texttt{items} the width is computed from the first label; with it,
+from the \textit{n}th.  The second list below must therefore be the wider one,
+and both must number from 1.
+
+\begin{prop}[style=fitmargin]
+  \item First item, long enough to wrap onto a second line for comparison.
+  \item Second item. \label{h:a}
+\end{prop}
+
+\begin{prop}[style=fitmargin, items=20]
+  \item First item, long enough to wrap onto a second line for comparison.
+  \item Second item. \label{h:b}
+\end{prop}
+
+References: \ref{h:a}, \ref{h:b}.  Expected: (2), (4) --- unnamed items keep
+the format of the \texttt{numbered} style, parentheses and all; the style only
+sizes the margin.  (Numbered items are not what this style is for; they are
+used here to exercise \texttt{items} and the preview.)
+
+\section{The preview must not disturb the counter}
+
+Computing \verb|\propformlabel| resolves an item, which steps the counter, and
+the step has to be undone --- but only when it happened.  A named environment
+does not step at all, so an unconditional undo would run the counter backwards:
+one step per environment.
+
+\begin{prop}[name=Named, style=fitmargin]
+  \item This environment's items are named, so nothing is stepped.
+  \item Nor here.
+\end{prop}
+
+\begin{prop}[style=fitmargin, items=20]
+  \item Numbered, after a named environment. \label{h:c}
+  \item Second. \label{h:d}
+\end{prop}
+
+\begin{prop}
+  \item Numbered, plain environment. \label{h:e}
+\end{prop}
+
+References: \ref{h:c}, \ref{h:d}, \ref{h:e}.  Expected: (5), (6), (7) ---
+consecutive, with nothing lost to the preview.
+
+\section{The margin does not jitter}
+
+\verb|fitmargin| measures \verb|\propwidestlabel|, not \verb|\propformlabel|, so
+the margin depends on the number of digits in the label and not on which digits
+they are.  In the four lists below \texttt{LM} must be \emph{equal} in the first
+pair (both labels two digits) and strictly increasing from the second pair to
+the third and fourth (two, then three, then four digits).  Were the actual
+label measured, the first pair would differ.
+
+\setcounter{numpropi}{10}
+\begin{prop}[style=fitmargin]
+  \item Label (11): \dims
+\end{prop}
+\setcounter{numpropi}{98}
+\begin{prop}[style=fitmargin]
+  \item Label (99): \dims
+\end{prop}
+\setcounter{numpropi}{998}
+\begin{prop}[style=fitmargin]
+  \item Label (999): \dims
+\end{prop}
+\setcounter{numpropi}{9998}
+\begin{prop}[style=fitmargin]
+  \item Label (9999): \dims
+\end{prop}
+\setcounter{numpropi}{0}
+
+A label with no digits is unaffected, and formatting survives the widening:
+\verb|\propwidest| of \textbf{(3.147)} is \propwidest{\textbf{(3.147)}}, which
+must still be bold, and of \textsc{Prop}~1a is \propwidest{\textsc{Prop}~1a},
+which must still be small caps with the space intact.
+
+\section{\texttt{outerfit}: the outer level only}
+
+\verb|outerfit| is \verb|fitmargin| at level one and nothing below it, so that
+it can be set for a whole document with \verb|\propoptions{style=outerfit}|
+without disturbing nested lists.  Its dimension values vary with the level via
+\verb|\proplevelchoice|, the second entry being a self-assignment.
+
+{\propoptions{style = outerfit}
+\noindent\rule{\textwidth}{0.3pt}
+\begin{prop}[name=Outer Name]
+  \item Outer, named: \dims
+  \begin{prop}[style=roman]
+    \item Nested, roman: \dims
+    \begin{prop}
+      \item Third level: \dims
+    \end{prop}
+  \end{prop}
+\end{prop}
+\begin{prop}
+  \item Outer, numbered: \dims
+\end{prop}
+\noindent\rule{\textwidth}{0.3pt}
+\par}
+
+The two outer items must be fitted to their own labels, as under
+\verb|fitmargin|: \texttt{LM} equal to the label width plus \texttt{LS}, and
+the label starting at the left rule.  The nested ones must keep the class
+defaults untouched --- \texttt{LM=22.0pt} at level two
+(\verb|\leftmarginii|) and \texttt{LM=18.7pt} at level three
+(\verb|\leftmarginiii|) in \texttt{article} --- which is the whole point of the
+style, and what a plain \verb|style=fitmargin| set globally would not do.
+
+Since the setting is confined to a group above, the lists below are unaffected.
+
+A level-two list is not always at \LaTeX{} list depth two: a box resets the
+depth, and at depth one the class sets no \verb|\labelwidth| at all.  The
+self-assignment must still read a sane value there, not whatever the enclosing
+list left behind --- which under \verb|outerfit| would be the outer item's
+fitted width.
+
+{\propoptions{style = outerfit}
+\noindent\rule{\textwidth}{0.3pt}
+\begin{prop}
+  \item Outer: \dims
+  \par\noindent
+  \begin{minipage}{0.7\textwidth}
+    \begin{prop}
+      \item Depth one: \dims
+    \end{prop}
+  \end{minipage}
+\end{prop}
+\noindent\rule{\textwidth}{0.3pt}
+\par}
+
+The inner list must show \texttt{LM=25.0pt} and \texttt{LW=20.0pt}, the depth-one
+defaults, exactly as it would without \verb|outerfit| --- not the outer item's
+\texttt{LW}.
+
+\section{An environment-level name reaches the items}
+
+\texttt{fitmargin} is only useful because a name set for the environment applies
+to each of its items.  A blank \verb|\item| argument must leave that name alone
+rather than override it with an empty one.
+
+\begin{prop}[name=Inherited]
+  \item No argument at all. \label{h:f}
+  \item[] An empty argument. \label{h:g}
+  \item[gloss=g] An argument with no name in it. \label{h:h}
+  \item[Own name] Its own name, which wins. \label{h:i}
+\end{prop}
+
+References: \ref{h:f}, \ref{h:g}, \ref{h:h}, \ref{h:i}.
+
+Expected references: \textbf{Inherited}, \textbf{Inherited},
+\textbf{Inherited}, \textbf{Own name} --- all in the named style, since a name
+reaches every one of them, three from the environment and one from the item's
+own argument.  The third item's \emph{label} carries the gloss as well,
+\textbf{Inherited}~(g), but a gloss is not part of the reference.
+
+\end{document}

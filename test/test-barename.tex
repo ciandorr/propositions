@@ -46,7 +46,11 @@ References: \ref{b:keys}, \ref{b:last}, \ref{b:style}, \ref{b:comma2},
   \item[reset] A valueless key must stay a key, so this item is numbered.
     \label{b:reset}
   \item[reset=false] Explicit form, also numbered. \label{b:reset2}
-  \item[counter=none] Text item: no number, no name.
+  \item[counter=none] Text item: no number, no name.  A counter does not make
+    an item named, so this one takes the nameless style --- but with nothing to
+    display it must produce no label at all, not that style's decoration
+    wrapped around nothing (\texttt{()}).
+  \item[counter=none, gloss=g] Text item with a gloss: the gloss survives.
   \item Plain numbered item. \label{b:plain}
 \end{prop}
 

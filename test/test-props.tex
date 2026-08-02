@@ -85,6 +85,33 @@ References across levels: \ref{nest1}, \ref{nest2a}, \ref{nest2ai}.
 
 References: \ref{P1}, \ref{P2}.
 
+\section{roman and alph at every nesting level}
+
+Both styles have a counter of their own at level one, reset at each
+\verb|\section|, and use the shared level counters below that, so either can
+number a sublist and the sublist restarts under each parent item.
+
+\begin{prop}
+  \ritem Level one. \label{lv:r1}
+  \begin{prop}
+    \ritem Level two. \label{lv:r2}
+    \ritem Level two again. \label{lv:r3}
+    \begin{prop}
+      \aitem Level three. \label{lv:a1}
+    \end{prop}
+  \end{prop}
+  \ritem Level one again. \label{lv:r4}
+  \begin{prop}
+    \aitem Level two, under a new parent --- restarts. \label{lv:a2}
+  \end{prop}
+\end{prop}
+
+References: \ref{lv:r1}, \ref{lv:r2}, \ref{lv:r3}, \ref{lv:a1},
+\ref{lv:r4}, \ref{lv:a2}.
+
+Expected: (i), (i), (ii), (a), (ii), (a) --- the level-one roman numbering runs
+(i), (ii) while each sublist starts again.
+
 \section{Oref and nref test}
 
 \begin{prop}
