@@ -86,6 +86,7 @@
 \bool_new:N \l__props_counter_stepped_bool %% true if this item stepped its counter
 \bool_new:N \l__props_titlecase_bool    %% true when \Ref etc. want titlecasing
 \bool_new:N \l__props_reset_bool        %% true (default) = reset sub-level counter on \item
+\bool_new:N \l__props_pi_any_bool       %% true if any per-item dimension is set for this item
 %% Two layers of item-level defaults.  The cascading layer (\l__props_defaults_tl)
 %% is fed by \propoptions and is inherited by nested environments; the env-local
 %% layer (\l__props_env_defaults_tl) is fed by a prop's own optional argument and
@@ -1062,13 +1063,23 @@
           { \str_if_eq_p:Vn \l__props_alignment_tl { flush-nextline } }
           { \__props_output_item_align: }
           {
-            \bool_lazy_any:nTF
-              {
-                { ! \tl_if_empty_p:N \l__props_pi_labelindent_tl }
-                { ! \tl_if_empty_p:N \l__props_pi_labelwidth_tl }
-                { ! \tl_if_empty_p:N \l__props_pi_labelsep_tl }
-                { ! \tl_if_empty_p:N \l__props_pi_itemindent_tl }
-              }
+            %% Sequential rather than \bool_lazy_any:n, whose predicates must
+            %% be expandable: \__props_dim_resolve:V is protected, since a
+            %% dimension value can only be expanded safely by \protected@edef.
+            \bool_set_false:N \l__props_pi_any_bool
+            \__props_dim_resolve:V \l__props_pi_labelindent_tl
+            \bool_if:NT \l__props_dim_set_bool
+              { \bool_set_true:N \l__props_pi_any_bool }
+            \__props_dim_resolve:V \l__props_pi_labelwidth_tl
+            \bool_if:NT \l__props_dim_set_bool
+              { \bool_set_true:N \l__props_pi_any_bool }
+            \__props_dim_resolve:V \l__props_pi_labelsep_tl
+            \bool_if:NT \l__props_dim_set_bool
+              { \bool_set_true:N \l__props_pi_any_bool }
+            \__props_dim_resolve:V \l__props_pi_itemindent_tl
+            \bool_if:NT \l__props_dim_set_bool
+              { \bool_set_true:N \l__props_pi_any_bool }
+            \bool_if:NTF \l__props_pi_any_bool
               { \__props_output_item_pidim: }
               { \__props_output_item_align: }
           }
@@ -1085,15 +1096,19 @@
     \dim_set:Nn \l_tmpa_dim
       { \leftmargin + \itemindent - \labelwidth - \labelsep }
     %% Apply per-item overrides to registers.
-    \tl_if_empty:NF \l__props_pi_labelwidth_tl
-      { \setlength { \labelwidth } { \l__props_pi_labelwidth_tl } }
-    \tl_if_empty:NF \l__props_pi_labelsep_tl
-      { \setlength { \labelsep } { \l__props_pi_labelsep_tl } }
-    \tl_if_empty:NF \l__props_pi_itemindent_tl
-      { \setlength { \itemindent } { \l__props_pi_itemindent_tl } }
+    \__props_dim_resolve:V \l__props_pi_labelwidth_tl
+    \bool_if:NT \l__props_dim_set_bool
+      { \setlength { \labelwidth } { \l__props_dim_resolved_tl } }
+    \__props_dim_resolve:V \l__props_pi_labelsep_tl
+    \bool_if:NT \l__props_dim_set_bool
+      { \setlength { \labelsep } { \l__props_dim_resolved_tl } }
+    \__props_dim_resolve:V \l__props_pi_itemindent_tl
+    \bool_if:NT \l__props_dim_set_bool
+      { \setlength { \itemindent } { \l__props_dim_resolved_tl } }
     %% If labelindent overridden, use it; else keep baseline.
-    \tl_if_empty:NF \l__props_pi_labelindent_tl
-      { \dim_set:Nn \l_tmpa_dim { \l__props_pi_labelindent_tl } }
+    \__props_dim_resolve:V \l__props_pi_labelindent_tl
+    \bool_if:NT \l__props_dim_set_bool
+      { \dim_set:Nn \l_tmpa_dim { \l__props_dim_resolved_tl } }
     %% Compute deficit = LI + LW + LS - LM - II.
     \dim_set:Nn \l_tmpb_dim
       { \l_tmpa_dim + \labelwidth + \labelsep
@@ -1111,41 +1126,50 @@
     \dim_compare:nNnF \l_tmpb_dim = { \c_zero_dim }
       {
         %% Try labelwidth (position 4)
-        \bool_lazy_and:nnT
-          { \tl_if_empty_p:N \l__props_pi_labelwidth_tl }
-          { \tl_if_empty_p:N \l__props_labelwidth_tl }
+        \__props_dim_resolve:V \l__props_pi_labelwidth_tl
+        \bool_if:NF \l__props_dim_set_bool
           {
-            \dim_compare:nNnF
-              { \labelwidth - \l_tmpb_dim } < { \c_zero_dim }
+            \__props_dim_resolve:V \l__props_labelwidth_tl
+            \bool_if:NF \l__props_dim_set_bool
               {
-                \dim_sub:Nn \labelwidth { \l_tmpb_dim }
-                \dim_zero:N \l_tmpb_dim
+                \dim_compare:nNnF
+                  { \labelwidth - \l_tmpb_dim } < { \c_zero_dim }
+                  {
+                    \dim_sub:Nn \labelwidth { \l_tmpb_dim }
+                    \dim_zero:N \l_tmpb_dim
+                  }
               }
           }
         %% Try labelsep (position 2) — non-negative
         \dim_compare:nNnF \l_tmpb_dim = { \c_zero_dim }
           {
-            \bool_lazy_and:nnT
-              { \tl_if_empty_p:N \l__props_pi_labelsep_tl }
-              { \tl_if_empty_p:N \l__props_labelsep_tl }
+            \__props_dim_resolve:V \l__props_pi_labelsep_tl
+            \bool_if:NF \l__props_dim_set_bool
               {
-                \dim_compare:nNnF
-                  { \labelsep - \l_tmpb_dim } < { \c_zero_dim }
+                \__props_dim_resolve:V \l__props_labelsep_tl
+                \bool_if:NF \l__props_dim_set_bool
                   {
-                    \dim_sub:Nn \labelsep { \l_tmpb_dim }
-                    \dim_zero:N \l_tmpb_dim
+                    \dim_compare:nNnF
+                      { \labelsep - \l_tmpb_dim } < { \c_zero_dim }
+                      {
+                        \dim_sub:Nn \labelsep { \l_tmpb_dim }
+                        \dim_zero:N \l_tmpb_dim
+                      }
                   }
               }
           }
         %% Try itemindent (position 1) — no sign constraint
         \dim_compare:nNnF \l_tmpb_dim = { \c_zero_dim }
           {
-            \bool_lazy_and:nnT
-              { \tl_if_empty_p:N \l__props_pi_itemindent_tl }
-              { \tl_if_empty_p:N \l__props_itemindent_tl }
+            \__props_dim_resolve:V \l__props_pi_itemindent_tl
+            \bool_if:NF \l__props_dim_set_bool
               {
-                \dim_add:Nn \itemindent { \l_tmpb_dim }
-                \dim_zero:N \l_tmpb_dim
+                \__props_dim_resolve:V \l__props_itemindent_tl
+                \bool_if:NF \l__props_dim_set_bool
+                  {
+                    \dim_add:Nn \itemindent { \l_tmpb_dim }
+                    \dim_zero:N \l_tmpb_dim
+                  }
               }
           }
         %% Fallback: all three candidates user-set.
@@ -1348,24 +1372,26 @@
 \skip_new:N \g__props_natural_topsepadd_skip
 \skip_new:N \g__props_prev_itemsep_parsep_skip
 
-\seq_new:N \l__props_dim_split_seq
-\cs_generate_variant:Nn \seq_set_split:Nnn { NnV }
-\cs_new:Nn \__props_apply_dim:Nn
+\tl_new:N   \l__props_dim_resolved_tl
+\bool_new:N \l__props_dim_set_bool
+\cs_new_protected:Nn \__props_dim_resolve:n
   {
-    \tl_if_empty:NF #1
+    \tl_clear:N \l__props_dim_resolved_tl
+    \bool_set_false:N \l__props_dim_set_bool
+    \tl_if_blank:nF { #1 }
       {
-        \seq_set_split:NnV \l__props_dim_split_seq { , } #1
-        \int_compare:nNnTF
-          { \seq_count:N \l__props_dim_split_seq } > { 1 }
-          {
-            \tl_set:Nx \l_tmpa_tl
-              { \seq_item:Nn \l__props_dim_split_seq
-                  { \g__props_level_int } }
-            \tl_if_empty:NF \l_tmpa_tl
-              { \setlength { #2 } { \l_tmpa_tl } }
-          }
-          { \setlength { #2 } { #1 } }
+        \protected@edef \l__props_dim_resolved_tl { #1 }
+        \str_if_eq:VnF \l__props_dim_resolved_tl { * }
+          { \bool_set_true:N \l__props_dim_set_bool }
       }
+  }
+\cs_generate_variant:Nn \__props_dim_resolve:n { V }
+
+\cs_new_protected:Nn \__props_apply_dim:Nn
+  {
+    \__props_dim_resolve:V #1
+    \bool_if:NT \l__props_dim_set_bool
+      { \setlength { #2 } { \l__props_dim_resolved_tl } }
   }
 
 \clist_const:Nn \c__props_env_dims_clist
@@ -1395,20 +1421,9 @@
     \setlength \propoperativeleftmargin
       { \proplevelchoice { \leftmargini , \leftmarginii , \leftmarginiii ,
           \leftmarginiv , \leftmarginv , \leftmarginvi } }
-    \tl_if_empty:NF \l__props_ambient_leftmargin_tl
-      {
-        \seq_set_split:NnV \l__props_dim_split_seq
-          { , } \l__props_ambient_leftmargin_tl
-        \int_compare:nNnTF { \seq_count:N \l__props_dim_split_seq } > { 1 }
-          {
-            \tl_set:Nx \l_tmpa_tl
-              { \seq_item:Nn \l__props_dim_split_seq { \g__props_level_int } }
-            \tl_if_empty:NF \l_tmpa_tl
-              { \setlength \propoperativeleftmargin { \l_tmpa_tl } }
-          }
-          { \setlength \propoperativeleftmargin
-              { \l__props_ambient_leftmargin_tl } }
-      }
+    \__props_dim_resolve:V \l__props_ambient_leftmargin_tl
+    \bool_if:NT \l__props_dim_set_bool
+      { \setlength \propoperativeleftmargin { \l__props_dim_resolved_tl } }
   }
 
 \NewDocumentEnvironment { prop } { O{} }
@@ -1491,16 +1506,14 @@
         %%
         %% Done unconditionally, not just when no labelwidth override follows.
         %% An override normally overwrites this outright, so the work is wasted
-        %% --- except when the override's value reads \labelwidth itself, which
-        %% is how a style says "leave this level alone" (see outerfit).  Such an
-        %% override needs a sane value to read back, and at depth one there is
-        %% none until this has run.
+        %% --- except when the override resolves to the sentinel at this level,
+        %% or reads \labelwidth itself, in which case nothing is assigned and
+        %% this is the only value there is.
         \dim_set:Nn \labelwidth { \leftmargin - \labelsep }
         \dim_compare:nNnT \labelwidth < \c_zero_dim
           { \dim_zero:N \labelwidth }
-        %% Apply dimension overrides.  Each value may be a single length
-        %% (applied at all levels) or a comma-list of per-level lengths.
-        %% Empty = inherit the document class default.
+        %% Apply dimension overrides.  Empty or the sentinel * = inherit the
+        %% document class default.
         \__props_apply_dim:Nn \l__props_topsep_tl        \topsep
         \__props_apply_dim:Nn \l__props_partopsep_tl      \partopsep
         \__props_apply_dim:Nn \l__props_itemsep_tl        \itemsep
@@ -1519,77 +1532,72 @@
         %% Default priority (most→least protected):
         %%   itemindent(1), labelsep(2), leftmargin(3),
         %%   labelwidth(4), labelindent(5).
-        \tl_if_empty:NF \l__props_labelindent_tl
+        \__props_dim_resolve:V \l__props_labelindent_tl
+        \bool_if:NT \l__props_dim_set_bool
           {
-            %% Extract per-level labelindent value.
-            \seq_set_split:NnV \l__props_dim_split_seq
-              { , } \l__props_labelindent_tl
-            \int_compare:nNnTF
-              { \seq_count:N \l__props_dim_split_seq } > { 1 }
+            %% Copied out of the shared \l__props_dim_resolved_tl at once: the
+            %% resolves below, deciding which register may absorb the deficit,
+            %% overwrite it while this value is still needed.
+            \tl_set_eq:NN \l_tmpa_tl \l__props_dim_resolved_tl
+            %% Compute deficit = LI + LW + LS - LM - II.
+            \dim_set:Nn \l_tmpb_dim
+              { \l_tmpa_tl + \labelwidth + \labelsep
+                - \leftmargin - \itemindent }
+            \dim_compare:nNnF \l_tmpb_dim = { \c_zero_dim }
               {
-                \tl_set:Nx \l_tmpa_tl
-                  { \seq_item:Nn \l__props_dim_split_seq
-                      { \g__props_level_int } }
-              }
-              { \tl_set_eq:NN \l_tmpa_tl \l__props_labelindent_tl }
-            \tl_if_empty:NF \l_tmpa_tl
-              {
-                %% Compute deficit = LI + LW + LS - LM - II.
-                \dim_set:Nn \l_tmpb_dim
-                  { \l_tmpa_tl + \labelwidth + \labelsep
-                    - \leftmargin - \itemindent }
+                %% Try labelwidth (position 4) — non-negative
+                \__props_dim_resolve:V \l__props_labelwidth_tl
+                \bool_if:NF \l__props_dim_set_bool
+                  {
+                    \dim_compare:nNnF
+                      { \labelwidth - \l_tmpb_dim } < { \c_zero_dim }
+                      {
+                        \dim_sub:Nn \labelwidth { \l_tmpb_dim }
+                        \dim_zero:N \l_tmpb_dim
+                      }
+                  }
+                %% Try leftmargin (position 3) — no sign constraint
                 \dim_compare:nNnF \l_tmpb_dim = { \c_zero_dim }
                   {
-                    %% Try labelwidth (position 4) — non-negative
-                    \tl_if_empty:NT \l__props_labelwidth_tl
+                    \__props_dim_resolve:V \l__props_leftmargin_tl
+                    \bool_if:NF \l__props_dim_set_bool
+                      {
+                        \dim_add:Nn \leftmargin { \l_tmpb_dim }
+                        \dim_zero:N \l_tmpb_dim
+                      }
+                  }
+                %% Try labelsep (position 2) — non-negative
+                \dim_compare:nNnF \l_tmpb_dim = { \c_zero_dim }
+                  {
+                    \__props_dim_resolve:V \l__props_labelsep_tl
+                    \bool_if:NF \l__props_dim_set_bool
                       {
                         \dim_compare:nNnF
-                          { \labelwidth - \l_tmpb_dim } < { \c_zero_dim }
+                          { \labelsep - \l_tmpb_dim } < { \c_zero_dim }
                           {
-                            \dim_sub:Nn \labelwidth { \l_tmpb_dim }
+                            \dim_sub:Nn \labelsep { \l_tmpb_dim }
                             \dim_zero:N \l_tmpb_dim
                           }
                       }
-                    %% Try leftmargin (position 3) — no sign constraint
-                    \dim_compare:nNnF \l_tmpb_dim = { \c_zero_dim }
+                  }
+                %% Try itemindent (position 1) — no sign constraint
+                \dim_compare:nNnF \l_tmpb_dim = { \c_zero_dim }
+                  {
+                    \__props_dim_resolve:V \l__props_itemindent_tl
+                    \bool_if:NF \l__props_dim_set_bool
                       {
-                        \tl_if_empty:NT \l__props_leftmargin_tl
-                          {
-                            \dim_add:Nn \leftmargin { \l_tmpb_dim }
-                            \dim_zero:N \l_tmpb_dim
-                          }
+                        \dim_add:Nn \itemindent { \l_tmpb_dim }
+                        \dim_zero:N \l_tmpb_dim
                       }
-                    %% Try labelsep (position 2) — non-negative
-                    \dim_compare:nNnF \l_tmpb_dim = { \c_zero_dim }
-                      {
-                        \tl_if_empty:NT \l__props_labelsep_tl
-                          {
-                            \dim_compare:nNnF
-                              { \labelsep - \l_tmpb_dim } < { \c_zero_dim }
-                              {
-                                \dim_sub:Nn \labelsep { \l_tmpb_dim }
-                                \dim_zero:N \l_tmpb_dim
-                              }
-                          }
-                      }
-                    %% Try itemindent (position 1) — no sign constraint
-                    \dim_compare:nNnF \l_tmpb_dim = { \c_zero_dim }
-                      {
-                        \tl_if_empty:NT \l__props_itemindent_tl
-                          {
-                            \dim_add:Nn \itemindent { \l_tmpb_dim }
-                            \dim_zero:N \l_tmpb_dim
-                          }
-                      }
-                    %% Fallback: all candidates user-set.
-                    %% Use default priority ignoring user-set status.
-                    \dim_compare:nNnF \l_tmpb_dim = { \c_zero_dim }
-                      {
-                        \dim_compare:nNnTF
-                          { \labelwidth - \l_tmpb_dim } < { \c_zero_dim }
-                          { \dim_add:Nn \leftmargin { \l_tmpb_dim } }
-                          { \dim_sub:Nn \labelwidth { \l_tmpb_dim } }
-                      }
+                  }
+                %% Fallback: all candidates user-set.
+                %% Use default priority ignoring user-set status.
+                \dim_compare:nNnF \l_tmpb_dim = { \c_zero_dim }
+                  {
+                    \dim_compare:nNnTF
+                      { \labelwidth - \l_tmpb_dim } < { \c_zero_dim }
+                      { \dim_add:Nn \leftmargin { \l_tmpb_dim } }
+                      { \dim_sub:Nn \labelwidth { \l_tmpb_dim } }
                   }
               }
           }
@@ -2142,11 +2150,9 @@
 
 \SetPropStyle { outerfit }
   {
-    labelwidth =
-      \proplevelchoice { \widthof{\propwidestlabel} , \labelwidth } ,
+    labelwidth = \proplevelchoice { \widthof{\propwidestlabel} , * } ,
     leftmargin =
-      \proplevelchoice
-        { \widthof{\propwidestlabel} + \labelsep , \leftmargin } ,
+      \proplevelchoice { \widthof{\propwidestlabel} + \labelsep , * } ,
   }
 
 

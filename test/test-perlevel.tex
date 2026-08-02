@@ -2,11 +2,12 @@
 \usepackage{calc}           % for \widthof
 \usepackage{propositions}
 
-%% Per-level dimension lists: every list dimension key accepts a
-%% comma-separated list of values, one per nesting level.  The first applies
-%% at level 1, the second at level 2, and so on; a gap falls back to the class
-%% default for that level.  This file reports the dimensions the list actually
-%% ends up with, so the expectations can be checked without measuring the page.
+%% Level-varying dimensions.  A dimension key's value is stored unexpanded and
+%% evaluated where it is used, so \proplevelchoice in it resolves at the level
+%% being set up; and the sentinel * means "as if the key had not been set" --
+%% inherit the class default, or leave the dimension free for the label-area
+%% resolver.  This file reports the dimensions the list actually ends up with,
+%% so the expectations can be checked without measuring the page.
 
 \newcommand\report{\texttt{LM=\the\leftmargin, LW=\the\labelwidth,
   LS=\the\labelsep}}
@@ -34,14 +35,16 @@ With no options set, each level should use the class default for its depth.
   \end{prop}
 \end{prop}
 
-\section{A per-level list via \texttt{\textbackslash propoptions}}
+\section{A level-varying value via \texttt{\textbackslash propoptions}}
 
-\verb|leftmargin={3em, 1em}|: level 1 is 3em and level 2 is 1em.  Level 3 is
-past the end of the list, which is treated like a gap: it falls back to the
-class default (\the\leftmarginiii), rather than reusing the last value.
+\verb|leftmargin=\proplevelchoice{3em, 1em, *}|: level 1 is 3em and level 2 is
+1em.  Level 3 takes the sentinel, so it falls back to the class default
+(\the\leftmarginiii).  Without that third entry level 3 would repeat the last
+one, since \verb|\proplevelchoice| clamps to its final entry rather than
+running out.
 
 \begingroup
-\propoptions{leftmargin={3em, 1em}}
+\propoptions{leftmargin=\proplevelchoice{3em, 1em, *}}
 \begin{prop}
   \item Level 1 (expect 3em): \report
   \begin{prop}
@@ -53,13 +56,34 @@ class default (\the\leftmarginiii), rather than reusing the last value.
 \end{prop}
 \endgroup
 
-\section{Gaps fall back to the class default}
-
-\verb|leftmargin={, 0em}|: level 1 takes the class default (\the\leftmargini),
-level 2 is 0em, so level-2 text aligns with level-1 text.
+Without the sentinel the last entry carries on downwards, which is the other
+half of the contrast:
 
 \begingroup
-\propoptions{leftmargin={, 0em}}
+\propoptions{leftmargin=\proplevelchoice{3em, 1em}}
+\begin{prop}
+  \item Level 1 (expect 3em): \report
+  \begin{prop}
+    \item Level 2 (expect 1em): \report
+    \begin{prop}
+      \item Level 3 (expect 1em, repeated): \report
+    \end{prop}
+  \end{prop}
+\end{prop}
+\endgroup
+
+\section{The sentinel skips a level}
+
+\verb|leftmargin=\proplevelchoice{*, 0em}|: level 1 takes the class default
+(\the\leftmargini), level 2 is 0em, so level-2 text aligns with level-1 text.
+
+A \emph{blank} entry would not do this.  \verb|\proplevelchoice| reads its
+argument as a comma list, and comma lists discard empty items, so
+\verb|\proplevelchoice{, 0em}| would put 0em at level 1.  That is what the
+sentinel exists for.
+
+\begingroup
+\propoptions{leftmargin=\proplevelchoice{*, 0em}}
 \begin{prop}
   \item Level 1 (expect \the\leftmargini): \report
   \begin{prop}
@@ -68,14 +92,33 @@ level 2 is 0em, so level-2 text aligns with level-1 text.
 \end{prop}
 \endgroup
 
+\section{A bare sentinel is the same as not setting the key}
+
+\verb|leftmargin=*| at every level must reproduce the baseline of section~1
+exactly.
+
+\begingroup
+\propoptions{leftmargin=*, labelwidth=*, labelsep=*}
+\begin{prop}
+  \item Level 1: \report
+  \begin{prop}
+    \item Level 2: \report
+    \begin{prop}
+      \item Level 3: \report
+    \end{prop}
+  \end{prop}
+\end{prop}
+\endgroup
+
 \section{Per-level \texttt{labelwidth} sized to the widest label}
 
-\verb|labelwidth={\widthof{(99)}, \widthof{a.}, \widthof{(iii)}}| gives each
-level just enough room for its own widest label.
+\verb|labelwidth=\proplevelchoice{\widthof{(99)}, \widthof{a.}, \widthof{(iii)}}|
+gives each level just enough room for its own widest label.  The values are
+\textsf{calc} expressions, which the resolver has to leave intact.
 
 \begingroup
 \propoptions{labelindent=0pt,
-  labelwidth={\widthof{(99)}, \widthof{a.}, \widthof{(iii)}}}
+  labelwidth=\proplevelchoice{\widthof{(99)}, \widthof{a.}, \widthof{(iii)}}}
 \begin{prop}
   \item Level 1 (expect LW=\wid{(99)}): \report
   \begin{prop}
@@ -105,12 +148,14 @@ sub-item text keeps the class-default indent.
 \end{prop}
 \endgroup
 
-The original mockup layout: \verb|labelindent={0em, -1.5em}| pushes level-2
-labels left into the gap, and \verb|leftmargin={3em, 0em}| zeroes the level-2
-margin so level-2 text aligns with level-1 text.
+The original mockup layout:
+\verb|labelindent=\proplevelchoice{0em, -1.5em}| pushes level-2 labels left
+into the gap, and \verb|leftmargin=\proplevelchoice{3em, 0em}| zeroes the
+level-2 margin so level-2 text aligns with level-1 text.
 
 \begingroup
-\propoptions{labelindent={0em, -1.5em}, leftmargin={3em, 0em}}
+\propoptions{labelindent=\proplevelchoice{0em, -1.5em},
+  leftmargin=\proplevelchoice{3em, 0em}}
 \begin{prop}
   \item Outermost item.  The level-two text below should align with this text.
   \begin{prop}
@@ -122,18 +167,35 @@ margin so level-2 text aligns with level-1 text.
 \end{prop}
 \endgroup
 
-\section{A per-level list in an environment argument is env-local}
+\section{A level-varying value in an environment argument is env-local}
 
 An argument styles only its own environment, so the nested list below falls
-back to the class default rather than inheriting the second entry of the list.
+back to the class default rather than picking up the second entry.
 
-\begin{prop}[leftmargin={3em, 1em}]
+\begin{prop}[leftmargin=\proplevelchoice{3em, 1em}]
   \item Level 1 (expect 3em): \report
   \begin{prop}
     \item Level 2 (expect \the\leftmarginii, not 1em): \report
   \end{prop}
 \end{prop}
 
-With \verb|\propoptions| the same list does cascade, as in section~2 above.
+With \verb|\propoptions| the same value does cascade, as in section~2 above.
+
+\section{The sentinel works inside a style}
+
+This is what the old comma-list syntax could not do: a style's dimension keys
+are read twice, once for the list's geometry and once for each item's label
+area, and the per-item reading passes the value straight to \verb|\setlength|.
+
+\begingroup
+\SetPropStyle{levelvarying}{leftmargin=\proplevelchoice{3em, *}}
+\propoptions{style=levelvarying}
+\begin{prop}
+  \item Level 1 (expect 3em): \report
+  \begin{prop}
+    \item Level 2 (expect \the\leftmarginii): \report
+  \end{prop}
+\end{prop}
+\endgroup
 
 \end{document}

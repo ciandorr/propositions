@@ -134,6 +134,42 @@ adjusts.  Since labelwidth is protected, the box stays 3em wide.
 \endgroup
 
 %%------------------------------------------------------------
+\subsection{The sentinel leaves a dimension free}
+
+\verb|labelwidth=*| means the key is not set, so the resolver may derive
+labelwidth --- the whole point of the sentinel, and the one thing that
+distinguishes it from a value that merely fails to assign anything.  A
+per-item \texttt{labelsep=0pt} must therefore expand the box here, exactly as
+in the \texttt{labelsep} test near the top of this file, and not leave it fixed
+the way \texttt{labelwidth=3em} does just above.
+
+\begingroup
+\propoptions{labelwidth=*}
+\begin{prop}
+  \item[name=\flabel{A}] Baseline with global labelwidth=*.
+  \item[labelsep=0pt, name=\flabel{B}]
+    Per-item labelsep=0pt: the box must expand.
+  \item[name=\flabel{C}] Back to baseline.
+\end{prop}
+\endgroup
+
+The same through \verb|\proplevelchoice|, with the sentinel reached only below
+level one: the outer box is protected by \texttt{3em} and must stay put, the
+inner one is free and must expand.
+
+\begingroup
+\propoptions{labelwidth=\proplevelchoice{3em, *}}
+\begin{prop}
+  \item[name=\flabel{L1a}] Level one baseline.
+  \item[labelsep=0pt, name=\flabel{L1b}] Level one: protected, stays 3em.
+  \begin{prop}
+    \item[name=\flabel{L2a}] Level two baseline.
+    \item[labelsep=0pt, name=\flabel{L2b}] Level two: free, expands.
+  \end{prop}
+\end{prop}
+\endgroup
+
+%%------------------------------------------------------------
 \subsection{All three per-item: fallback to default priority}
 
 When labelwidth, labelsep, and itemindent are all set per-item, and

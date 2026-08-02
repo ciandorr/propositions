@@ -118,7 +118,7 @@ which must still be small caps with the space intact.
 \verb|outerfit| is \verb|fitmargin| at level one and nothing below it, so that
 it can be set for a whole document with \verb|\propoptions{style=outerfit}|
 without disturbing nested lists.  Its dimension values vary with the level via
-\verb|\proplevelchoice|, the second entry being a self-assignment.
+\verb|\proplevelchoice|, the second entry being the sentinel \verb|*|.
 
 {\propoptions{style = outerfit}
 \noindent\rule{\textwidth}{0.3pt}
@@ -149,9 +149,9 @@ Since the setting is confined to a group above, the lists below are unaffected.
 
 A level-two list is not always at \LaTeX{} list depth two: a box resets the
 depth, and at depth one the class sets no \verb|\labelwidth| at all.  The
-self-assignment must still read a sane value there, not whatever the enclosing
-list left behind --- which under \verb|outerfit| would be the outer item's
-fitted width.
+sentinel must still leave a sane value there, not whatever the enclosing list
+left behind --- which under \verb|outerfit| would be the outer item's fitted
+width.
 
 {\propoptions{style = outerfit}
 \noindent\rule{\textwidth}{0.3pt}
