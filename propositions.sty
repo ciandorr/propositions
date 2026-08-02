@@ -1222,6 +1222,9 @@
     \setlength { \itemindent } { \l__props_save_itemindent_dim }
   }
 
+\cs_new_protected:Nn \__props_start_body_unindented:
+  { \@afterindentfalse \@afterheading }
+
 \cs_new_protected:Nn \__props_output_item_align:
   {
     \str_if_eq:VnTF \l__props_alignment_tl { nextline }
@@ -1237,7 +1240,7 @@
             { \leftskip = \dimexpr \l__props_pi_labelindent_tl
                 - \leftmargin \relax }
           \l__props_item_output_tl \par }
-        \vspace { -\parsep } \noindent
+        \vspace { -\parsep } \__props_start_body_unindented:
         \bool_set_true:N \l__props_nextline_bool
       }
       {
@@ -1248,7 +1251,7 @@
             %% then cancel the inter-paragraph space.
             \__props_list_item: []
             \l__props_item_output_tl \par
-            \vspace { -\parsep } \noindent
+            \vspace { -\parsep } \__props_start_body_unindented:
             \bool_set_true:N \l__props_nextline_bool
           }
           { \__props_emit_aligned_item: }

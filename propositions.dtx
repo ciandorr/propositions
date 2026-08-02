@@ -2663,6 +2663,26 @@
     \setlength { \itemindent } { \l__props_save_itemindent_dim }
   }
 
+% Begin the item body on the next line, unindented, after a label that has
+% just taken a line of its own.
+%
+% Not \noindent, which starts a paragraph on the spot.  That is right when the
+% body is text --- the text joins the paragraph, flush --- but wrong when the
+% body opens with vertical material, a nested prop being the obvious case: the
+% inner \begin{list} closes the paragraph immediately, and an empty paragraph
+% is a line of white space.  So a nextline label followed by a sublist used to
+% be separated from it by a blank line, while the same label followed by text
+% was not.
+%
+% \@afterheading arms \everypar to unindent whichever paragraph comes next
+% instead of starting one now, which is what \LaTeX{} itself does after a
+% sectioning command for exactly this reason.  Text still starts flush; a list
+% starts no paragraph, so there is none to leave empty.  It also sets
+% \@nobreaktrue, which keeps a page break out from between the label and its
+% body --- wanted here, the two being one item.
+\cs_new_protected:Nn \__props_start_body_unindented:
+  { \@afterindentfalse \@afterheading }
+
 % Alignment-based label placement (no per-item dim overrides).
 % The two alignments that give the label a line of its own are handled here;
 % everything else is \__props_emit_aligned_item:, shared with the per-item
@@ -2682,7 +2702,7 @@
             { \leftskip = \dimexpr \l__props_pi_labelindent_tl
                 - \leftmargin \relax }
           \l__props_item_output_tl \par }
-        \vspace { -\parsep } \noindent
+        \vspace { -\parsep } \__props_start_body_unindented:
         \bool_set_true:N \l__props_nextline_bool
       }
       {
@@ -2693,7 +2713,7 @@
             %% then cancel the inter-paragraph space.
             \__props_list_item: []
             \l__props_item_output_tl \par
-            \vspace { -\parsep } \noindent
+            \vspace { -\parsep } \__props_start_body_unindented:
             \bool_set_true:N \l__props_nextline_bool
           }
           { \__props_emit_aligned_item: }

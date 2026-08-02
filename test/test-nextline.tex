@@ -1,0 +1,99 @@
+\documentclass{article}
+\usepackage{propositions}
+
+%% align=nextline and align=flush-nextline give the label a line of its own and
+%% start the body on the next one.  Starting it is the delicate part: \noindent
+%% would begin a paragraph there and then, which suits a body of text but not
+%% one that opens with vertical material.  A nested prop's \begin{list} closes
+%% such a paragraph at once, and an empty paragraph is a line of white space --
+%% so the sublist came out separated from its label by a blank line, while the
+%% same label followed by text was not.  The body is therefore started with
+%% \@afterheading, which unindents whichever paragraph comes next rather than
+%% opening one now.
+
+\newcommand\gap{\rule[-2pt]{0.4pt}{8pt}}
+
+\begin{document}
+
+\section{A nextline label followed by a list}
+
+The first two lists below must look the same below their labels: the body
+begins on the very next line either way, whether it is a sublist or a
+paragraph.  The third shows what \verb|nextline| is for --- without it the
+sublist starts on the label's own line and is pushed right, which is what makes
+its internal alignment go awry.
+
+\noindent\rule{\textwidth}{0.3pt}
+\begin{prop}
+  \item[Label A, align=nextline]
+  \begin{prop}
+    \item First sub-item.
+    \item Second sub-item.
+  \end{prop}
+\end{prop}
+\noindent\rule{\textwidth}{0.3pt}
+\begin{prop}
+  \item[Label B, align=nextline] Ordinary text after the label, which must
+  begin on the next line exactly as the sublist above does.
+\end{prop}
+\noindent\rule{\textwidth}{0.3pt}
+\begin{prop}
+  \item[Label C]
+  \begin{prop}
+    \item First sub-item, on the label's own line (no \texttt{nextline}).
+    \item Second sub-item.
+  \end{prop}
+\end{prop}
+\noindent\rule{\textwidth}{0.3pt}
+
+Measured on the baselines: A and B must both advance one \verb|\baselineskip|
+from label to body (11.95pt in \texttt{article} at 10pt), and C must advance
+none, its sublist sharing the label's line.
+
+\section{The same for \texttt{flush-nextline}}
+
+\noindent\rule{\textwidth}{0.3pt}
+\begin{prop}
+  \item[Label D, align=flush-nextline]
+  \begin{prop}
+    \item Sub-item under a flush-nextline label.
+  \end{prop}
+\end{prop}
+\noindent\rule{\textwidth}{0.3pt}
+
+\section{Nested nextline labels}
+
+Each level must advance exactly one line, with no blank line accumulating as
+the nesting deepens.
+
+\noindent\rule{\textwidth}{0.3pt}
+\begin{prop}
+  \item[Outer, align=nextline]
+  \begin{prop}
+    \item[Inner, align=nextline]
+    \begin{prop}
+      \item Innermost.
+    \end{prop}
+  \end{prop}
+\end{prop}
+\noindent\rule{\textwidth}{0.3pt}
+
+\section{An empty body, and a following paragraph}
+
+A \verb|nextline| label with nothing after it must not disturb the item that
+follows, nor leave anything behind that unindents a later paragraph: the
+\verb|\everypar| hook \verb|\@afterheading| leaves pending is cleared by the
+paragraphs it fires on, and is confined to the list's group in any case.
+
+\noindent\rule{\textwidth}{0.3pt}
+\begin{prop}
+  \item[Empty body, align=nextline]
+  \item[Next item] This item must be laid out normally.
+\end{prop}
+\noindent\rule{\textwidth}{0.3pt}
+
+This paragraph follows the list and must be indented like any other opening
+paragraph of running text, long enough to wrap so that the first line's indent
+can be compared with the second's.
+
+\end{document}
