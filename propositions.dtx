@@ -92,7 +92,7 @@
 %
 % \title{The \textsf{propositions} package}
 % \author{Cian Dorr (with help from Claude)\\ \texttt{ciandorr@gmail.com}}
-% \date{Version 1.0: \filedate}
+% \date{\fileversion: \filedate}
 %
 % \maketitle
 %
@@ -904,11 +904,11 @@
 %
 % \begin{example}
 % \begin{prop}
-%   \item[Basic classification, ref format={the \textit{#1}}] \label{complex}
-%   There are three different basic kinds of people.
+%   \item[Basic classification, ref format={the \textit{#1}}] 
+%   There are three different kinds of people. \label{complex}
 %   \begin{prop}
 %     \ritem \label{partone} Those who know how to count, 
-%     comprising in turn.
+%     comprising in turn:
 %     \begin{prop}
 %       \aitem \label{parta} Those who know how to count up to 
 %    some number, but not beyond.
@@ -1026,7 +1026,7 @@
 % 
 % \begin{description}
 % \item[\texttt{outerfit}] 
-% This style behaves like \texttt{fitmargin} at the outer nesting level, but does nothing at other levels.  Intended to be set once using \refCom{propoptions}, for a document that wants `fitmargin'-like behavior for its top-level propositions, but not for lower-level propositions (where adjusting to acommodate, e.g., roman numerals of different lengths would be a delicate task).  
+% This style behaves similar to \texttt{fitmargin} at the outer nesting level (with a bit more space between label and text), but does nothing at other levels.  Intended to be set once using \refCom{propoptions}, for a document that wants `fitmargin'-like behavior for its top-level propositions, but not for lower-level propositions (where adjusting to acommodate, e.g., roman numerals of different lengths would be a delicate task).  
 % 
 % This matches the behaviour of the |\ex.| command in package 
 % \textsc{linguex}, widely used in linguistics.  
@@ -1118,6 +1118,12 @@
 % These warnings are harmless and do not affect the correctness
 % of cross-references.
 %
+% \section{Release notes}
+%
+% \begin{description}
+% \item[0.9] Initial public release.
+% \end{description}
+%
 % \StopEventually{}
 %
 % \section{Implementation}
@@ -1125,7 +1131,7 @@
 %    \begin{macrocode}
 %<*package>
 % propositions.sty --- A flexible system for labelling and cross-referencing displayed propositions.
-\ProvidesExplPackage {propositions} {2026/02/13} {0.2}
+\ProvidesExplPackage {propositions} {2026/08/02} {0.9}
   {Proposition labeling with key-value interface}
 
 \RequirePackage { calc }
