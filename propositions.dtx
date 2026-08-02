@@ -117,13 +117,13 @@
 % add parentheses or other formatting at every point of reference.  The standard |description| environment does not allow cross-referencing at all.
 %
 % The \textsf{propositions} package solves this by attaching formatting
-% information to each label.  A short item like |\item[P]| (inside \texttt{prop}) is displayed
+% information to each label.  A short item like |\item[P]| (inside \refEnv{prop}) is displayed
 % as ``(P)'' and |\ref| automatically produces ``(P)'' as well---complete
 % with parentheses, hyperlinks, and \textsf{cleveref} support.  The full
 % key-value interface supports named items, numbered items, custom
 % counters, glosses, shorthands, and per-item format overrides.
 %
-% The |\ptag| command (which requires \textsf{amsmath}) extends this to
+% The \refCom{ptag} command (which requires \textsf{amsmath}) extends this to
 % displayed math environments: an equation can be tagged with a
 % proposition label instead of (or using) its equation number.
 % 
@@ -202,7 +202,7 @@
 % \end{example}
 % Shortcut commands---e.g., |\titem[|\meta{keys}|]| for |\item[style=thesis, |\meta{keys}|]|---can also be defined.  The package loads with a range of predefined styles (listed in \cref{sect:builtin-styles}).
 %
-% When the package is loaded with |\usepackage[equations]{propositions}|, a first-level |\item| within \texttt{prop} 
+% When the package is loaded with |\usepackage[equations]{propositions}|, a first-level |\item| within \refEnv{prop} 
 % will use the counter as equations.  (This looks better 
 % with the |leqno| option to |\documentclass|.)
 % \begin{example}
@@ -213,9 +213,9 @@
 %   \item There is overlap between the mental and the physical.
 % \end{prop}
 % \end{example}
-% The |\ptag| command (requires \textsf{amsmath})
+% The \refCom{ptag} command (requires \textsf{amsmath})
 % is a replacement for the standard |\tag| command
-% that behaves just like an |\item| in a \texttt{prop} 
+% that behaves just like an |\item| in a \refEnv{prop} 
 % environment.
 % \begin{example}
 % \begin{equation}
@@ -230,28 +230,28 @@
 % \begin{docEnvironment}{prop}{\oarg{keys}}
 %   Creates a displayed list of propositions.  It is a standard \LaTeX{} list, so by default its formatting will depend on the standard length parameters like \cs{itemsep} and \cs{topsep}, although these can be overridden by setting keys.
 %
-%   Within \texttt{prop}, \cs{item} creates the propositions (see below).
+%   Within \refEnv{prop}, \cs{item} creates the propositions (see below).
 %
-%   The optional \meta{keys} argument can contain a list of keys, which will affect only the given environment (not any other \texttt{prop} environments that may be nested within it).  
+%   The optional \meta{keys} argument can contain a list of keys, which will affect only the given environment (not any other \refEnv{prop} environments that may be nested within it).  
 % 
 % \end{docEnvironment}
 %
 % \begin{docEnvironment}{inlineprop}{\oarg{keys}}
-%   Like \texttt{prop}, but does not create a list.  Allows \cs{item} to be used outside list environments, e.g.\ for generating numbers at the beginning of paragraphs.  Steps the \texttt{prop} counter and increments the nesting level.  Accepts the same optional \meta{keys} as \texttt{prop}.
+%   Like \refEnv{prop}, but does not create a list.  Allows \cs{item} to be used outside list environments, e.g.\ for generating numbers at the beginning of paragraphs.  Steps the \texttt{prop} counter and increments the nesting level.  Accepts the same optional \meta{keys} as \refEnv{prop}.
 % \end{docEnvironment}
 %
-% Within \texttt{prop} and \texttt{inlineprop}, \cs{item} is redefined to act as the proposition-item command.  Its optional argument is a comma-separated list of \meta{key}=\meta{value} pairs (see \autoref{sect:keys}).  A bare string without \texttt{=} is treated as a proposition name.
+% Within \refEnv{prop} and \refEnv{inlineprop}, \cs{item} is redefined to act as the proposition-item command.  Its optional argument is a comma-separated list of \meta{key}=\meta{value} pairs (see \autoref{sect:keys}).  A bare string without \texttt{=} is treated as a proposition name.
 %
-% When used without an optional argument (or without setting \texttt{name}, \texttt{counter}, or \texttt{style}), the style is determined by the \texttt{nameless style} key (\autoref{sect:keys}).  By default this is \texttt{numbered}, which dispatches by nesting depth to \texttt{levelone}, \texttt{leveltwo}, \ldots\ via \cs{proplevelchoice}.
+% When used without an optional argument (or without setting \refKey{name}, \refKey{counter}, or \refKey{style}), the style is determined by the \refKey{nameless style} key (\autoref{sect:keys}).  By default this is \texttt{numbered}, which dispatches by nesting depth to \texttt{levelone}, \texttt{leveltwo}, \ldots\ via \refCom{proplevelchoice}.
 %
 % \begin{docCommand}{ptag}{\oarg{keys}}
-%   (Available only when \textsf{amsmath} is loaded.)  Works inside displayed math environments like \texttt{equation} and \texttt{align}.  Accepts the same keys as \cs{item} within \texttt{prop}, except that \texttt{align} has no effect (since positioning is controlled by the tag placement system).
+%   (Available only when \textsf{amsmath} is loaded.)  Works inside displayed math environments like \texttt{equation} and \texttt{align}.  Accepts the same keys as \cs{item} within \refEnv{prop}, except that \refKey{align} has no effect (since positioning is controlled by the tag placement system).
 % 
-% Any display math environment (|equation|, |align|, etc.) used inside \texttt{prop} or \texttt{inlineprop} automatically increments the nesting level for its duration, so that \cs{ptag} inside such an environment behaves as if it were one level deeper.
+% Any display math environment (|equation|, |align|, etc.) used inside \refEnv{prop} or \refEnv{inlineprop} automatically increments the nesting level for its duration, so that \cs{ptag} inside such an environment behaves as if it were one level deeper.
 % \end{docCommand}
 % 
 % \begin{docCommand}{propoptions}{\marg{keys}}
-%   Sets default keys (see \autoref{sect:keys}), which take effect for all subsequent uses of \texttt{prop}, \texttt{inlineprop}, |\item|, and |\ptag| (within the current scope).
+%   Sets default keys (see \autoref{sect:keys}), which take effect for all subsequent uses of \refEnv{prop}, \refEnv{inlineprop}, |\item|, and \refCom{ptag} (within the current scope).
 % \end{docCommand}
 % 
 % Further commands are described below, especially in \cref{sect:styles} (defining styles) and \cref{sect:xref} (cross-referencing).  
@@ -263,25 +263,30 @@
 % The keys listed in this subsection can be used in the following places: 
 % \begin{itemize}
 %   \item 
-%    In the optional argument of |\item| or |\ptag|: the key applies to that item only.
-%   \item In the optional argument of \texttt{prop} or \texttt{inlineprop}: the key applies to every top-level |\item| within
-% that environment, unless overridden by the |\item|'s own optional argument.  (If another \texttt{prop} or \texttt{inlineprop} environment is used inside this one, the key will 
+%    In the optional argument of |\item| or \refCom{ptag}: the key applies to that item only.
+%   \item In the optional argument of \refEnv{prop} or \refEnv{inlineprop}: the key applies to every top-level |\item| within
+% that environment, unless overridden by the |\item|'s own optional argument.  (If another \refEnv{prop} or \refEnv{inlineprop} environment is used inside this one, the key will 
 % not apply to its |\item|s.)
 %   \item In the argument of \refCom{propoptions}: the key 
-% will apply to every subsequent |\item| or |\ptag| (in the current group), unless overridden by that |\item|'s optional argument, or that 
-% of its parent \texttt{prop} or \texttt{inlineprop} environment.
-%   \item In the optional argument of |\usepackage{propositions}|: equivalent to |\propoptions|.  
-%   \item With |\SetPropStyle| or |\DeclareNumberedStyle|, to
+% will apply to every subsequent |\item| or \refCom{ptag} (in the current group), unless overridden by that |\item|'s optional argument, or that 
+% of its parent environment.
+%   \item In the optional argument of |\usepackage{propositions}|: equivalent to \refCom{propoptions}, except that keys that require the |#| character cannot be set here, (due to a limitation in how \LaTeX\ processes options)  
+%   \item With \refCom{SetPropStyle} or \refCom{DeclareNumberedStyle}, to
 % add the key to a given style.  
 % \end{itemize}
 % 
 % \begin{docKey}{style}{=\meta{style}}{no default}
-%   A prop style, equivalent to a preset collection of keys: see \cref{sect:styles} for details.  
+%   A style, equivalent to a preset collection of keys: see \cref{sect:styles} for details.  
 % \end{docKey}
 % 
-% \begin{docKey}{align}{=\meta{value}}{no default}
-%   How the label should be positioned.  Possible values: \texttt{left} (standard left-aligned label, offset controlled by \cs{labelwidth} and \cs{labelsep}), \texttt{right} (right-aligned, like \texttt{enumerate}), \texttt{center} (centered within the label box), \texttt{flush} (aligned with left margin of item text), \texttt{nextline} (label on its own line), and \texttt{flush-nextline}.
-%   Has no effect inside \texttt{inlineprop} or \cs{ptag}.
+% \begin{docKey}{align}{\docKeyChoices{left,right,center,flush,nextline,flush-nextline}}{initially \docValue{left}}
+%   How the label should be positioned.
+%   \docValue{left} is the standard left-aligned label, its offset controlled by \refKey{labelwidth} and \refKey{labelsep};
+%   \docValue{right} is right-aligned within the label box, like \texttt{enumerate};
+%   \docValue{center} is centred within it;
+%   \docValue{flush} aligns the label with the left margin of the item text;
+%   \docValue{nextline} puts the label on a line of its own, and \docValue{flush-nextline} does both.
+%   Has no effect inside \refEnv{inlineprop} or \refCom{ptag}.
 % \end{docKey}
 % 
 % \begin{example}
@@ -305,15 +310,15 @@
 % \end{docKey}
 %
 % \begin{docKey}{counter}{=\meta{name}}{no default}
-%   Counter to use.  The counter is automatically stepped, and the item's \texttt{name} is set to \cs{the}\meta{name} (though this can be overridden by \texttt{counter format} or \texttt{name}).
+%   Counter to use.  The counter is automatically stepped, and the item's \refKey{name} is set to \cs{the}\meta{name} (though this can be overridden by \refKey{counter format} or \refKey{name}).
 % \end{docKey}
 %
 % \begin{docKey}{counter format}{=\meta{template}}{no default}
-%   How to display the counter value.  Use \texttt{\#1} for the counter name, e.g.\ \texttt{counter format=\string\roman\{\#1\}}.  When both this key and \texttt{counter} are set, this is used instead of \cs{the}\meta{counter} for generating the item's \texttt{name}.
+%   How to display the counter value.  Use \texttt{\#1} for the counter name, e.g.\ \texttt{counter format=\string\roman\{\#1\}}.  When both this key and \refKey{counter} are set, this is used instead of \cs{the}\meta{counter} for generating the item's \refKey{name}.
 % \end{docKey}
 %
 % \begin{docKey}{format}{=\meta{template}}{no default}
-%   Formatting applied to the \texttt{name}: use \texttt{\#1} for the argument, e.g.\ \texttt{format=\string\textbf\{(\#1)\}}.  Shorthand for setting both \texttt{display format} and \texttt{ref format}.
+%   Formatting applied to the \refKey{name}: use \texttt{\#1} for the argument, e.g.\ \texttt{format=\string\textbf\{(\#1)\}}.  Shorthand for setting both \refKey{display format} and \refKey{ref format}.
 % \end{docKey}
 %
 % \begin{docKey}{display format}{=\meta{template}}{no default}
@@ -325,9 +330,18 @@
 % \end{docKey}
 %
 % \begin{docKey}{shorthand}{=\meta{text}}{no default}
-%   An abbreviation displayed after the name.  If present, the shorthand becomes the reference text: \cs{ref} produces the shorthand (formatted with \texttt{ref format}) rather than the full name.
+%   An abbreviation displayed after the name.  If present, the shorthand becomes the reference text: \cs{ref} produces the shorthand (formatted with \refKey{ref format}) rather than the full name.
 % \end{docKey}
 %
+% \begin{example}
+% \begin{prop}
+%   \item[Global Physical Supervenience, shorthand=GPS] \label{global}
+%   Every fact is entailed by some fact about 
+%   the physical world.  
+% \end{prop}    
+% There are several interesting arguments for \ref{global}.
+% \end{example}
+% 
 % \begin{docKey}{shorthand format}{=\meta{template}}{initially \texttt{\string~[\#1]}}
 %   Format for displaying the shorthand in the label.
 % \end{docKey}
@@ -336,19 +350,28 @@
 %   A parenthetical gloss displayed after the name.  Does not affect cross-references.
 % \end{docKey}
 %
+% \begin{example}
+% \begin{prop}
+%   \item[Humean Supervenience, gloss=after David Lewis]
+%   Every fact is entailed by some fact about the 
+%   fundamental properties and spatiotemporal relations
+%   of points.
+% \end{prop}
+% \end{example}
+% 
 % \begin{docKey}{gloss format}{=\meta{template}}{initially \texttt{\string~(\#1)}}
 %   Format for displaying the gloss in the label.
 % \end{docKey}
 %
 % \begin{docKey}{label format}{=\meta{template}}{no default}
 %   Format applied to the \emph{entire} assembled label, i.e.\ the name (after
-%   \texttt{display format}), shorthand, and gloss together.  Use \texttt{\#1} for
+%   \refKey{display format}), shorthand, and gloss together.  Use \texttt{\#1} for
 %   the whole assembled text.  For example, \texttt{label format=\#1:}\ appends
 %   a colon after the complete label.
 % \end{docKey}
 %
 % \begin{docKey}{ref}{=\meta{text}}{no default}
-%   Explicitly set the reference text, overriding what would be derived from \texttt{name}, \texttt{counter}, or \texttt{shorthand}.
+%   Explicitly set the reference text, overriding what would be derived from \refKey{name}, \refKey{counter}, or \refKey{shorthand}.
 % \end{docKey}
 %
 % \begin{docKey}{label}{=\meta{label}}{no default}
@@ -363,26 +386,26 @@
 % \end{docKey}
 %
 % \begin{docKey}{crefname}{=\meta{type}}{no default}
-%   When \textsf{cleveref} is loaded, assigns an arbitrary reference type to this proposition.  For example, \texttt{crefname=lemma} causes \cs{cref} to use the names defined by \cs{crefname}\texttt{\{lemma\}\{...\}\{...\}} instead of the default (private) \texttt{prop} type.  The \meta{type} must be known to \textsf{cleveref}; new types can be declared with \cs{crefname}.
+%   When \textsf{cleveref} is loaded, assigns an arbitrary reference type to this proposition.  For example, \texttt{crefname=lemma} causes \cs{cref} to use the names defined by \cs{crefname}\texttt{\{lemma\}\{...\}\{...\}} instead of the default (private) \refEnv{prop} type.  The \meta{type} must be known to \textsf{cleveref}; new types can be declared with \cs{crefname}.
 % \end{docKey}
 %
-% Four of the list-dimension keys documented in the next section---\texttt{labelwidth}, \texttt{labelsep}, \texttt{itemindent} and \texttt{labelindent}---may also be given to an individual \cs{item}, where they reposition the label of that item alone, overriding the value in force for the rest of the list.  (The other dimension keys have no effect at item level.)
+% Four of the list-dimension keys documented in the next section---\refKey{labelwidth}, \refKey{labelsep}, \refKey{itemindent} and \refKey{labelindent}---may also be given to an individual \cs{item}, where they reposition the label of that item alone, overriding the value in force for the rest of the list.  (The other dimension keys have no effect at item level.)
 % 
 % \subsection{Keys for \texttt{prop} environments}\label{sect:keys-dims}
 %
 % The keys in this section can be used in the following places: 
 % \begin{itemize}
-%   \item In the optional argument of \texttt{prop}: the key applies to that environment only, not to any other \texttt{prop} or \texttt{inlineprop} environments that may be nested within it.  
+%   \item In the optional argument of \refEnv{prop}: the key applies to that environment only, not to any other \refEnv{prop} or \refEnv{inlineprop} environments that may be nested within it.  
 %   \item In the argument of \refCom{propoptions}: the key 
-% will apply to every subsequent \texttt{prop} environment (in the current group), unless overridden by that environment's optional argument.
-%   \item In the optional argument of |\usepackage{propositions}|: equivalent to |\propoptions|.  
-%   \item With |\SetPropStyle| or |\DeclareNumberedStyle|, to
+% will apply to every subsequent \refEnv{prop} environment (in the current group), unless overridden by that environment's optional argument.
+%   \item In the optional argument of |\usepackage{propositions}|: equivalent to \refCom{propoptions}.   
+%   \item With \refCom{SetPropStyle} or \refCom{DeclareNumberedStyle}, to
 % add the key to a given style.  
 % \end{itemize}
-% The keys can also be set in the optional argument of |\item|, |\ptag|, or \texttt{inlineprop}, or as part of a style used in one of those contexts, but will have no effect there, except for \texttt{labelwidth}, \texttt{labelsep}, \texttt{itemindent} and \texttt{labelindent} which will override the given dimensions for an individual |\item|.  
+% The keys can also be set in the optional argument of |\item|, \refCom{ptag}, or \refEnv{inlineprop}, or as part of a style used in one of those contexts, but will have no effect there, except for \refKey{labelwidth}, \refKey{labelsep}, \refKey{itemindent} and \refKey{labelindent} which will override the given dimensions for an individual |\item|.  
 %
 % \begin{docKeys}[
-%     doc parameter = {=\meta{length / length list}},
+%     doc parameter = {=\meta{length}},
 %   ]
 %   {
 %     { doc name = topsep },
@@ -421,7 +444,7 @@
 % \end{docCommand}
 %
 % \begin{docCommand}{propwidestlabel}{}
-%   \refCom{propformlabel} with every digit replaced by the digit that makes the label widest (an~\texttt{8} in the usual case, where all digits have the same width).  Using it in place of \cs{propformlabel} in a dimension expression makes the dimension depend on how many digits the label has rather than on which digits they are, so that a run of numbered environments keeps a steady margin instead of shifting at every change of number: \texttt{(9)} and \texttt{(10)} differ in width by 5pt in the default font, where \texttt{(8)} and \texttt{(88)} differ only by as much as an extra digit requires.  (The substitution is used for measurement only; the labels themselves are untouched.)  This is what the \texttt{fitmargin} style measures.
+%   \refCom{propformlabel} with every digit replaced by the digit that makes the label widest (an~\texttt{8} in the usual case, where all digits have the same width).  Using it in place of \refCom{propformlabel} in a dimension expression makes the dimension depend on how many digits the label has rather than on which digits they are, so that a run of numbered environments keeps a steady margin instead of shifting at every change of number: \texttt{(9)} and \texttt{(10)} differ in width by 5pt in the default font, where \texttt{(8)} and \texttt{(88)} differ only by as much as an extra digit requires.  (The substitution is used for measurement only; the labels themselves are untouched.)  This is what the \texttt{fitmargin} style measures.
 % \end{docCommand}
 %
 % \begin{docCommand}{propwidest}{\marg{label}}
@@ -433,16 +456,16 @@
 % \begin{docKey}{items}{=\meta{n}}{initially \texttt{1}}
 %   Indicates that approximately \meta{n} items are expected in this environment.
 %   The only effect of this key is in conjunction with \refCom{propformlabel}, to compute a preview label wide enough for the \meta{n}\/th expected item, so that dimension expressions such as
-%   \texttt{leftmargin=\cs{widthof}\{\cs{propformlabel}\}+0.5em} reserve enough space for the
+%   \texttt{leftmargin=\cs{widthof}\{\refCom{propformlabel}\}+0.5em} reserve enough space for the
 %   widest label.  Has no effect on actual item processing or counter stepping.
 % \end{docKey}
 % 
-% \begin{docKey}{labelindent}{=\meta{length / length list}}{no default}
+% \begin{docKey}{labelindent}{=\meta{length}}{no default}
 %   Positions the left edge of the label box at \meta{length} from the enclosing margin, adjusting \cs{labelwidth}, \cs{leftmargin}, \cs{labelsep}, or \cs{itemindent} as needed.  (Since the value of any one of these dimensions can be derived from those of the other four, it never makes sense to set all five.)
 % \end{docKey}
 %
 % \begin{docKey}{tightspacing}{}{no value}
-%   Sets all vertical spacing to the compact defaults that the standard document classes use for level-three lists (\texttt{topsep} and \texttt{itemsep} to \texttt{2pt} with stretch/shrink, \texttt{parsep} to \texttt{0pt}, \texttt{partopsep} to \texttt{1pt}).
+%   Sets all vertical spacing to the compact defaults that the standard document classes use for level-three lists (\refKey{topsep} and \refKey{itemsep} to \texttt{2pt} with stretch/shrink, \refKey{parsep} to \texttt{0pt}, \refKey{partopsep} to \texttt{1pt}).
 % \end{docKey}
 %
 % \begin{docKey}{nosep}{}{no value}
@@ -450,8 +473,8 @@
 % \end{docKey}
 %
 % \begin{docKey}{continue}{=\meta{boolean}}{initially \texttt{true}}
-%   When \texttt{true}, a \texttt{prop} environment that
-%   immediately follows another \texttt{prop} (with no intervening
+%   When \texttt{true}, a \refEnv{prop} environment that
+%   immediately follows another \refEnv{prop} (with no intervening
 %   paragraph text) replaces the normal \cs{topsep}-based inter-list
 %   space with \cs{itemsep}\,+\,\cs{parsep}, giving the visual
 %   appearance of a single continuous list.
@@ -459,29 +482,29 @@
 %
 % \subsection{Keys for \texttt{prop} and \texttt{inlineprop} environments}\label{sect:keys-env}
 %
-% The keys in this section have effect in both the \texttt{prop} and \texttt{inlineprop} environments.  They can also be used with |\propoptions|, |\usepackage|, and |\SetPropStyle|, just like the keys in the previous subsection.  
+% The keys in this section have effect in both the \refEnv{prop} and \refEnv{inlineprop} environments.  They can also be used with \refCom{propoptions}, |\usepackage|, and \refCom{SetPropStyle}, just like the keys in the previous subsection.  
 % 
 % \begin{docKey}{named style}{=\meta{style}}{initially \texttt{proposition}}
-%   The style when an |\item| or |\ptag| has a value for \texttt{name} but no explicit \texttt{style}.
+%   The style when an |\item| or \refCom{ptag} has a value for \refKey{name} but no explicit \refKey{style}.
 % \end{docKey}
 %
 % \begin{docKey}{named ptag style}{=\meta{style}}{initially empty}
-%   If set, overrides \texttt{named style} for \cs{ptag} items only.
+%   If set, overrides \refKey{named style} for \refCom{ptag} items only.
 % \end{docKey}
 %
 % \begin{docKey}{nameless style}{=\meta{style}}{initially \texttt{numbered}}
-%   The style used when \cs{item} or \cs{ptag} has no value for \texttt{name} and no explicit \texttt{style}.  A \texttt{counter} does not affect the choice: it says how the item is numbered, and this is the style meant to look right around a number.
+%   The style used when \cs{item} or \refCom{ptag} has no value for \refKey{name} and no explicit \refKey{style}.  A \refKey{counter} does not affect the choice: it says how the item is numbered, and this is the style meant to look right around a number.
 % \end{docKey}
 %
 % \begin{docKey}{nameless ptag style}{=\meta{style}}{initially empty}
-%   If set, overrides \texttt{nameless style} for \cs{ptag} items only.
+%   If set, overrides \refKey{nameless style} for \refCom{ptag} items only.
 % \end{docKey}
 % 
-% The choice between them turns on \texttt{name} alone, read from the whole key
+% The choice between them turns on \refKey{name} alone, read from the whole key
 % list---\refCom{propoptions}, then the environment argument, then the item's
 % own argument.  An item counts as named if a name reaches it from any of those,
 % so \verb|\begin{prop}[name=foo]\item bar| gives the same result as
-% \verb|\begin{prop}\item[name=foo] bar|.  An explicit \texttt{style} overrides
+% \verb|\begin{prop}\item[name=foo] bar|.  An explicit \refKey{style} overrides
 % the choice wherever it is set.
 % 
 % \begin{docKeys}[
@@ -507,18 +530,18 @@
 % code---that is, it must not read its body as a macro argument via \cs{collect@body} or similar.
 % \end{docKeys}
 %
-% The following command is provided for use with \texttt{wrapper begin}:
+% The following command is provided for use with \refKey{wrapper begin}:
 % \begin{docCommand}{propoperativeleftmargin}{}
-%   A read-only length giving the \texttt{leftmargin} a \texttt{prop} environment (with no optional argument) would use, given the current defaults set by |\propoptions| and the current nesting level.  It is recomputed at every \verb|\begin{prop}|, so it is valid inside a wrapper (before the
-%   environment's own \texttt{leftmargin} has taken effect).  For example, the built-in \texttt{framed} style uses this command in the value of \texttt{wrapper begin} to make the margins of framed environments match those of regular environments.
+%   A read-only length giving the \refKey{leftmargin} a \refEnv{prop} environment (with no optional argument) would use, given the current defaults set by \refCom{propoptions} and the current nesting level.  It is recomputed at every \verb|\begin{prop}|, so it is valid inside a wrapper (before the
+%   environment's own \refKey{leftmargin} has taken effect).  For example, the built-in \texttt{framed} style uses this command in the value of \refKey{wrapper begin} to make the margins of framed environments match those of regular environments.
 % \end{docCommand}
 %
-% \subsection{Global keys}
+% \subsection{Global key}
 % \label{sect:keys-global}
 %
-% The following key can only be set in the optional argument of |\usepackage|, or in the preamble with |\propoptions|.  
+% The following key can only be set in the optional argument of |\usepackage|, or in the preamble with \refCom{propoptions}.  
 % \begin{docKey}{equations}{}{no value, \textbf{global only}}
-%   Installs hooks so that the \LaTeX\ and \textsf{amstex} displayed equation environments (such as \texttt{equation} and \texttt{align}) use the same formatting as the special \texttt{equation} prop style.  The \texttt{equation} style's \texttt{display format} and \texttt{ref format} keys are used for generating equation numbers and cross-references to them.  
+%   Installs hooks so that the \LaTeX\ and \textsf{amstex} displayed equation environments (such as \texttt{equation} and \texttt{align}) use the same formatting as the special \texttt{equation} prop style.  The \texttt{equation} style's \refKey{display format} and \refKey{ref format} keys are used for generating equation numbers and cross-references to them.  
 % 
 % Redefining the \texttt{equation} style, e.g.~with
 %\begin{codebox}
@@ -526,20 +549,20 @@
 %\end{codebox}
 %   will automatically update the hooks.
 % 
-% The \texttt{equations} key also sets \texttt{nameless style\,=\,eqnum}, so that top-level |\item|s with no name will also use the \texttt{equation} style, while lower-level |\item|s will use other kinds of numbering: for details, see \cref{sect:builtin-styles} below.  
+% The \refKey{equations} key also sets \texttt{nameless style\,=\,eqnum}, so that top-level |\item|s with no name will also use the \texttt{equation} style, while lower-level |\item|s will use other kinds of numbering: for details, see \cref{sect:builtin-styles} below.  
 % 
 % \end{docKey}
 %
 % \section{Defining and modifying styles}\label{sect:styles}
 %
 % Styles, equivalent to bundles of key-value settings,
-% can be defined, and used freely in the optional arguments of |\item|, |\ptag|, \texttt{prop}, \texttt{inlineprop}, and the argument of |\propoptions|.  
+% can be defined, and used freely in the optional arguments of |\item|, \refCom{ptag}, \refEnv{prop}, \refEnv{inlineprop}, and the argument of \refCom{propoptions}.  
 % Styles can freely be combined, and the definition of 
 % one style can reference another (in which case redefining
 % the latter style will change the effect of the former style.)
 %  
 % \begin{docCommand}{SetPropStyle}{\marg{name}\marg{keys}}
-%   Defines or modifies a prop style for use with the \texttt{style} key.  All item-level keys (\autoref{sect:keys-item}) are accepted, plus the following:
+%   Defines or modifies a prop style for use with the \refKey{style} key.  All item-level keys (\autoref{sect:keys-item}) are accepted, plus the following:
 % \end{docCommand}
 %
 % \begin{docKey}[][doc label=setpropstyle/style]{style}{=\meta{parent}}{no default}
@@ -552,7 +575,7 @@
 %   A new user macro, equivalent to \cs{item}\texttt{[style=}\meta{name}\texttt{]}.  Any further keys given to the macro are passed to \cs{item}.
 % \end{docKey}
 %
-% If the style \meta{name} already exists, |\SetPropStyle| modifies or adds keys.  For example, |\SetPropStyle{proposition}{align=flush}| changes the alignment of the built-in |proposition| style while preserving its other settings.
+% If the style \meta{name} already exists, \refCom{SetPropStyle} modifies or adds keys.  For example, |\SetPropStyle{proposition}{align=flush}| changes the alignment of the built-in |proposition| style while preserving its other settings.
 %
 %
 % \begin{example}
@@ -573,7 +596,7 @@
 % \end{docCommand}
 %
 % \begin{docKey}{parent}{=\meta{counter}}{no default}
-%   A parent counter; the new counter resets when the parent steps (same mechanism as \cs{numberwithin}).  A dedicated \texttt{prop} counter (stepped by each \texttt{prop} and \texttt{inlineprop}) is available for non-persistent numbering.
+%   A parent counter; the new counter resets when the parent steps (same mechanism as \cs{numberwithin}).  A dedicated \texttt{prop} counter (stepped by each \refEnv{prop} and \refEnv{inlineprop}) is available for non-persistent numbering.
 % \end{docKey}
 %
 % \begin{example}
@@ -584,14 +607,14 @@
 % \end{prop}
 % From \ref{p1} and \ref{p2}\ldots
 % \end{example}
-%
+% 
 % \begin{docCommand}{proplevelchoice}{\marg{item1, item2, \ldots}}
-%   Picks the entry from the list depending on the current nesting depth (1-indexed, last element will be used if the list is too short).  At depth~0 (outside any \texttt{prop} environment), returns the first entry.  This macro is expandable, and designed to be used within \cs{SetPropStyle} to create styles that produce different results depending on the nesting depth of the |\item| in which they are used.
+%   Picks the entry from the list depending on the current nesting depth (1-indexed, last element will be used if the list is too short).  At depth~0 (outside any \refEnv{prop} environment), returns the first entry.  This macro is expandable, and designed to be used within \refCom{SetPropStyle} to create styles that produce different results depending on the nesting depth of the |\item| in which they are used.
 %
 %   In a dimension key, an entry of~\texttt{*} leaves that depth untouched (see \autoref{sect:keys}).  A \emph{blank} entry will not serve, and does not do what it looks like: the argument is read as a comma list, and comma lists discard empty items, so \texttt{\cs{proplevelchoice}\{2em, , 1em\}} has two entries rather than three and puts \texttt{1em} at depth~2.
 % \end{docCommand}
 %
-% Special counters \docCounter{leveltwo}, \docCounter{levelthree}, \docCounter{levelfour}, \docCounter{levelfive} are provided, whose values are automatically reset each time an |\item| is processed at a lower nesting level.  These are especially useful in combination with \cs{proplevelchoice}, to generate hierarchically numbered styles: for examples, see the built-in \texttt{numbered}, \texttt{eqnum}, and \texttt{hierarchical} styles in the next section.
+% Special counters \docCounter{leveltwo}, \docCounter{levelthree}, \docCounter{levelfour}, \docCounter{levelfive} are provided, whose values are automatically reset each time an |\item| is processed at a lower nesting level.  These are especially useful in combination with \refCom{proplevelchoice}, to generate hierarchically numbered styles: for examples, see the built-in \texttt{numbered}, \texttt{eqnum}, and \texttt{hierarchical} styles in the next section.
 % 
 % \section{Built-in styles}\label{sect:builtin-styles}
 %
@@ -601,6 +624,39 @@
 % All styles can be modified with \refCom{SetPropStyle}; the definitions are reproduced here to facilitate modification.
 %
 % \subsubsection*{Text styles}
+% 
+% \begin{description}
+% \item[\texttt{plain}] Unformatted text label.
+% \begin{codebox}
+% \SetPropStyle{plain}{format = #1}
+% \end{codebox}
+%
+% \item[\texttt{proposition}] The standard style assigned to named propositions.  By default, uses boldface for both the label and references.  
+% \begin{codebox}
+% \SetPropStyle{proposition}{format = \textbf{#1}}
+% \end{codebox}
+%
+% \item[\texttt{thesis}] Intended for named propositions with a longer name.  The name begins at the text margin (\texttt{flush} alignment), and is set in small caps; references use plain font.  Shortcut: |\titem|.
+% \begin{codebox}
+% \SetPropStyle{thesis}{display format = \textsc{#1},
+%   ref format=#1, align = flush, macro = \titem}
+% \end{codebox}
+%
+% \item[\texttt{vignette}] Intended for things like example vignettes and comments.  Italic name at the text margin, and italic references, separated from the text by a colon.
+% \begin{codebox}
+% \SetPropStyle{vignette}{ref format = \textit{#1},
+%   align = flush, label format = \textit{#1:}}
+% \end{codebox}
+%
+% \item[\texttt{bullet}] Bullet symbol varying by depth (like |\itemize|).  Shortcut: |\bitem|.
+% \begin{codebox}
+% \SetPropStyle{bullet}{align = center,
+%   name = \proplevelchoice{\textbullet,
+%     {\normalfont\textendash}, \textasteriskcentered,
+%     \textperiodcentered},
+%   display format = #1, macro = \bitem}
+% \end{codebox}
+% \end{description}
 %
 % \begin{example}
 % \begin{prop}
@@ -618,141 +674,13 @@
 % \end{prop}
 % \end{example}
 % 
-% \begin{description}
-% \item[\texttt{plain}] Unformatted text label.
-% \begin{codebox}
-% \SetPropStyle{plain}{format = #1}
-% \end{codebox}
-%
-% \item[\texttt{proposition}] Bold text label and reference.  Auto-selected when |\item| has a name but no \texttt{style}.
-% \begin{codebox}
-% \SetPropStyle{proposition}{format = \textbf{#1}}
-% \end{codebox}
-%
-% \item[\texttt{thesis}] Small-caps name at the text margin (\texttt{flush} alignment).  Shortcut: |\titem|.
-% \begin{codebox}
-% \SetPropStyle{thesis}{display format = \textsc{#1},
-%   ref format=#1, align = flush, macro = \titem}
-% \end{codebox}
-%
-% \item[\texttt{vignette}] Italic name at the text margin with a colon in the label.
-% \begin{codebox}
-% \SetPropStyle{vignette}{ref format = \textit{#1},
-%   align = flush, label format = \textit{#1:}}
-% \end{codebox}
-%
-% \item[\texttt{bullet}] Bullet symbol varying by depth (like |\itemize|).  Shortcut: |\bitem|.
-% \begin{codebox}
-% \SetPropStyle{bullet}{align = center,
-%   name = \proplevelchoice{\textbullet,
-%     {\normalfont\textendash}, \textasteriskcentered,
-%     \textperiodcentered},
-%   display format = #1, macro = \bitem}
-% \end{codebox}
-% \end{description}
-%
 % \subsubsection*{Numbered styles}
-%
-% \begin{example}
-% \begin{prop}
-%   \ritem \label{bs:roman}
-%   In style |roman|, cited as \ref{bs:roman}.
-%   \begin{prop}
-%     \ritem The same style in a sublist: the
-%     numbering restarts under each parent item.
-%     \ritem A second sub-item.
-%   \end{prop}
-%   \aitem \label{bs:alph}
-%   In style |alph|, cited as \ref{bs:alph}.
-%   \item[style=equation] \label{bs:equation}
-%   In style |equation|, cited as \ref{bs:equation}.
-% \end{prop}
-% \end{example}
 % 
 % \begin{description}
-% \item[\texttt{roman}] Roman numerals.  Shortcut: |\ritem|.
+% \item[\texttt{numbered}] The default nameless style.  Selects one of 
+%    the helper styles \texttt{levelone}--\texttt{levelfive}, depending
+%    on nesting depth.    
 % \begin{codebox}
-% \DeclareNumberedStyle{roman}[parent = section,
-%   counter format = \roman{#1}, format = (#1), macro = \ritem]
-% \SetPropStyle{roman}{counter = \proplevelchoice{
-%   roman, numpropii, numpropiii, numpropiv, numpropv}}
-% \end{codebox}
-%
-% \item[\texttt{alph}] Letters.  Shortcut: |\aitem|.
-% \begin{codebox}
-% \DeclareNumberedStyle{alph}[parent = section,
-%   counter format = \alph{#1}, display format=#1., 
-%   ref format = (#1), macro = \aitem]
-% \SetPropStyle{alph}{counter = \proplevelchoice{
-%   alph, numpropii, numpropiii, numpropiv, numpropv}}
-% \end{codebox}
-%
-%   \refCom{DeclareNumberedStyle} gives a style the counter of the same name,
-%   which is what is wanted at level one: a sequence running through the
-%   document, reset at each \cs{section}.  It is not what is wanted deeper down,
-%   where a sublist should start again under each parent item, so both styles
-%   override \texttt{counter} afterwards (a later key wins) to pick up the
-%   shared level counters instead.  Either style can therefore number a sublist
-%   as well as a top-level list.  Two consequences worth knowing: below level one
-%   the numbering is shared with any other style using those counters, and the
-%   reference to a sub-item is just its own numeral, since the style's
-%   \texttt{format} applies at every level---unlike \texttt{leveltwo} and its
-%   siblings, whose \texttt{ref format} prefixes the parent.
-%
-% \item[\texttt{equation}] Uses the |equation| counter.  This style has a special behavior when the |equations| option is active: changing its \texttt{display format} and \texttt{ref format} keys (or both, by setting \texttt{format}) will also change the corresponding hooks used to create the tags for numbered equations make the \texttt{equation} environment and \textsf{amstex} environments like \texttt{gather}.
-% \begin{codebox}
-% \SetPropStyle{equation}{counter = equation, format = (#1)}
-% \end{codebox}
-% \end{description}
-%
-% \medskip\noindent
-% The remaining numbered styles select one of the others according to the
-% current nesting level.
-%
-% % \begin{example}
-% \begingroup
-% \propoptions{style = hierarchical}
-% \begin{prop}
-%   \item \label{bs:h1} The world is everything that is the case.
-%   \begin{prop}
-%     \item \label{bs:h2} From \ref{bs:h1}, it follows that the 
-%     underworld is everything that is not the case.
-%   \end{prop}
-% \end{prop}
-% \endgroup
-% \begin{prop}
-%   \item \label{bs:d1} Outside the group, this manual's own 
-%   \texttt{eqnum} default for nameless items is back in effect.  
-%   At this outermost level, it has the same effect as 
-%   \texttt{equation}.  This item can be referenced as \ref{bs:d1}.
-%   \begin{prop}
-%     \item \label{bs:d2} Since this item (referenced as 
-%     \ref{bs:d2}) is at level two, \texttt{eqnum} dispatches 
-%     to \texttt{leveltwo}. 
-%     \begin{prop}
-%       \item \label{bs:d3} Since this item (referenced as 
-%       \ref{bs:d3}) is at level three, \texttt{eqnum} 
-%       dispatches to \texttt{levelthree}.
-%     \end{prop}
-%   \end{prop}
-% \end{prop}
-% \end{example}
-% 
-% These styles use \cs{proplevelchoice} to select a style depending on the
-% current nesting level.  Each is defined together with the level-specific
-% styles it dispatches to.  Those helper styles share the counters
-% |numpropi|\,--\,|numpropv|, which reset automatically when an |\item| at the
-% next lower level is processed.
-%
-% \begin{description}
-% \item[\texttt{numbered}] The default nameless style.  Dispatches by nesting
-%   depth to \texttt{levelone} (arabic in parentheses), \texttt{leveltwo}
-%   (lowercase alphabetic with a dot), \texttt{levelthree} (lowercase roman in
-%   parentheses), \texttt{levelfour} (uppercase alphabetic with a dot) and
-%   \texttt{levelfive} (uppercase roman in parentheses).
-% \begin{codebox}
-% \SetPropStyle{numbered}{style = \proplevelchoice{
-%   levelone, leveltwo, levelthree, levelfour, levelfive}}
 % \SetPropStyle{levelone}{counter = numpropi, format = (#1)}
 % \SetPropStyle{leveltwo}{counter = numpropii,
 %   display format = #1., ref format = \parentref{#1}}
@@ -762,20 +690,101 @@
 %   display format = #1., ref format = \parentref{#1}}
 % \SetPropStyle{levelfive}{counter = numpropv,
 %   display format = (#1), ref format = \parentref{.#1}}
+% \SetPropStyle{numbered}{style = \proplevelchoice{
+%   levelone, leveltwo, levelthree, levelfour, levelfive}}
 % \end{codebox}
+% 
+% \item[\texttt{equation}] Uses the |equation| counter.  Note that this style has a special behavior when the |equations| option is active: changing its \refKey{display format} and \refKey{ref format} keys (or both, by setting \refKey{format}) will also change the corresponding hooks used to create the tags for numbered equations make the \texttt{equation} environment and \textsf{amstex} environments like \texttt{gather}.
+% \begin{codebox}
+% \SetPropStyle{equation}{counter = equation, format = (#1)}
+% \end{codebox}
+% \end{description}
 %
-% \item[\texttt{eqnum}] Like |numbered|, but uses |equation| at level~1.
-%   Activated by the |equations| package option (which sets
-%   |nameless style = eqnum|), and therefore the style in force for the
-%   unnamed items of this manual.
+% \begin{description}
+% \item[\texttt{eqnum}] Like |numbered|, but uses |equation| instead 
+% of |levelone| at the outer level.  The |equations| package option sets
+% |default nameless style = eqnum|.  Since this manual uses this option,
+% its outer-level nameless items use the |equation| style.
 % \begin{codebox}
 % \SetPropStyle{eqnum}{style = \proplevelchoice{
 %   equation, leveltwo, levelthree, levelfour, levelfive}}
 % \end{codebox}
+% \end{description}
+% 
+% \begin{example}
+% \begin{prop}
+%   \item \label{outer}
+%   This is an outermost numbered item.  Since the default style for
+%   nameless items is |eqnum|, it uses the |equation| style.
+%   \begin{prop}
+%     \item \label{second}
+%     This is a second level item, using |leveltwo|.
+%     \begin{prop}
+%       \item \label{third}
+%       This is a third level item, using |levelthree|.
+%       \begin{prop}
+%         \item \label{fourth}
+%         This is a fourth level item, using |levelfour|.
+%         \begin{prop}
+%           \item \label{fifth}
+%           This is a fifth level item, using |levelfive|.
+%         \end{prop}
+%       \end{prop}
+%     \end{prop}
+%   \end{prop}
+% \end{prop}
+% We hope you enjoyed reading \ref{outer}, \ref{second}, \ref{third},
+% \ref{fourth}, and \ref{fifth}. 
+% \end{example}
+% 
+% \begin{description}
+% \item[\texttt{roman}] Roman numerals.  At the
+% outer level, they use their own counter (reset every section); inside 
+% nested lists, they use the counter appropriate to the nesting
+% level, so one can easily make roman-numbered sublists.  Shortcut: |\ritem|.  
+% \begin{codebox}
+% \DeclareNumberedStyle{roman}[parent = section,
+%   counter format = \roman{#1}, format = (#1), macro = \ritem]
+% \SetPropStyle{roman}{counter = \proplevelchoice{
+%   roman, numpropii, numpropiii, numpropiv, numpropv}}
+% \end{codebox}
 %
-% \item[\texttt{hierarchical}] Produces 1, 1.1, 1.1.1\,\ldots\
-%   numbering using \cs{parentref} and \texttt{counter format}.
-%   Defined via two helper styles:
+% \item[\texttt{alph}] Letters.  Works the same as |roman|, but with 
+% letters.  Uses its own dedicated counter at the outer level.  
+% Shortcut: |\aitem|.  
+% \begin{codebox}
+% \DeclareNumberedStyle{alph}[parent = section,
+%   counter format = \alph{#1}, display format=#1., 
+%   ref format = (#1), macro = \aitem]
+% \SetPropStyle{alph}{counter = \proplevelchoice{
+%   alph, numpropii, numpropiii, numpropiv, numpropv}}
+% \end{codebox}
+%
+% \begin{example}
+% \begin{prop}
+%   \item[Complex thesis, align=nextline] \label{complex}
+%   \begin{prop}
+%     \ritem \label{partone} The first part.
+%     \begin{prop}
+%       \aitem \label{parta} This also has several components.
+%       \aitem \label{partb} Including this one.
+%     \end{prop}
+%     \ritem \label{parttwo} The second part.  
+%   \end{prop}
+% \end{prop}
+% For \ref{complex} to serve its purpose, both \ref{partone} (and its 
+% two components \ref{parta} and \ref{partb}) and \ref{parttwo} 
+% are needed.  
+% \begin{prop}
+%   \ritem
+%   The |roman| and |alph| styles are also useful for creating ad-hoc 
+%   numbered lists at the outer level.  
+%   \ritem
+%   Like this one.  
+% \end{prop}
+% \end{example}
+% 
+% \item[\texttt{hierarchical}] Produces 1, 1.1, 1.1.1\,\ldots\ numbering.  Defined via two helper styles:
 % \begin{codebox}
 % \SetPropStyle{h-base}{counter = numpropi,
 %   counter format = \arabic{#1}, ref format = #1, 
@@ -788,25 +797,104 @@
 % \SetPropStyle{hierarchical}{style = \proplevelchoice{
 %   h-base, h-sub}}
 % \end{codebox}
-% \end{description}
+% \end{description} 
+% 
+% Note that since the optional arguments of the \refEnv{prop} and \refEnv{inlineprop} environment only affect the |\item|s in the \emph{immediate} scope of that environment (not of any nested environments), styles like |hierarchical| will need to be set using \refCom{propoptions} when one wants to apply the style at multiple levels.  (The scope of \refCom*{propoptions} can be controlled by creating a \TeX{} group.)
+% 
+% \begin{example}
+% \begingroup
+% \propoptions{style = hierarchical, leftmargin=3em, labelindent=0em}
+% \begin{prop}
+%   \item \label{theworld} The world is everything that is the case.
+%   \begin{prop}
+%     \item \label{totality}
+%     The world is the totality of facts, not of things.
+%     \begin{prop}
+%       \item 
+%       The world is determined by the facts, and by their being all the
+%       facts.
+%       \item
+%       For the totality of facts determines what is the case, and also 
+%       whatever is not the case.
+%     \end{prop}
+%   \end{prop}
+% \end{prop}
+% Proposition \ref{totality} helps elucidate the meaning of 
+% proposition \ref{theworld}.  
+% \endgroup
+% \end{example}
 %
-% Note that since the optional arguments of the \texttt{prop} and \texttt{inlineprop} environment only affect the |\item|s in the \emph{immediate} scope of that environment (not of any nested environments), dispatcher styles are most useful when either set as defaults using keys like \refKey{nameless style}, or set with \refCom{propoptions} (whose scope can be controlled by creating a \TeX{} group).
 %
 % \subsubsection*{Environment-level styles}
 %
 % These styles are designed to be used in 
-% the optional argument of \texttt{prop} or \texttt{inlineprop}.
+% the optional argument of \refEnv{prop} or \refEnv{inlineprop}.
 % 
+% \begin{description}
+% \item[\texttt{fitmargin}] Fits the left margin to the predicted width of the 
+% label (computed using \refCom{propwidestlabel}), so that the label will never
+% extend past the left margin of the following text. 
+% \begin{codebox}
+% \SetPropStyle{fitmargin}{
+%   labelindent = 0pt,
+%   leftmargin  = \widthof{\propwidestlabel} + \labelsep}
+% \end{codebox}
+%   This is what \refCom{propformlabel} is for: it is the label this
+%   environment's items are expected to produce, computed once at
+%   \verb|\begin{prop}| and therefore usable in the dimension keys that size the
+%   list.  What it measures is \refCom{propwidestlabel}, the same label with
+%   its digits widened, so that a run of numbered environments does not shift
+%   its margin every time the numbers change width.
+%
+%   \refKey{leftmargin} places the body; \refKey{labelwidth} then has to come
+%   out as \refKey{leftmargin} minus \refKey{labelsep}, or the label box keeps
+%   the class default and the label starts a box-width short of the margin.
+%   Rather than say so, \refKey{labelindent}\,=\,\texttt{0pt} says where the
+%   label box begins---at the enclosing margin---and lets the package derive
+%   \refKey{labelwidth} from the constraint it maintains between the five
+%   dimensions.  \refKey{align} is left alone, so the label may be placed
+%   anywhere within that box.
+%
+%   Since the name is set for the environment, every \cs{item} of the list
+%   carries the same label, so this style is meant for a list of one item; a
+%   numbered variant would want \refKey{items} as well, so that the width is
+%   computed for the last expected label rather than the first.
+% \end{description}
+%
 % \begin{example}
-% \begin{prop}[style=framed, style=thesis]
-%   \item[Central Doctrine] This thesis is so incredibly 
-%   important that it deserves to be put in its own box!
-% \end{prop}
 % \begin{prop}[name=Fitted Margin, style=fitmargin]
-%   \item The name is set for the environment, and the
-%   body of the item begins where the label ends.
+%   \item Notice that the |name| key needs to be set in the optional 
+%   argument of |prop| rather than |item|, so that the style knows 
+%   how much space needs to be reserved.
+% \end{prop}
+% \begin{prop}[items=2, style=fitmargin]
+%   \item
+%   The use of |items=2| is crucial here; without it, we would
+%   only reserve enough space for a one-digit number.
+%   \item 
+%   This happens to be where the |equation| counter hits value 10.
 % \end{prop}
 % \end{example}
+% 
+% \begin{description}
+% \item[\texttt{outerfit}] 
+% This style behaves like \texttt{fitmargin} at the outer nesting level, but does nothing at other levels.  Intended to be set once, for a document that wants all of its top-level propositions numbered in the manner of
+%   \textsf{linguex}:
+% \begin{codebox}
+% \propoptions{style = outerfit}
+% \end{codebox}
+%   Fitting the margin to the label is wanted at the outer level and unwanted
+%   inside it, where a nested list's roman numerals or letters would drag the
+%   margin about as they changed width.  So each dimension takes a value that
+%   varies with the nesting level, using \refCom{proplevelchoice}:
+% \begin{codebox}
+% \SetPropStyle{outerfit}{
+%   labelwidth = \proplevelchoice{
+%     \widthof{\propwidestlabel}, *},
+%   leftmargin = \proplevelchoice{
+%     \widthof{\propwidestlabel} + \labelsep, *}}
+% \end{codebox}
+% \end{description}
 % 
 % \begin{description}
 % \item[\texttt{framed}] Frames a list in a \texttt{tcolorbox} (requires the \textsf{tcolorbox}
@@ -909,7 +997,7 @@
 %   Geometry only: the label keeps whatever appearance its \refKey{named style}
 %   or \refKey{nameless style} gives it, so a named proposition reverted this
 %   way is still bold.  That is a consequence of the order in which an item is
-%   resolved---the style chosen by \texttt{name} is loaded first, and the
+%   resolved---the style chosen by \refKey{name} is loaded first, and the
 %   argument's keys are applied on top of it---so a style cannot reset a format
 %   without wiping the base style's formatting too.  For the same reason
 %   item-level layout keys survive: to undo a style that also set
@@ -920,7 +1008,7 @@
 %
 % \section{Cross-referencing commands}\label{sect:xref}
 %
-% Labels placed after |\item| items (within \texttt{prop}) work with the standard
+% Labels placed after |\item| items (within \refEnv{prop}) work with the standard
 % |\label|/|\ref| mechanism.  The key difference from ordinary
 % \LaTeX{} references is that |\ref| produces \emph{formatted}
 % output: for example, |\textbf| might be applied to the name, or the number might be wrapped in parentheses.  The formatting is controlled by the |format| key (or separately by |display format| and |ref format|).
@@ -934,7 +1022,7 @@
 %   `the Identity Theory', then |\Ref{thesis}| produces
 %   `The Identity Theory'.)  The starred form suppresses the hyperlink.
 %   Note: |\Ref| only affects references produced by this package (which are stored
-%   via \cs{propapply}); for other references, it behaves like |\ref|.
+%   via \refCom{propapply}); for other references, it behaves like |\ref|.
 % \end{docCommands}
 %
 % \begin{docCommands}{
@@ -1002,7 +1090,7 @@
 %   { doc name = lastref,  doc parameter = \oarg{prefix}\marg{suffix} },
 %   { doc name = Lastref,  doc parameter = \oarg{prefix}\marg{suffix} },
 % }
-%   Produces a reference (witth no hyperlink) to the most recently processed \cs{item} or \cs{ptag}, even without a \cs{label}.  Useful for back-references in running text.  With one argument, \meta{suffix} is appended; with two, \meta{prefix} is also prepended.  Use \cs{lastref}\texttt{\{\}} for a plain reference.  \cs{Lastref} is the titlecase variant.
+%   Produces a reference (witth no hyperlink) to the most recently processed \cs{item} or \refCom{ptag}, even without a \cs{label}.  Useful for back-references in running text.  With one argument, \meta{suffix} is appended; with two, \meta{prefix} is also prepended.  Use \cs{lastref}\texttt{\{\}} for a plain reference.  \cs{Lastref} is the titlecase variant.
 % \end{docCommands}
 %
 % \begin{docCommands}{
@@ -1016,7 +1104,7 @@
 %   { doc name = parentref,  doc parameter = \oarg{prefix}\marg{suffix} },
 %   { doc name = Parentref,  doc parameter = \oarg{prefix}\marg{suffix} },
 % }
-%   Inside a nested \texttt{prop} (or \texttt{inlineprop}), produces a formatted reference to the most recent item of the enclosing level.  Same argument convention as \refCom{lastref}.  \cs{Parentref} is the titlecase variant.
+%   Inside a nested \refEnv{prop} (or \refEnv{inlineprop}), produces a formatted reference to the most recent item of the enclosing level.  Same argument convention as \refCom{lastref}.  \cs{Parentref} is the titlecase variant.
 % \end{docCommands}
 %
 % \begin{docCommands}{
@@ -1053,7 +1141,7 @@
 % \subsection{How cross-referencing works: \cs{propapply}}
 %
 % \begin{docCommand}{propapply}{\marg{template}\marg{content}}
-%   Internally, each reference is stored in the \texttt{.aux} file as \cs{propapply}\marg{template}\marg{content}.  The \meta{template} contains formatting with the placeholder \refCom{propfmtarg} where content appears.  At reference time, \cs{propapply} evaluates the template with \cs{propfmtarg} bound to \meta{content}.  The \refCom{oref} and \refCom{nref} commands work by locally redefining \cs{propapply}.
+%   Internally, each reference is stored in the \texttt{.aux} file as \cs{propapply}\marg{template}\marg{content}.  The \meta{template} contains formatting with the placeholder \refCom{propfmtarg} where content appears.  At reference time, \cs{propapply} evaluates the template with \refCom{propfmtarg} bound to \meta{content}.  The \refCom{oref} and \refCom{nref} commands work by locally redefining \cs{propapply}.
 %
 %   In normal use, you need not interact with \cs{propapply} directly.
 % \end{docCommand}
@@ -1067,7 +1155,7 @@
 % The \textsf{propositions} package is designed to work with \textsf{hyperref}, \textsf{cleveref}, \textsf{amsmath}, and \textsf{tcolorbox}.
 % \begin{itemize}
 %    \item 
-%    \textsf{amsmath} is required for |\ptag| and the |equations| option.  
+%    \textsf{amsmath} is required for \refCom{ptag} and the |equations| option.  
 %    \item 
 %    With \textsf{hyperref} loaded, all cross-referencing 
 %    commands generate hyperlinks, as usual.  
@@ -1091,7 +1179,7 @@
 %
 % \section{Known issues}
 %
-% When using |\ptag| with a named counter (e.g.\ |\ptag[counter=P]|)
+% When using \refCom{ptag} with a named counter (e.g.\ |\ptag[counter=P]|)
 % inside an \textsf{amsmath} equation environment, \textsf{hyperref}
 % may emit warnings of the form:
 % \begin{Verbatim}[gobble=2]
