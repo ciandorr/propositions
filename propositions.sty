@@ -1522,9 +1522,14 @@
         \__props_apply_dim:Nn \l__props_partopsep_tl      \partopsep
         \__props_apply_dim:Nn \l__props_itemsep_tl        \itemsep
         \__props_apply_dim:Nn \l__props_parsep_tl         \parsep
+        %% \labelsep before \leftmargin, since a leftmargin may be written in
+        %% terms of it --- fitmargin's \widthof{\propwidestlabel}+\labelsep is
+        %% the built-in case --- and would otherwise be computed from the value
+        %% this list is about to replace.  With labelsep left alone the order
+        %% makes no difference, which is why it went unnoticed.
+        \__props_apply_dim:Nn \l__props_labelsep_tl       \labelsep
         \__props_apply_dim:Nn \l__props_leftmargin_tl     \leftmargin
         \__props_apply_dim:Nn \l__props_rightmargin_tl    \rightmargin
-        \__props_apply_dim:Nn \l__props_labelsep_tl       \labelsep
         \__props_apply_dim:Nn \l__props_itemindent_tl     \itemindent
         \__props_apply_dim:Nn \l__props_listparindent_tl  \listparindent
         \__props_apply_dim:Nn \l__props_labelwidth_tl     \labelwidth
@@ -2138,6 +2143,7 @@
 \SetPropStyle { hierarchical }
   {
     style = \proplevelchoice { h-base , h-sub } ,
+    tightspacing ,
   }
 
 
@@ -2150,9 +2156,9 @@
 
 \SetPropStyle { outerfit }
   {
-    labelwidth = \proplevelchoice { \widthof{\propwidestlabel} , * } ,
-    leftmargin =
-      \proplevelchoice { \widthof{\propwidestlabel} + \labelsep , * } ,
+    labelindent = \proplevelchoice { 0pt , * } ,
+    leftmargin  =
+      \proplevelchoice { \widthof{\propwidestlabel} + 1.3em , * } ,
   }
 
 

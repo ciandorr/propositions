@@ -1,0 +1,65 @@
+\documentclass{article}
+\usepackage{propositions}
+
+%% How wide the gap after an outer example number is, and why outerfit sets it.
+%%
+%% Under outerfit the outer margin is derived from the label: the label's width
+%% plus a separation.  fitmargin uses \labelsep for that, which the standard
+%% classes set to 5pt; outerfit uses 1.3em, linguex's spacing for examples.
+%% The sections below show the difference, which is 8pt of daylight between an
+%% example number and the sentence it introduces -- and, at 25.78pt, puts the
+%% text within a point of where an ordinary list body starts.
+%%
+%% Everything here is at the outer level, the only one outerfit touches.  Note
+%% that the separation is written into the margin rather than as labelsep:
+%% \labelsep is not re-established per list level by the classes, so setting it
+%% would leak into nested lists and squeeze their label boxes.  See the outerfit
+%% section of test-fitmargin for the levels below.
+
+\newcommand\dims{\texttt{\footnotesize[LM=\the\leftmargin\ LS=\the\labelsep]}}
+
+\newcommand\sample{%
+  \begin{prop}
+    \item Everything that can be said at all can be said clearly, and whereof
+    one cannot speak, thereof one must be silent. \dims
+    \item The limits of my language mean the limits of my world. \dims
+    \item A third example, long enough to wrap onto a second line so that the
+    continuation lines can be seen to align with the first. \dims
+  \end{prop}}
+
+\begin{document}
+
+\section{\texttt{fitmargin}: separation is \texttt{labelsep} (5pt)}
+
+\propoptions{style=fitmargin}
+\sample
+
+\section{\texttt{outerfit}: separation is 1.3em (13pt)}
+
+\propoptions{style=outerfit}
+\sample
+
+\section{Two-digit numbers, \texttt{fitmargin}}
+
+\begingroup
+\propoptions{style=fitmargin}
+\setcounter{numpropi}{9}
+\sample
+\endgroup
+
+\section{Two-digit numbers, \texttt{outerfit}}
+
+\begingroup
+\propoptions{style=outerfit}
+\setcounter{numpropi}{9}
+\sample
+\endgroup
+
+\section{For reference: no \texttt{outerfit}, class defaults}
+
+\begingroup
+\propoptions{style=standard}
+\sample
+\endgroup
+
+\end{document}

@@ -23,7 +23,7 @@
 \usepackage{amsmath}
 \usepackage[most]{tcolorbox}
 \tcbuselibrary{documentation}
-\usepackage[equations, tightspacing]{propositions}
+\usepackage[equations]{propositions}
 \usepackage{cleveref}
 \usepackage{fancyvrb}
 \VerbatimFootnotes
@@ -556,6 +556,142 @@
 % 
 % \end{docKey}
 %
+% \section{Cross-referencing commands}\label{sect:xref}
+%
+% Labels placed after |\item| items (within \refEnv{prop}) work with the standard
+% |\label|/|\ref| mechanism.  The key difference from ordinary
+% \LaTeX{} references is that |\ref| produces \emph{formatted}
+% output: for example, |\textbf| might be applied to the name, or the number might be wrapped in parentheses.  The formatting is controlled by the |format| key (or separately by |display format| and |ref format|).
+%
+% \begin{docCommands}{
+%   { doc name = Ref,  doc parameter = \marg{label} },
+%   { doc name = {Ref*}, doc parameter = \marg{label} },
+% }
+%   Titlecase variants of |\ref| and |\ref*|: uppercases the first letter of the
+%   formatted output.  (For example, if |\ref{thesis}| produces
+%   `the Identity Theory', then |\Ref{thesis}| produces
+%   `The Identity Theory'.)  The starred form suppresses the hyperlink.
+%   Note: |\Ref| only affects references produced by this package (which are stored
+%   via \refCom{propapply}); for other references, it behaves like |\ref|.
+% \end{docCommands}
+%
+% \begin{docCommands}{
+%   { doc name = nref,  doc parameter = \marg{label} },
+%   { doc name = {nref*}, doc parameter = \marg{label} },
+%   { doc name = Nref,  doc parameter = \marg{label} },
+%   { doc name = {Nref*}, doc parameter = \marg{label} },
+% }
+%   ``Naked ref.''  Outputs the bare reference content with all formatting stripped.  If \cs{ref}\texttt{\{premise\}} produces~`(P1)', then \cs{nref}\texttt{\{premise\}} produces~`P1'.  The starred form suppresses the hyperlink.  \cs{Nref} is the titlecase variant: it uppercases the first letter of the bare content.
+% \end{docCommands}
+%
+% |\nref| can be useful in the argument of |\item|, when the
+% the name of one proposition should depend on that of another:
+% \begin{example}
+% \SetPropStyle{proposition}{format=(\textbf{#1})}
+% \begin{prop}
+%   \item[Phys] Everything is physical. \label{phys2}
+%   \item[\nref{phys2}*] Almost everything is physical.
+%   \label{newphys2}
+%   \item[\ref{phys2}*] This one has two sets of parentheses,
+%   which is probably not desired!  Note that 
+%   the previous proposition \ref{newphys2} avoided this by using
+%   |\nref| in the optional argument
+%    of |\item|.
+% \end{prop}
+% \end{example}
+% 
+% \emph{Warning:} documents where the name of one item includes
+% a reference to that of another, and there are further 
+% references to that item, will require multiple
+% \LaTeX\ runs to resolve all references.  To save time, 
+% it is better to avoid long chains of dependencies of this sort.
+% 
+% \begin{docCommands}{
+%   { doc name = oref,  doc parameter = \oarg{prefix}\oarg{suffix}\marg{label} },
+%   { doc name = {oref*}, doc parameter = \oarg{prefix}\oarg{suffix}\marg{label} },
+%   { doc name = Oref,  doc parameter = \oarg{prefix}\oarg{suffix}\marg{label} },
+%   { doc name = {Oref*}, doc parameter = \oarg{prefix}\oarg{suffix}\marg{label} },
+% }
+%   ``Ref with options.''  Extends \cs{ref} by injecting a prefix and/or suffix \emph{inside} the formatting.  With one optional argument, \meta{suffix} is appended; with two, \meta{prefix} is prepended and \meta{suffix} appended.  For instance, if \cs{ref}\texttt{\{premise\}} produces~`(P1)', then \cs{oref}\texttt{[*]\{premise\}} produces~`(P1*)' and \cs{oref}\texttt{[old\string~][*]\{premise\}} produces~`(old\string~P1*)'.  
+% 
+% \cs{Oref} is the titlecase variant; the starred forms suppress the hyperlink.
+% \end{docCommands}
+% 
+% |\oref| can also be useful in the name of |\item|s, if
+% one wants the display format for the modified item
+% to depend on that originally used
+% \begin{example}
+% \begin{prop}
+%   \item[style=plain, name=\oref[$^\dag$]{phys2}]
+%   This will use boldface and parentheses because the
+%   original referenced item did.
+% \end{prop}
+% \end{example}
+% 
+% Another handy use for |\oref| is in combination with |\nref| to refer to ranges:
+% \begin{example}
+% The first two numbered examples in this document
+% were \oref[--\nref{atomism}]{atoms}.
+% \end{example}
+%
+% 
+% \begin{docCommands}{
+%   { doc name = lastref,  doc parameter = \oarg{prefix}\marg{suffix} },
+%   { doc name = Lastref,  doc parameter = \oarg{prefix}\marg{suffix} },
+% }
+%   Produces a reference (witth no hyperlink) to the most recently processed \cs{item} or \refCom{ptag}, even without a \cs{label}.  Useful for back-references in running text.  With one argument, \meta{suffix} is appended; with two, \meta{prefix} is also prepended.  Use \cs{lastref}\texttt{\{\}} for a plain reference.  \cs{Lastref} is the titlecase variant.
+% \end{docCommands}
+%
+% \begin{docCommands}{
+%   { doc name = nlastref, doc parameter = {} },
+%   { doc name = nLastref, doc parameter = {} },
+% }
+%   Like \cs{lastref}\texttt{\{\}}, but returns the bare content without formatting.  \cs{nLastref} is the titlecase variant.
+% \end{docCommands}
+%
+% \begin{docCommands}{
+%   { doc name = parentref,  doc parameter = \oarg{prefix}\marg{suffix} },
+%   { doc name = Parentref,  doc parameter = \oarg{prefix}\marg{suffix} },
+% }
+%   Inside a nested \refEnv{prop} (or \refEnv{inlineprop}), produces a formatted reference to the most recent item of the enclosing level.  Same argument convention as \refCom{lastref}.  \cs{Parentref} is the titlecase variant.
+% \end{docCommands}
+%
+% \begin{docCommands}{
+%   { doc name = nparentref, doc parameter = {} },
+%   { doc name = nParentref, doc parameter = {} },
+% }
+%   Like \cs{parentref}\texttt{\{\}} but returns the bare content without formatting.  Takes no arguments; simply output any desired suffix directly afterwards.  \cs{nParentref} is the titlecase variant.  
+% \end{docCommands}
+%
+% \refCom{parentref} and \refCom{nparentref} are useful for making subitems whose names derive from their parent's:
+% \begin{example}
+% \begin{prop}
+%   \item[P1, ref format=(#1)] \label{claim}
+%   \begin{prop}[counter format=\alph{#1}, 
+%     display format=\textit{#1.}, ref format=\parentref{#1}]
+%     \item \label{positive}
+%     Some things are physical.
+%     \item \label{negative}
+%     Some things are not physical.
+%   \end{prop}
+% \end{prop}
+% Of the two parts of \ref{claim}, \ref{positive} is far more controversial than \ref{negative}.  Thus, we will mostly be considering part \nref{negative}.  
+% \end{example}
+%
+% Many of the built-in numbered styles use \refCom{parentref} in their \refKey{ref format}, to achieve this sort of composite effect.
+%
+% \subsection{How cross-referencing works}
+%
+% \begin{docCommand}{propapply}{\marg{template}\marg{content}}
+%   Internally, each reference is stored in the \texttt{.aux} file as \cs{propapply}\marg{template}\marg{content}.  The \meta{template} contains formatting with the placeholder \refCom{propfmtarg} where content appears.  At reference time, \cs{propapply} evaluates the template with \refCom{propfmtarg} bound to \meta{content}.  The \refCom{oref} and \refCom{nref} commands work by locally redefining \cs{propapply}.
+%
+%   In normal use, you need not interact with \cs{propapply} directly.
+% \end{docCommand}
+%
+% \begin{docCommand}{propfmtarg}{}
+%   Placeholder used inside templates; expands to the content argument of the enclosing \refCom{propapply}.
+% \end{docCommand} 
+% 
 % \section{Defining and modifying styles}\label{sect:styles}
 %
 % Styles, equivalent to bundles of key-value settings,
@@ -732,8 +868,11 @@
 %           \item \label{fifth}
 %           This is a fifth level item, using |levelfive|.
 %         \end{prop}
+%         \item Another fourth level item.
 %       \end{prop}
+%       \item Another third level item.
 %     \end{prop}
+%     \item Another second level item.
 %   \end{prop}
 % \end{prop}
 % We hope you enjoyed reading \ref{outer}, \ref{second}, \ref{third},
@@ -765,19 +904,22 @@
 %
 % \begin{example}
 % \begin{prop}
-%   \item[Complex thesis, align=nextline] \label{complex}
+%   \item[Basic classification, ref format={the \textit{#1}}] \label{complex}
+%   There are three different basic kinds of people.
 %   \begin{prop}
-%     \ritem \label{partone} The first part.
+%     \ritem \label{partone} Those who know how to count, 
+%     comprising in turn.
 %     \begin{prop}
-%       \aitem \label{parta} This also has several components.
-%       \aitem \label{partb} Including this one.
+%       \aitem \label{parta} Those who know how to count up to 
+%    some number, but not beyond.
+%       \aitem \label{partb} Those who can keep going indefinitely.
 %     \end{prop}
-%     \ritem \label{parttwo} The second part.  
+%     \ritem \label{parttwo} Those who do not know how to count.
 %   \end{prop}
 % \end{prop}
-% For \ref{complex} to serve its purpose, both \ref{partone} (and its 
-% two components \ref{parta} and \ref{partb}) and \ref{parttwo} 
-% are needed.  
+% For \ref{complex} to serve its purpose, both \ref{partone} (and 
+% its two components \ref{parta} and \ref{partb}) and 
+% \ref{parttwo} are needed.  
 % \begin{prop}
 %   \ritem
 %   The |roman| and |alph| styles are also useful for creating ad-hoc 
@@ -798,11 +940,11 @@
 %   counter format = \arabic{#1},
 %   format = \parentref{.#1}}
 % \SetPropStyle{hierarchical}{style = \proplevelchoice{
-%   h-base, h-sub}}
+%   h-base, h-sub}, tightspacing}
 % \end{codebox}
 % \end{description} 
 % 
-% Note that since the optional arguments of the \refEnv{prop} and \refEnv{inlineprop} environment only affect the |\item|s in the \emph{immediate} scope of that environment (not of any nested environments), styles like |hierarchical| will need to be set using \refCom{propoptions} when one wants to apply the style at multiple levels.  (The scope of \refCom*{propoptions} can be controlled by creating a \TeX{} group.)
+% Note that since the optional arguments of the \refEnv{prop} and \refEnv{inlineprop} environment only affect the |\item|s in the \emph{immediate} scope of that environment (not of any nested environments), styles like |hierarchical| will need to be set using \refCom{propoptions} when one wants to apply the style to an environment and all its sub-environements, sub-sub-environments, etc.  (The scope of \refCom*{propoptions} can be controlled by creating a \TeX{} group.)
 % 
 % \begin{example}
 % \begingroup
@@ -842,26 +984,9 @@
 %   labelindent = 0pt,
 %   leftmargin  = \widthof{\propwidestlabel} + \labelsep}
 % \end{codebox}
-%   This is what \refCom{propformlabel} is for: it is the label this
-%   environment's items are expected to produce, computed once at
-%   \verb|\begin{prop}| and therefore usable in the dimension keys that size the
-%   list.  What it measures is \refCom{propwidestlabel}, the same label with
-%   its digits widened, so that a run of numbered environments does not shift
-%   its margin every time the numbers change width.
-%
-%   \refKey{leftmargin} places the body; \refKey{labelwidth} then has to come
-%   out as \refKey{leftmargin} minus \refKey{labelsep}, or the label box keeps
-%   the class default and the label starts a box-width short of the margin.
-%   Rather than say so, \refKey{labelindent}\,=\,\texttt{0pt} says where the
-%   label box begins---at the enclosing margin---and lets the package derive
-%   \refKey{labelwidth} from the constraint it maintains between the five
-%   dimensions.  \refKey{align} is left alone, so the label may be placed
-%   anywhere within that box.
-%
-%   Since the name is set for the environment, every \cs{item} of the list
-%   carries the same label, so this style is meant for a list of one item; a
-%   numbered variant would want \refKey{items} as well, so that the width is
-%   computed for the last expected label rather than the first.
+%  (Explanation: \refCom{propwidestlabel} computes the widest label the environment's items are  expected to produce.  By setting \refKey{labelindent} to zero, we make sure that the \refKey{labelwidth} will be sized to fit the computed \refKey{leftmargin}.)  
+% 
+% When a list will contain several numbered items, you can use the \refKey{items} key to tell the environment how many |\item|s it contains, so that it can properly anticipate how wide the widest label will be.
 % \end{description}
 %
 % \begin{example}
@@ -877,30 +1002,46 @@
 %   \item 
 %   This happens to be where the |equation| counter hits value 10.
 % \end{prop}
+% The |hierarchical| style arguably looks better combined with |fitmargin|:
+% \begingroup
+% \propoptions{style=hierarchical, style=fitmargin}
+% \begin{prop}
+%   \item What is the case---a fact---is the existence of states of affairs.
+%   \begin{prop}
+%     \item A state of affairs (a state of things) is a combination
+%     of objects (things).
+%     \begin{prop} 
+%       \item 
+%       It is essential to things that they should be possible 
+%       constituents of states of affairs.
+%       \item
+%       In logic nothing is accidental: if a thing can occur in a 
+%       state of affairs, the possibility of the state of affairs 
+%       must be written into the thing itself.
+%     \end{prop}
+%   \end{prop}
+% \end{prop}
+% \endgroup
 % \end{example}
 % 
 % \begin{description}
 % \item[\texttt{outerfit}] 
-% This style behaves like \texttt{fitmargin} at the outer nesting level, but does nothing at other levels.  Intended to be set once, for a document that wants all of its top-level propositions numbered in the manner of
-%   \textsf{linguex}:
-% \begin{codebox}
-% \propoptions{style = outerfit}
-% \end{codebox}
-%   Fitting the margin to the label is wanted at the outer level and unwanted
-%   inside it, where a nested list's roman numerals or letters would drag the
-%   margin about as they changed width.  So each dimension takes a value that
-%   varies with the nesting level, using \refCom{proplevelchoice}:
+% This style behaves like \texttt{fitmargin} at the outer nesting level, but does nothing at other levels.  Intended to be set once using \refCom{propoptions}, for a document that wants `fitmargin'-like behavior for its top-level propositions, but not for lower-level propositions (where adjusting to acommodate, e.g., roman numerals of different lengths would be a delicate task).  
+% 
+% This matches the behaviour of the |\ex.| command in package 
+% \textsc{linguex}, widely used in linguistics.  
+% 
 % \begin{codebox}
 % \SetPropStyle{outerfit}{
-%   labelwidth = \proplevelchoice{
-%     \widthof{\propwidestlabel}, *},
-%   leftmargin = \proplevelchoice{
-%     \widthof{\propwidestlabel} + \labelsep, *}}
+%   labelindent = \proplevelchoice{0pt, *},
+%   leftmargin  = \proplevelchoice{
+%     \widthof{\propwidestlabel} + 1.3em, *}}
 % \end{codebox}
+%   (Note the use of \texttt{*} in the argument of \refCom{proplevelchoice}, which leaves the deeper levels as though neither key had been set.)
 % \end{description}
 % 
 % \begin{description}
-% \item[\texttt{framed}] Frames a list in a \texttt{tcolorbox} (requires the \textsf{tcolorbox}
+% \item[\texttt{framed}] Puts an outline around a list (requires the \textsf{tcolorbox}
 %   package to be loaded).  Change the
 %   padding with \verb|\setlength\propframepad{...}|.
 % \begin{codebox}
@@ -919,186 +1060,23 @@
 %   wrapper end = {\end{tcolorbox}},
 % }
 % \end{codebox}
-%   The \texttt{leftmargin\,=\,0} key means that the left margin \emph{inside} the frame is zero.  But the use of 
+%  (Explanation: \texttt{leftmargin\,=\,0} means that the left margin \emph{inside} the frame is zero.  But the use of 
 %   \refCom{propoperativeleftmargin} indents the whole \texttt{tcolorbox} environment by the right amount for the  the
 % left margin of the enclosed material to appear at the same position that would have been used for a list without the \texttt{frame} style, with the frame rule one
-%   \cs{propframepad} further out.
+%   \cs{propframepad} further out.)
 %
-%   \texttt{continue\,=\,false} keeps the frame clear of any list immediately
-%   before or after it.  Joining does not merely retune the gap: it cancels the
-%   vertical glue already in place, which for a framed list is the
-%   \textsf{tcolorbox}'s own spacing.
+% \begin{example}
+% \begin{prop}[style=framed]
+%   \item[Important Claim]
+%   This claim is so important that it deserves to 
+%   put in a special box!
+% \end{prop}
+% \end{example}
 %
-% \item[\texttt{standard}] Puts the list geometry back to the document class's
-%   own, for a single environment.  Setting a style with \refCom{propoptions}
-%   is easy; unsetting it is not, because a style applies the keys it names and
-%   leaves the rest alone---so asking for a \emph{different} style does not
-%   restore what the first one did to the margins.  Under
-%   \texttt{\refCom{propoptions}\{style = outerfit\}}, for instance,
-%   \verb|\begin{prop}[name=Aside, style=proposition]| still gets the fitted
-%   margin.  \texttt{standard} is the way back:
-% \begin{codebox}
-% \begin{prop}[name=Aside, style=standard]
-% \end{codebox}
-%   It sets every list dimension, every spacing key and \refKey{labelindent} to
-%   \texttt{*}, clears \refKey{wrapper begin} and \refKey{wrapper end}, and
-%   restores \refKey{continue}.
-%
-%   Geometry only: the label keeps whatever appearance its \refKey{named style}
-%   or \refKey{nameless style} gives it, so a named proposition reverted this
-%   way is still bold.  That is a consequence of the order in which an item is
-%   resolved---the style chosen by \refKey{name} is loaded first, and the
-%   argument's keys are applied on top of it---so a style cannot reset a format
-%   without wiping the base style's formatting too.  For the same reason
-%   item-level layout keys survive: to undo a style that also set
-%   \refKey{align}, as \texttt{framed} does, add it to the argument:
-%   \verb|[style=standard, align=left]|.
+% \item[\texttt{standard}] 
+% A style that resets all the environment-level keys back to their default value.  (This is useful, since there is otherwise no easy way to `unset' a globally-set style.)  Item-level keys like \refKey{align} and \refKey{display format} are not affected, so these will still be set by the the operative \refKey{named style} or \refKey{nameless style} defaults.  (To reset \refKey*{align} along with the other keys, just set \verb|[style=standard, align=left]|.)
 % \end{description}
 %
-%
-% \section{Cross-referencing commands}\label{sect:xref}
-%
-% Labels placed after |\item| items (within \refEnv{prop}) work with the standard
-% |\label|/|\ref| mechanism.  The key difference from ordinary
-% \LaTeX{} references is that |\ref| produces \emph{formatted}
-% output: for example, |\textbf| might be applied to the name, or the number might be wrapped in parentheses.  The formatting is controlled by the |format| key (or separately by |display format| and |ref format|).
-%
-% \begin{docCommands}{
-%   { doc name = Ref,  doc parameter = \marg{label} },
-%   { doc name = {Ref*}, doc parameter = \marg{label} },
-% }
-%   Titlecase variants of |\ref| and |\ref*|: uppercases the first letter of the
-%   formatted output.  (For example, if |\ref{thesis}| produces
-%   `the Identity Theory', then |\Ref{thesis}| produces
-%   `The Identity Theory'.)  The starred form suppresses the hyperlink.
-%   Note: |\Ref| only affects references produced by this package (which are stored
-%   via \refCom{propapply}); for other references, it behaves like |\ref|.
-% \end{docCommands}
-%
-% \begin{docCommands}{
-%   { doc name = nref,  doc parameter = \marg{label} },
-%   { doc name = {nref*}, doc parameter = \marg{label} },
-%   { doc name = Nref,  doc parameter = \marg{label} },
-%   { doc name = {Nref*}, doc parameter = \marg{label} },
-% }
-%   ``Naked ref.''  Outputs the bare reference content with all formatting stripped.  If \cs{ref}\texttt{\{premise\}} produces~`(P1)', then \cs{nref}\texttt{\{premise\}} produces~`P1'.  The starred form suppresses the hyperlink.  \cs{Nref} is the titlecase variant: it uppercases the first letter of the bare content.
-% \end{docCommands}
-%
-% |\nref| can be useful in the argument of |\item|, when the
-% the name of one proposition should depend on that of another:
-% \begin{example}
-% \SetPropStyle{proposition}{format=(\textbf{#1})}
-% \begin{prop}
-%   \item[Phys] Everything is physical. \label{phys2}
-%   \item[\nref{phys2}*] Almost everything is physical.
-%   \label{newphys2}
-%   \item[\ref{phys2}*] This one has two sets of parentheses,
-%   which is probably not desired!  Note that 
-%   the previous proposition \ref{newphys2} avoided this by using
-%   |\nref| in the optional argument
-%    of |\item|.
-% \end{prop}
-% \end{example}
-% 
-% \emph{Warning:} documents where the name of one item includes
-% a reference to that of another, and there are further 
-% references to that item, will require multiple
-% \LaTeX\ runs to resolve all references.  To save time, 
-% it is better to avoid long chains of dependencies of this sort.
-% 
-% \begin{docCommands}{
-%   { doc name = oref,  doc parameter = \oarg{prefix}\oarg{suffix}\marg{label} },
-%   { doc name = {oref*}, doc parameter = \oarg{prefix}\oarg{suffix}\marg{label} },
-%   { doc name = Oref,  doc parameter = \oarg{prefix}\oarg{suffix}\marg{label} },
-%   { doc name = {Oref*}, doc parameter = \oarg{prefix}\oarg{suffix}\marg{label} },
-% }
-%   ``Ref with options.''  Extends \cs{ref} by injecting a prefix and/or suffix \emph{inside} the formatting.  With one optional argument, \meta{suffix} is appended; with two, \meta{prefix} is prepended and \meta{suffix} appended.  For instance, if \cs{ref}\texttt{\{premise\}} produces~`(P1)', then \cs{oref}\texttt{[*]\{premise\}} produces~`(P1*)' and \cs{oref}\texttt{[old\string~][*]\{premise\}} produces~`(old\string~P1*)'.  
-% 
-% \cs{Oref} is the titlecase variant; the starred forms suppress the hyperlink.
-% \end{docCommands}
-% 
-% |\oref| can also be useful in the name of |\item|s, if
-% one wants the display format for the modified item
-% to depend on that originally used
-% \begin{example}
-% \begin{prop}
-%   \label{premise}
-%   \item[style=plain, name=\oref[*]{phys2}]
-%   This will use boldface and parentheses because the
-%   original referenced item did.
-% \end{prop}
-% \end{example}
-% 
-% Another handy use for |\oref| is in combination with |\nref| to refer to ranges:
-% \begin{example}
-% The first two numbered examples in this document
-% were \oref[--\nref{atomism}]{atoms}.
-% \end{example}
-%
-% 
-% \begin{docCommands}{
-%   { doc name = lastref,  doc parameter = \oarg{prefix}\marg{suffix} },
-%   { doc name = Lastref,  doc parameter = \oarg{prefix}\marg{suffix} },
-% }
-%   Produces a reference (witth no hyperlink) to the most recently processed \cs{item} or \refCom{ptag}, even without a \cs{label}.  Useful for back-references in running text.  With one argument, \meta{suffix} is appended; with two, \meta{prefix} is also prepended.  Use \cs{lastref}\texttt{\{\}} for a plain reference.  \cs{Lastref} is the titlecase variant.
-% \end{docCommands}
-%
-% \begin{docCommands}{
-%   { doc name = nlastref, doc parameter = {} },
-%   { doc name = nLastref, doc parameter = {} },
-% }
-%   Like \cs{lastref}\texttt{\{\}}, but returns the bare content without formatting.  \cs{nLastref} is the titlecase variant.
-% \end{docCommands}
-%
-% \begin{docCommands}{
-%   { doc name = parentref,  doc parameter = \oarg{prefix}\marg{suffix} },
-%   { doc name = Parentref,  doc parameter = \oarg{prefix}\marg{suffix} },
-% }
-%   Inside a nested \refEnv{prop} (or \refEnv{inlineprop}), produces a formatted reference to the most recent item of the enclosing level.  Same argument convention as \refCom{lastref}.  \cs{Parentref} is the titlecase variant.
-% \end{docCommands}
-%
-% \begin{docCommands}{
-%   { doc name = nparentref, doc parameter = {} },
-%   { doc name = nParentref, doc parameter = {} },
-% }
-%   Like \cs{parentref}\texttt{\{\}} but returns the bare content without formatting.  Takes no arguments; simply output any desired suffix directly afterwards.  \cs{nParentref} is the titlecase variant.  
-% \end{docCommands}
-%
-% \refCom{parentref} and \refCom{nparentref} are useful for making subitems whose names derive from their parent's:
-% \begin{example}
-% \DeclareNumberedStyle{inner}[
-%   counter format=\alph{inner},
-%   display format=#1.]
-% \begin{prop}
-%   \item[OI] Outer item. \label{outer2}
-%   \begin{prop}
-%     \item[style=inner, format=\parentref{.#1}] \label{dsub1}
-%     Ref: \ref{dsub1}, naked: \nref{dsub1}.
-%     \item[style=inner,
-%           display format=#1., ref format=\parentref{.#1}]
-%     \label{dsub2}
-%     Ref: \ref{dsub2}, naked: \nref{dsub2}.
-%   \end{prop}
-% \end{prop}
-% \end{example}
-%
-% The built-in |leveltwo| and |levelthree| styles have
-% |ref format=\parentref{#1}| and |ref format=\parentref{.#1}|,
-% respectively, so that if the parent references
-% as~`(\textbf{P1})', a |leveltwo| sub-item references
-% as~`(\textbf{P1a})' and |\nref| returns just~`a'.
-%
-% \subsection{How cross-referencing works: \cs{propapply}}
-%
-% \begin{docCommand}{propapply}{\marg{template}\marg{content}}
-%   Internally, each reference is stored in the \texttt{.aux} file as \cs{propapply}\marg{template}\marg{content}.  The \meta{template} contains formatting with the placeholder \refCom{propfmtarg} where content appears.  At reference time, \cs{propapply} evaluates the template with \refCom{propfmtarg} bound to \meta{content}.  The \refCom{oref} and \refCom{nref} commands work by locally redefining \cs{propapply}.
-%
-%   In normal use, you need not interact with \cs{propapply} directly.
-% \end{docCommand}
-%
-% \begin{docCommand}{propfmtarg}{}
-%   Placeholder used inside templates; expands to the content argument of the enclosing \refCom{propapply}.
-% \end{docCommand}
 %
 % \section{Compatibility}
 %
@@ -3115,9 +3093,14 @@
         \__props_apply_dim:Nn \l__props_partopsep_tl      \partopsep
         \__props_apply_dim:Nn \l__props_itemsep_tl        \itemsep
         \__props_apply_dim:Nn \l__props_parsep_tl         \parsep
+        %% \labelsep before \leftmargin, since a leftmargin may be written in
+        %% terms of it --- fitmargin's \widthof{\propwidestlabel}+\labelsep is
+        %% the built-in case --- and would otherwise be computed from the value
+        %% this list is about to replace.  With labelsep left alone the order
+        %% makes no difference, which is why it went unnoticed.
+        \__props_apply_dim:Nn \l__props_labelsep_tl       \labelsep
         \__props_apply_dim:Nn \l__props_leftmargin_tl     \leftmargin
         \__props_apply_dim:Nn \l__props_rightmargin_tl    \rightmargin
-        \__props_apply_dim:Nn \l__props_labelsep_tl       \labelsep
         \__props_apply_dim:Nn \l__props_itemindent_tl     \itemindent
         \__props_apply_dim:Nn \l__props_listparindent_tl  \listparindent
         \__props_apply_dim:Nn \l__props_labelwidth_tl     \labelwidth
@@ -3801,6 +3784,7 @@
 \SetPropStyle { hierarchical }
   {
     style = \proplevelchoice { h-base , h-sub } ,
+    tightspacing ,
   }
 
 % ====================================================================
@@ -3857,15 +3841,43 @@
 % the dimension, so the resolver would treat it as protected and push any
 % deficit onto another one.
 %
-% align is deliberately not set, though fitmargin sets it: it is the default
-% anyway (see \__props_decl_reset:), and a style that is in force at every
-% level should not quietly overrule an alignment chosen further in.
+% labelindent = 0pt rather than a labelwidth, for the reason fitmargin gives:
+% it says where the label box begins and lets the resolver derive the width.
+% Note that it too is dispatched by level --- 0pt at the outer level, the
+% sentinel below it.  A bare 0pt would apply everywhere, pinning every nested
+% list's label box to its margin, which is precisely the interference this
+% style exists to avoid.
+%
+% The margin is the label's width plus 1.3em, \textsf{linguex}'s separation,
+% rather than fitmargin's + \labelsep.  With the classes' 5pt an outer example
+% reads as one run, the number almost touching its sentence and the text
+% starting a good 7pt left of where an ordinary list body would; 1.3em puts it
+% back at about the accustomed place while keeping the margin fitted.
+% fitmargin is deliberately left alone: it is the general-purpose fitting tool,
+% used for a lone named proposition as often as for numbers, and a 13pt gap
+% after a bold name is an opinion it should not hold.
+%
+% Written into the margin rather than as labelsep = 1.3em, which would give
+% the same outer level and wreck the inner ones.  \labelsep is not
+% re-established per level by the standard classes the way \leftmargin and
+% \labelwidth are, so a nested list inherits whatever its parent left in the
+% register, and the sentinel --- which declines to assign rather than
+% restoring a default --- has nothing to put back.  Nested labels then found
+% themselves in a box 1.3em too narrow, overflowed it, and shoved their own
+% first lines sideways.  With the width in the margin instead, labelsep is
+% never touched and the deeper levels are untouched with it.  The label sits
+% at the margin and the body at \leftmargin either way, so the outer level is
+% indistinguishable.
+%
+% align is not set, for the same reason as in fitmargin, and the more so here:
+% a style in force at every level should not overrule an alignment chosen
+% further in.
 
 \SetPropStyle { outerfit }
   {
-    labelwidth = \proplevelchoice { \widthof{\propwidestlabel} , * } ,
-    leftmargin =
-      \proplevelchoice { \widthof{\propwidestlabel} + \labelsep , * } ,
+    labelindent = \proplevelchoice { 0pt , * } ,
+    leftmargin  =
+      \proplevelchoice { \widthof{\propwidestlabel} + 1.3em , * } ,
   }
 
 % ====================================================================

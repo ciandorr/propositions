@@ -144,10 +144,12 @@ further right than the first.
 
 \section{\texttt{outerfit}: the outer level only}
 
-\verb|outerfit| is \verb|fitmargin| at level one and nothing below it, so that
+\verb|outerfit| fits the margin at level one and does nothing below it, so that
 it can be set for a whole document with \verb|\propoptions{style=outerfit}|
 without disturbing nested lists.  Its dimension values vary with the level via
-\verb|\proplevelchoice|, the second entry being the sentinel \verb|*|.
+\verb|\proplevelchoice|, the second entry being the sentinel \verb|*|.  It
+differs from \verb|fitmargin| in separating label from text by 1.3em rather
+than a \verb|\labelsep|, \textsf{linguex}'s spacing for examples.
 
 {\propoptions{style = outerfit}
 \noindent\rule{\textwidth}{0.3pt}
@@ -166,9 +168,11 @@ without disturbing nested lists.  Its dimension values vary with the level via
 \noindent\rule{\textwidth}{0.3pt}
 \par}
 
-The two outer items must be fitted to their own labels, as under
-\verb|fitmargin|: \texttt{LM} equal to the label width plus \texttt{LS}, and
-the label starting at the left rule.  The nested ones must keep the class
+The two outer items must be fitted to their own labels: \texttt{LM} equal to
+the label's own width plus 1.3em (13pt at 10pt), and the label starting at the
+left rule.  The label \emph{box} is wider than the label by the difference
+between 1.3em and \texttt{LS}, which is invisible while the label is
+left-aligned in it.  The nested ones must keep the class
 defaults untouched --- \texttt{LM=22.0pt} at level two
 (\verb|\leftmarginii|) and \texttt{LM=18.7pt} at level three
 (\verb|\leftmarginiii|) in \texttt{article} --- which is the whole point of the
