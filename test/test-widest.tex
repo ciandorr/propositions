@@ -2,17 +2,24 @@
 \usepackage[oldstyle]{ebgaramond}
 \usepackage{propositions}
 
-%% \propwidest with proportional (oldstyle) figures.  Computer Modern cannot
+%% The digit widening with proportional (oldstyle) figures.  Computer Modern cannot
 %% exercise this: all of its digits have the same width, so any choice of
 %% substitute digit gives the same answer and a wrong choice cannot show up.
 %% EB Garamond's oldstyle figures are genuinely proportional --- 0 is the
 %% widest and 1 is 44% narrower --- so here the substitute has to be the widest
 %% digit and nothing else will do.  (Requires ebgaramond.)
 
+%% \propwidest is package-internal (\__props_widest:n).  A test may reach for
+%% it anyway; this shim keeps the prose below readable without pretending the
+%% command is public.
+\ExplSyntaxOn
+\NewDocumentCommand \widen { m } { \__props_widest:n {#1} }
+\ExplSyntaxOff
+
 \newlength\wa \newlength\wb
 \newcommand\cmp[1]{%
   \settowidth\wa{\rmfamily\normalsize(#1)}%
-  \settowidth\wb{\rmfamily\normalsize\propwidest{(#1)}}%
+  \settowidth\wb{\rmfamily\normalsize\widen{(#1)}}%
   \texttt{(#1)}: actual \the\wa, reserved \the\wb,
   \ifdim\wa>\wb \textbf{OVERFLOW by \the\dimexpr\wa-\wb\relax}%
   \else slack \the\dimexpr\wb-\wa\relax\fi\par}
@@ -62,10 +69,10 @@ second one 0.28pt out.
 
 \section{Non-digits are untouched}
 
-\verb|\propwidest| of \textbf{(3.147)} is \propwidest{\textbf{(3.147)}}, still
+\verb|\__props_widest:n| of \textbf{(3.147)} is \widen{\textbf{(3.147)}}, still
 bold and with the point still in place; of \textsc{Prop}~1a it is
-\propwidest{\textsc{Prop}~1a}, still small caps with the space intact; and of a
-label with no digits at all, \emph{Nihilism}, it is \propwidest{\emph{Nihilism}}
+\widen{\textsc{Prop}~1a}, still small caps with the space intact; and of a
+label with no digits at all, \emph{Nihilism}, it is \widen{\emph{Nihilism}}
 --- unchanged, and measured no times at all.
 
 \end{document}

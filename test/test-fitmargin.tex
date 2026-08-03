@@ -8,6 +8,13 @@
 %% must start at the left rule and the body must start one \labelsep past the
 %% end of the label, with continuation lines aligned under the body.
 
+%% \propwidest is package-internal (\__props_widest:n).  A test may reach for
+%% it anyway; this shim keeps the prose below readable without pretending the
+%% command is public.
+\ExplSyntaxOn
+\NewDocumentCommand \widen { m } { \__props_widest:n {#1} }
+\ExplSyntaxOff
+
 \newcommand\dims{\texttt{LM=\the\leftmargin\ LW=\the\labelwidth\
   LS=\the\labelsep}}
 
@@ -109,8 +116,8 @@ label measured, the first pair would differ.
 \setcounter{numpropi}{0}
 
 A label with no digits is unaffected, and formatting survives the widening:
-\verb|\propwidest| of \textbf{(3.147)} is \propwidest{\textbf{(3.147)}}, which
-must still be bold, and of \textsc{Prop}~1a is \propwidest{\textsc{Prop}~1a},
+\verb|\__props_widest:n| of \textbf{(3.147)} is \widen{\textbf{(3.147)}}, which
+must still be bold, and of \textsc{Prop}~1a is \widen{\textsc{Prop}~1a},
 which must still be small caps with the space intact.
 
 \section{Labels that change width within one list}

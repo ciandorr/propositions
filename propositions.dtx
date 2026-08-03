@@ -196,28 +196,37 @@
 % \end{example}
 % The prop environment can also take an optional argument with a list of keys:
 % \begin{example}
-% \begin{prop}[leftmargin=5em, display format=[#1]]
+% \begin{prop}[leftmargin=5em, format=[#1]]
 %   \item Every mental thing is physical. 
 % \end{prop}
 % \end{example}
-% Preset styles can be declared and used in place of a set of key-value pairs:
+% Preset styles can be declared and used in place of a set of key-value pairs.  The package loads with a range of predefined styles (see \cref{sect:builtin-styles}).
 % \begin{example}
 % \begin{prop}
 %   \item[Nihilism, style=thesis] There is nothing. \label{nihilism}
 % \end{prop}
 % Does \ref{nihilism} imply \ref{phys}, \ref{dual}, or both?  Discuss.
 % \end{example}
-% The package loads with a range of predefined styles (listed in \cref{sect:builtin-styles}).
-%
+% 
+% Additional cross-referencing commands (see \cref{sect:xref}) include \refCom{nref} (strips formatting from reference) and \refCom{lastref} (refers to the most recent proposition, even if it lacked a label):
+% \begin{example}
+% \begin{prop}
+%   \item[Mentality] \label{mental} Everything is mental.
+%   \item[\nref{mental}*] Many things are mental.
+% \end{prop}
+% One may think \lastref\ more reasonable than \ref{mental}.
+% \end{example}
+% 
 % When the package is loaded with |\usepackage[equations]{propositions}|, a first-level |\item| within \refEnv{prop} 
 % will use the counter as equations.  (This looks better 
 % with the |leqno| option to |\documentclass|.)
 % \begin{example}
 % \begin{equation}
-%   \exists x (\text{Mental}(x) \wedge \text{Physical}(x))
+%   \exists x (\text{Mental}(x) \wedge \text{Physical}(x)) \label{overlap}
 % \end{equation}
+% \ref{overlap} can be stated in English as \ref{overlap2}:
 % \begin{prop}
-%   \item There is overlap between the mental and the physical.
+%   \item Some things are both mental and physical.  \label{overlap2}
 % \end{prop}
 % \end{example}
 % The \refCom{ptag} command (requires \textsf{amsmath})
@@ -225,8 +234,8 @@
 % that behaves just like an |\item| in a \refEnv{prop} 
 % environment.
 % \begin{example}
-% \begin{equation}
-%   \ptag[Monism] \label{mon}
+% \begin{equation} 
+%   \ptag[Monism, \format=\textsc{#1}] \label{mon}
 %   \exists x \forall y(y = x)
 % \end{equation}
 % Is \ref{mon} compatible with \ref{dual}?
@@ -261,7 +270,14 @@
 %   Sets default keys (see \autoref{sect:keys}), which take effect for all subsequent uses of \refEnv{prop}, \refEnv{inlineprop}, |\item|, and \refCom{ptag} (within the current scope).
 % \end{docCommand}
 % 
-% Further commands are described below, especially in \cref{sect:styles} (defining styles) and \cref{sect:xref} (cross-referencing).  
+% \begin{docCommand}{proplevelchoice}{\marg{item1, item2, \ldots}}
+%   Picks the entry from the comma-separated list depending on the current nesting depth (1-indexed; last element will be used if the list is too short; empty entries are skipped).  At depth~0 (outside any \refEnv{prop} environment), returns the first entry.  
+% 
+% This macro can be used, for example, to set different list dimensions for different nesting levels (see \cref{sect:keys-dims}) or to create styles that produce different results depending on the nesting depth where they are used (see \cref{sect:styles}).
+% \end{docCommand}
+% 
+% 
+% Further commands are described below, especially in \cref{sect:xref} (cross-referencing) and \cref{sect:styles} (defining styles).
 % 
 % \section{Keys}\label{sect:keys}
 % 
@@ -298,14 +314,14 @@
 % 
 % \begin{example}
 % \begin{prop}
-%   \item[A, align=left] Left aligned label.
-%   \item[A, align=center] Center aligned label.
-%   \item[A, align=right] Right aligned label.
+%   \item[L, align=left] Left aligned label.
+%   \item[C, align=center] Center aligned label.
+%   \item[R, align=right] Right aligned label.
 %   \item[Long label, align=center] As in standard \LaTeX\ lists, 
 %       longer labels expand to fill the label box and then push
 %       the following text along to make room for themsselves.
-%   \item[A, align=flush] Flush aligned label.
-%   \item[But sometimes a long label deserves its own line,
+%   \item[Flush label, align=flush] Flush aligned label.
+%   \item[Sometimes a long label will deserve its own line,
 %       align=nextline] Nextline aligned label.  
 %   \item[Another rather long label,
 %       align=flush-nextline] Flush-nextline aligned label.
@@ -318,24 +334,26 @@
 %
 % \begin{docKey}{counter}{=\meta{name}}{no default}
 %   Counter to use.  The counter is automatically stepped, and the item's \refKey{name} is set to \cs{the}\meta{name} (though this can be overridden by \refKey{counter format} or \refKey{name}).
+% 
+% Any counter can be used with \refKey{counter format}.  Special counters \docCounter{numpropii}, \docCounter{numpropiii}, \docCounter{numpropiv}, \docCounter{numpropv} are provided, whose values are automatically reset each time an |\item| is processed at a lower nesting level.  (There is also a counter \docCounter{numpropi} which does not automatically reset.) 
 % \end{docKey}
 %
 % \begin{docKey}{counter format}{=\meta{template}}{no default}
 %   How to display the counter value.  Use \texttt{\#1} for the counter name, e.g.\ \texttt{counter format=\string\roman\{\#1\}}.  When both this key and \refKey{counter} are set, this is used instead of \cs{the}\meta{counter} for generating the item's \refKey{name}.
 % \end{docKey}
 %
-% \begin{docKey}{format}{=\meta{template}}{no default}
-%   Formatting applied to the \refKey{name}: use \texttt{\#1} for the argument, e.g.\ \texttt{format=\string\textbf\{(\#1)\}}.  Shorthand for setting both \refKey{display format} and \refKey{ref format}.
-% \end{docKey}
-%
 % \begin{docKey}{display format}{=\meta{template}}{no default}
-%   Format for displaying the name in the proposition's label.  Does not affect cross-references.
+%   Format for displaying the name or counter value in the proposition's label.  Use \texttt{\#1} for the argument, e.g.\ \texttt{display format=\string\textbf\{\#1\}}.  Does not affect cross-references.
 % \end{docKey}
 %
 % \begin{docKey}{ref format}{=\meta{template}}{no default}
-%   Format for subsequent cross-references to this proposition.  Does not affect the display.
+%   Format for subsequent cross-references to this proposition.  Use \texttt{\#1} for the argument, e.g.\ \texttt{ref format=\string\{(\#1)\}}.  Does not affect the display.
 % \end{docKey}
 %
+% % \begin{docKey}{format}{=\meta{template}}{no default}
+%   Shorthand for setting both \refKey{display format} and \refKey{ref format}.
+% \end{docKey}
+% 
 % \begin{docKey}{shorthand}{=\meta{text}}{no default}
 %   An abbreviation displayed after the name.  If present, the shorthand becomes the reference text: \cs{ref} produces the shorthand (formatted with \refKey{ref format}) rather than the full name.
 % \end{docKey}
@@ -425,16 +443,21 @@
 %     { doc name = labelsep },
 %     { doc name = itemindent },
 %     { doc name = listparindent },
+%     { doc name = labelindent },
 %   }
 %   Override the standard \LaTeX{} list dimensions.  Accept the same values as \cs{setlength}, including rubber lengths (e.g.\ \texttt{itemsep=4pt plus 2pt}).
+% 
+% \refKey{labelindent} is not a standrd \LaTeX{} list dimension.  It positions the left edge of the label box at \meta{length} from the enclosing margin.  This introduces a redundancy: any one of \refKey{labelindent}, \cs{labelwidth}, \cs{leftmargin}, \cs{labelsep}, or \cs{itemindent} can be calculated from the four others, via the expression
+% \[
+% \refKey{labelindent} + \refKey{labelwidth} + \refKey{itemsep} = \refKey{leftmargin} + \refKey{itemindent}
+% \]
+% Whichever of these is not explicitly set will be computed from the ones that are explicitly set (or from the four most recently explicitly set) in such a way as to guarantee this identity.  Each dimension key also accepts the value~\texttt{*}, which means \emph{behave as if the key had not been set}: the dimension takes the document class's default, unless its value must shift to preserve the above identity.  This behaviour is identical to that of package \textsf{enumitem}.
 %
-% Each also accepts the value~\texttt{*}, which means \emph{as if the key had not been set}: the dimension takes the document class's default, or---where \refKey{labelindent} makes the five label-area dimensions over-determined---is left free for the package to derive from the others.  This is the same convention \textsf{enumitem} uses, and it is chiefly useful for confining an override to some levels of nesting, since a value is resolved afresh at each level:
+% The values of these keys can be a macro that expand to a dimension.  For example, one can set different list dimensions for different nesting levels by using \refCom{proplevelchoice}:
 % \begin{codebox}
 % \propoptions{leftmargin = \proplevelchoice{2.5em, 0em, *}}
 % \end{codebox}
-% gives level~1 2.5em, level~2 0em, and every deeper level the class default.  Without the \texttt{*} the last entry would apply at every level below the second, since \refCom{proplevelchoice} clamps rather than running out.
-%
-% When used with a \refEnv{prop} environment, the values of these keys can contain the special \refCom{propformlabel} macro: see below.
+% (Note that without the \texttt{*} the last entry 0em would apply at every level below the second.)  
 % \end{docKeys}
 %
 % \begin{docCommand}{propformlabel}{}
@@ -454,24 +477,15 @@
 % \end{docCommand}
 %
 % \begin{docCommand}{propwidestlabel}{}
-%   \refCom{propformlabel} with every digit replaced by the digit that makes the label widest (an~\texttt{8} in the usual case, where all digits have the same width).  Using it in place of \refCom{propformlabel} in a dimension expression makes the dimension depend on how many digits the label has rather than on which digits they are, so that a run of numbered environments keeps a steady margin instead of shifting at every change of number: \texttt{(9)} and \texttt{(10)} differ in width by 5pt in the default font, where \texttt{(8)} and \texttt{(88)} differ only by as much as an extra digit requires.  (The substitution is used for measurement only; the labels themselves are untouched.)  This is what the \texttt{fitmargin} style measures.
+%   The same as \refCom{propformlabel}, but with every digit replaced by the digit that makes the label widest (an~\texttt{8} in many fonts).  Using it in place of \refCom{propformlabel} in a dimension expression makes the dimension depend on how many digits the label has rather than on which digits they are, so that a run of numbered environments keeps a steady margin instead of shifting at every change of number.  (The substitution is used for measurement only; the labels themselves are untouched.)  (Used by the built-in \texttt{fitmargin} and \texttt{outerfit} styles.)
 % \end{docCommand}
 %
-% \begin{docCommand}{propwidest}{\marg{label}}
-%   The filter that \refCom{propwidestlabel} applies: expands \meta{label} and replaces all of its digits by whichever single digit makes it widest, leaving formatting, letters and spaces alone.  Use it on a label of your own, e.g.\ \verb|\widthof{\propwidest{(\ref{lastitem})}}|.
-%
-%   The widest digit is found by measurement rather than assumed, since it depends on the font: with tabular figures every digit has the same width and the choice is immaterial, but with proportional (usually oldstyle) figures it is not, and \texttt{8} is then often not the widest---in \textsf{EB~Garamond}'s oldstyle figures it is only the sixth widest, narrower than \texttt{0} by half a point per digit, enough for a margin reserved for \texttt{(88)} to let \texttt{(00)} overflow it.  The measurement costs eleven boxes, incurred only where \cs{propwidest} is used.
-% \end{docCommand}
 %
 % \begin{docKey}{items}{=\meta{n}}{initially \texttt{1}}
 %   Indicates that approximately \meta{n} items are expected in this environment.
 %   The only effect of this key is in conjunction with \refCom{propformlabel}, to compute a preview label wide enough for the \meta{n}\/th expected item, so that dimension expressions such as
 %   \texttt{leftmargin=\cs{widthof}\{\refCom{propformlabel}\}+0.5em} reserve enough space for the
 %   widest label.  Has no effect on actual item processing or counter stepping.
-% \end{docKey}
-% 
-% \begin{docKey}{labelindent}{=\meta{length}}{no default}
-%   Positions the left edge of the label box at \meta{length} from the enclosing margin, adjusting \cs{labelwidth}, \cs{leftmargin}, \cs{labelsep}, or \cs{itemindent} as needed.  (Since the value of any one of these dimensions can be derived from those of the other four, it never makes sense to set all five.)
 % \end{docKey}
 %
 % \begin{docKey}{tightspacing}{}{no value}
@@ -753,15 +767,7 @@
 % \end{prop}
 % From \ref{p1} and \ref{p2}\ldots
 % \end{example}
-% 
-% \begin{docCommand}{proplevelchoice}{\marg{item1, item2, \ldots}}
-%   Picks the entry from the list depending on the current nesting depth (1-indexed, last element will be used if the list is too short).  At depth~0 (outside any \refEnv{prop} environment), returns the first entry.  This macro is expandable, and designed to be used within \refCom{SetPropStyle} to create styles that produce different results depending on the nesting depth of the |\item| in which they are used.
-%
-%   In a dimension key, an entry of~\texttt{*} leaves that depth untouched (see \autoref{sect:keys}).  A \emph{blank} entry will not serve, and does not do what it looks like: the argument is read as a comma list, and comma lists discard empty items, so \texttt{\cs{proplevelchoice}\{2em, , 1em\}} has two entries rather than three and puts \texttt{1em} at depth~2.
-% \end{docCommand}
-%
-% Special counters \docCounter{numpropii}, \docCounter{numpropiii}, \docCounter{numpropiv}, \docCounter{numpropv} are provided, whose values are automatically reset each time an |\item| is processed at a lower nesting level.  (These are the counters used by the styles \texttt{leveltwo} to \texttt{levelfive}; \docCounter{numpropi}, used by \texttt{levelone}, is never reset.)  These are especially useful in combination with \refCom{proplevelchoice}, to generate hierarchically numbered styles: for examples, see the built-in \texttt{numbered}, \texttt{eqnum}, and \texttt{hierarchical} styles in the next section.
-% 
+%  
 % \section{Built-in styles}\label{sect:builtin-styles}
 %
 % The following prop styles are predefined.
@@ -2723,13 +2729,13 @@
 \NewDocumentCommand \propformlabel { } { }
 
 % ====================================================================
-% \propwidest — widen a label's digits, for measurement only
+% \__props_widest:n — widen a label's digits, for measurement only
 % ====================================================================
 % A margin sized to \widthof{\propformlabel} tracks the label exactly, so
 % consecutive environments shift back and forth as the numbers change width:
 % "(9)" and "(10)" differ by 5pt in the default font.  linguex avoids this by
 % measuring not the label but the widest label with the same number of digits.
-% \propwidest does the same to an already-formatted label, replacing all of its
+% It does the same to an already-formatted label, replacing all of its
 % digits by whichever single digit makes the label widest and leaving formatting
 % macros, spaces and letters alone.  The result is only ever measured, never
 % typeset, so the substitution is invisible.
@@ -2742,7 +2748,7 @@
 % margin reserved for "(88)" leaves "(00)" to overflow it and shove the first
 % line of the item body sideways --- exactly the jitter this is meant to remove.
 % So each of the ten digits is tried in turn and the widest result kept.  This
-% costs eleven \hbox measurements, but only where \propwidest is actually used:
+% costs eleven \hbox measurements, but only where the widening is used:
 % once or twice per environment, and not at all in a document that never asks
 % for it.  Measuring whole variants rather than bare digits also gets the label
 % measured in its own font, whatever \displayformat put it in.
@@ -2773,7 +2779,7 @@
       }
   }
 
-\NewDocumentCommand \propwidest { m }
+\cs_new_protected:Nn \__props_widest:n
   {
     \group_begin:
       \protected@edef \l__props_widen_tl {#1}
@@ -2799,7 +2805,7 @@
 % not jitter.  \widthof{\propwidestlabel} in place of \widthof{\propformlabel}
 % is the whole of the difference.
 
-\NewDocumentCommand \propwidestlabel { } { \propwidest { \propformlabel } }
+\NewDocumentCommand \propwidestlabel { } { \__props_widest:n { \propformlabel } }
 
 % ====================================================================
 % \__props_compute_env_preview: — compute \propformlabel at env open.

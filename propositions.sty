@@ -1298,7 +1298,7 @@
       }
   }
 
-\NewDocumentCommand \propwidest { m }
+\cs_new_protected:Nn \__props_widest:n
   {
     \group_begin:
       \protected@edef \l__props_widen_tl {#1}
@@ -1321,7 +1321,7 @@
   }
 
 
-\NewDocumentCommand \propwidestlabel { } { \propwidest { \propformlabel } }
+\NewDocumentCommand \propwidestlabel { } { \__props_widest:n { \propformlabel } }
 
 
 \cs_new_protected:Nn \__props_compute_env_preview:
