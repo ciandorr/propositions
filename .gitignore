@@ -27,3 +27,6 @@ test/*.aux
 test/*.log
 test/*.out
 test/*.pdf
+
+# CTAN upload archive
+*.zip
