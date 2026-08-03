@@ -120,8 +120,8 @@
 \tl_new:N  \g__props_last_tpl_tl
 \tl_new:N  \g__props_last_cnt_tl
 
-\newcounter { propanchor }
-\def \theHpropanchor { \the\value{propanchor} }
+\newcounter { prop@anchor }
+\def \theHprop@anchor { \the\value{prop@anchor} }
 
 \newcounter { prop }
 
@@ -828,19 +828,19 @@
   }
 
 \cs_new_protected:Npn \__props_set_cref_type:n #1
-  { \cs_gset:cpn { cref@propanchor@alias } { #1 } }
+  { \cs_gset:cpn { cref@prop@anchor@alias } { #1 } }
 
 \cs_new_protected:Nn \__props_set_ref:
   {
     \__props_build_ref_text:
-    \cs_set:Npx \thepropanchor { \exp_not:V \l__props_ref_result_tl }
+    \cs_set:Npx \theprop@anchor { \exp_not:V \l__props_ref_result_tl }
     \bool_if:NT \g__props_cleveref_bool
       {
         \tl_if_empty:NTF \l__props_crefname_tl
           { \__props_set_cref_type:n { prop } }
           { \exp_args:NV \__props_set_cref_type:n \l__props_crefname_tl }
       }
-    \refstepcounter { propanchor }
+    \refstepcounter { prop@anchor }
   }
 
 
@@ -888,9 +888,9 @@
               }
             \group_end:
           }
-        %% Make \autoref work for propanchor labels (outputs the
+        %% Make \autoref work for prop@anchor labels (outputs the
         %% formatted ref text with no extra prefix).
-        \def \propanchorautorefname { }
+        \def \prop@anchorautorefname { }
         \pdfstringdefDisableCommands
           {
             \def \propapply #1#2{ #2 }
@@ -919,10 +919,10 @@
 \cs_new_protected:Nn \__props_cleveref_setup:
   {
     \bool_gset_true:N \g__props_cleveref_bool
-    %% Map the propanchor counter to a private cleveref type "prop".  We use
+    %% Map the prop@anchor counter to a private cleveref type "prop".  We use
     %% "prop", not "proposition", so we do not commandeer the name a user may
     %% want for their own Proposition theorems (a common \newtheorem type).
-    \crefalias { propanchor } { prop }
+    \crefalias { prop@anchor } { prop }
     %% Empty name: \cref just outputs the formatted ref text
     \crefname  { prop } {} {}
     \Crefname  { prop } {} {}
@@ -1010,14 +1010,14 @@
 \cs_new_protected:Nn \__props_ptag_finish_ref:nn
   {
     \ifmeasuring@ \else
-    \cs_set:Npx \thepropanchor { \exp_not:n { #1 } }
+    \cs_set:Npx \theprop@anchor { \exp_not:n { #1 } }
     \bool_if:NT \g__props_cleveref_bool
       {
         \tl_if_empty:nTF { #2 }
           { \__props_set_cref_type:n { prop } }
           { \__props_set_cref_type:n { #2 } }
       }
-    \refstepcounter { propanchor }
+    \refstepcounter { prop@anchor }
     \fi
   }
 
@@ -2013,7 +2013,6 @@
     display~format = \textsc{#1} ,
     ref~format     = #1 ,
     align          = flush ,
-    macro          = \titem ,
   }
 
 \SetPropStyle { vignette }
@@ -2034,7 +2033,6 @@
                        \textperiodcentered
                      } ,
     display~format = #1 ,
-    macro          = \bitem ,
   }
 
 %% levelone: the standard level-1 numbered style.
@@ -2075,7 +2073,6 @@
     parent         = section ,
     counter~format = \roman{#1} ,
     format         = (#1) ,
-    macro          = \ritem ,
   ]
 \cs_gset:Npn \theroman { \roman { roman } }
 \SetPropStyle { roman }
@@ -2090,7 +2087,6 @@
     counter~format = \alph{#1} ,
     display~format = #1. ,
     ref~format     = (#1) ,
-    macro          = \aitem ,
   ]
 \cs_gset:Npn \thealph { \alph { alph } }
 \SetPropStyle { alph }

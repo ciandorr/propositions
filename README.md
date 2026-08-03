@@ -2,20 +2,20 @@
 
 Version 0.9 (2026/08/02)
 
-A LaTeX package for labelling and cross-referencing displayed propositions,
-theses, premises, etc.
+A LaTeX package for typesetting and cross-referencing named and numbered displayed propositions (examples, theses, premises...).
 
 ## Features
 
-- Key-value interface for named, numbered, and custom-typed items
-- Formatted cross-references: `\ref` automatically reproduces the item's
-  display format (parentheses, bold, small caps, etc.)
-- `\oref` for adding prefixes/suffixes to references; `\nref` for
-  stripping formatting
-- `\ptag` for tagging displayed equations with proposition labels
-- Nested proposition lists with automatic sub-item naming
-- Styles for reusable presets, including margins fitted to the label
-- Integration with `hyperref`, `cleveref`, and `amsmath`
+- Key-value interface for named and numbered propositions.
+- Customizable styles, with many useful built-in styles.  
+- Formatted cross-references: `\ref` automatically provides adds specified
+  formatting (e.g. parentheses, boldface, or a prefix derived from a 
+  parent proposition).
+- Extended reference syntax: e.g. `\oref` adds prefixes/suffixes within 
+  the formatting provided by `\ref`, and `\nref` strips formatting.
+- `\ptag` allows tagging displayed equations with proposition labels;
+  `equations` option treats numbered equations like numbered propositions.  
+- Integration with `hyperref` and `cleveref` as well as `amsmath`.  
 
 ## Usage
 

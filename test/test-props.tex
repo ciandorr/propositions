@@ -46,14 +46,14 @@ References: \ref{num1}, \ref{num2}, \ref{num3}.
 
 \begin{prop}
   \item[A] Short item A. \label{shortA}
-  \titem[Some Thesis] A long item. \label{longthesis}
+  \item[style=thesis, Some Thesis] A long item. \label{longthesis}
   \item A numbered item. \label{numshort}
 \end{prop}
 
 References: \ref{shortA}, \ref{longthesis}, \ref{numshort}.
 
 \begin{prop}
-  \bitem A bullet item. \label{bull1}
+  \item[style=bullet] A bullet item. \label{bull1}
 \end{prop}
 
 Reference: \ref{bull1}.
@@ -92,17 +92,17 @@ Both styles have a counter of their own at level one, reset at each
 number a sublist and the sublist restarts under each parent item.
 
 \begin{prop}
-  \ritem Level one. \label{lv:r1}
+  \item[style=roman] Level one. \label{lv:r1}
   \begin{prop}
-    \ritem Level two. \label{lv:r2}
-    \ritem Level two again. \label{lv:r3}
+    \item[style=roman] Level two. \label{lv:r2}
+    \item[style=roman] Level two again. \label{lv:r3}
     \begin{prop}
-      \aitem Level three. \label{lv:a1}
+      \item[style=alph] Level three. \label{lv:a1}
     \end{prop}
   \end{prop}
-  \ritem Level one again. \label{lv:r4}
+  \item[style=roman] Level one again. \label{lv:r4}
   \begin{prop}
-    \aitem Level two, under a new parent --- restarts. \label{lv:a2}
+    \item[style=alph] Level two, under a new parent --- restarts. \label{lv:a2}
   \end{prop}
 \end{prop}
 
@@ -535,9 +535,9 @@ Cross-refs from inside the group still work: \ref{ax:M1}, \ref{ax:M2}.
 
 \begin{theorem}
     \begin{prop}
-        \ritem 
+        \item[style=roman] 
         Part one of another theorem.
-        \ritem
+        \item[style=roman]
         Part two of that theorem
     \end{prop}
 \end{theorem}

@@ -9,20 +9,20 @@ Standard \verb|\itemize| uses different symbols at each level.
 The \texttt{bullet} type now does the same via \verb|\proplevelchoice|.
 
 \begin{prop}
-  \bitem Level 1: should be \textbullet
+  \item[style=bullet] Level 1: should be \textbullet
   \begin{prop}
-    \bitem Level 2: should be --
+    \item[style=bullet] Level 2: should be --
     \begin{prop}
-      \bitem Level 3: should be \textasteriskcentered
+      \item[style=bullet] Level 3: should be \textasteriskcentered
       \begin{prop}
-        \bitem Level 4: should be \textperiodcentered
+        \item[style=bullet] Level 4: should be \textperiodcentered
         \begin{prop}
-          \bitem Level 5+: should still be \textperiodcentered{} (last in list)
+          \item[style=bullet] Level 5+: should still be \textperiodcentered{} (last in list)
         \end{prop}
       \end{prop}
     \end{prop}
   \end{prop}
-  \bitem Back to level 1: \textbullet{} again
+  \item[style=bullet] Back to level 1: \textbullet{} again
 \end{prop}
 
 \section{Custom symbols via \texttt{\textbackslash proplevelchoice}}

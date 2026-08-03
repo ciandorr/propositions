@@ -98,7 +98,7 @@
 % \GetFileInfo{propositions.sty}
 %
 % \title{The \textsf{propositions} package}
-% \author{Cian Dorr (with help from Claude)\\ \texttt{ciandorr@gmail.com}}
+% \author{Cian Dorr\\ \texttt{ciandorr@gmail.com}}
 % \date{\fileversion: \filedate}
 %
 % \maketitle
@@ -121,29 +121,29 @@
 %   Standard \LaTeX{} environments like |enumerate| can
 % handle some of these cases, but cross-referencing is awkward:
 % |\ref| produces a bare number or letter, and the author must manually
-% add parentheses or other formatting at every point of reference.  The standard |description| environment does not allow cross-referencing at all.
+% add parentheses or other formatting at every point of reference.  The standard |description| environment, meanwhile, does not allow cross-referencing at all.
 %
 % The \textsf{propositions} package solves this by attaching formatting
-% information to each label.  A short item like |\item[P]| (inside \refEnv{prop}) is displayed
+% information to each label.  With an appropriate choice of style, |\item[P]| (inside \refEnv{prop}) is displayed
 % as ``(P)'' and |\ref| automatically produces ``(P)'' as well---complete
-% with parentheses, hyperlinks, and \textsf{cleveref} support.  The full
+% with parentheses and hyperlink.  The full
 % key-value interface supports named items, numbered items, custom
-% counters, glosses, shorthands, and per-item format overrides.
+% counters, glosses, shorthands, per-item format changes, changes to the list geometry, and styles.
 %
 % The \refCom{ptag} command (which requires \textsf{amsmath}) extends this to
 % displayed math environments: an equation can be tagged with a
-% proposition label instead of (or using) its equation number.
+% proposition label instead of (or using) its equation number, and |\ref| to an equation will pick up its
+% name or number with specified formatting.
 % 
 % \section{History}
 % I wrote the ancestor to this package in the 90s
-% while finishing my Ph.D. thesis, but never documented it 
-% or shared it with the world.  This new 
+% while finishing my Ph.D. thesis, and used it in my own work but never documented or shared it.  This new 
 % version is a thorough re-implementation in \LaTeX3,
-% written in 2026 with extensive help from Claude Code.  I 
-% hope others will find it as useful as I have. 
+% written in 2026 with very extensive help from Claude Code.  I 
+% hope others will find it as useful as I have.
 % 
 % \section{Basic usage}
-% Load the package with |\usepackage{propositions}| or |\usepackage|\oarg{options}|{propositions}| (see \autoref{sect:keys-global} below for valid package options).
+% Load with |\usepackage{propositions}| (see \autoref{sect:keys-global} below for valid package options).
 %
 % The |prop| environment generates a list of propositions, each introduced by |\item|.  |\item| with an optional argument gives a |description|-like label:
 % \begin{example}
@@ -207,7 +207,7 @@
 % \end{prop}
 % Does \ref{nihilism} imply \ref{phys}, \ref{dual}, or both?  Discuss.
 % \end{example}
-% Shortcut commands---e.g., |\titem[|\meta{keys}|]| for |\item[style=thesis, |\meta{keys}|]|---can also be defined.  The package loads with a range of predefined styles (listed in \cref{sect:builtin-styles}).
+% The package loads with a range of predefined styles (listed in \cref{sect:builtin-styles}).
 %
 % When the package is loaded with |\usepackage[equations]{propositions}|, a first-level |\item| within \refEnv{prop} 
 % will use the counter as equations.  (This looks better 
@@ -760,7 +760,7 @@
 %   In a dimension key, an entry of~\texttt{*} leaves that depth untouched (see \autoref{sect:keys}).  A \emph{blank} entry will not serve, and does not do what it looks like: the argument is read as a comma list, and comma lists discard empty items, so \texttt{\cs{proplevelchoice}\{2em, , 1em\}} has two entries rather than three and puts \texttt{1em} at depth~2.
 % \end{docCommand}
 %
-% Special counters \docCounter{leveltwo}, \docCounter{levelthree}, \docCounter{levelfour}, \docCounter{levelfive} are provided, whose values are automatically reset each time an |\item| is processed at a lower nesting level.  These are especially useful in combination with \refCom{proplevelchoice}, to generate hierarchically numbered styles: for examples, see the built-in \texttt{numbered}, \texttt{eqnum}, and \texttt{hierarchical} styles in the next section.
+% Special counters \docCounter{numpropii}, \docCounter{numpropiii}, \docCounter{numpropiv}, \docCounter{numpropv} are provided, whose values are automatically reset each time an |\item| is processed at a lower nesting level.  (These are the counters used by the styles \texttt{leveltwo} to \texttt{levelfive}; \docCounter{numpropi}, used by \texttt{levelone}, is never reset.)  These are especially useful in combination with \refCom{proplevelchoice}, to generate hierarchically numbered styles: for examples, see the built-in \texttt{numbered}, \texttt{eqnum}, and \texttt{hierarchical} styles in the next section.
 % 
 % \section{Built-in styles}\label{sect:builtin-styles}
 %
@@ -782,10 +782,10 @@
 % \SetPropStyle{proposition}{format = \textbf{#1}}
 % \end{codebox}
 %
-% \item[\texttt{thesis}] Intended for named propositions with a longer name.  The name begins at the text margin (\texttt{flush} alignment), and is set in small caps; references use plain font.  Shortcut: |\titem|.
+% \item[\texttt{thesis}] Intended for named propositions with a longer name.  The name begins at the text margin (\texttt{flush} alignment), and is set in small caps; references use plain font.
 % \begin{codebox}
 % \SetPropStyle{thesis}{display format = \textsc{#1},
-%   ref format=#1, align = flush, macro = \titem}
+%   ref format=#1, align = flush}
 % \end{codebox}
 %
 % \item[\texttt{vignette}] Intended for things like example vignettes and comments.  Italic name at the text margin, and italic references, separated from the text by a colon.
@@ -794,13 +794,13 @@
 %   align = flush, label format = \textit{#1:}}
 % \end{codebox}
 %
-% \item[\texttt{bullet}] Bullet symbol varying by depth (like |\itemize|).  Shortcut: |\bitem|.
+% \item[\texttt{bullet}] Bullet symbol varying by depth (like |\itemize|).
 % \begin{codebox}
 % \SetPropStyle{bullet}{align = center,
 %   name = \proplevelchoice{\textbullet,
 %     {\normalfont\textendash}, \textasteriskcentered,
 %     \textperiodcentered},
-%   display format = #1, macro = \bitem}
+%   display format = #1}
 % \end{codebox}
 % \end{description}
 %
@@ -810,11 +810,11 @@
 %   A proposition in style |plain|, cited as \ref{bs:plain}.
 %   \item[Two, style=proposition] \label{bs:prop}
 %   A proposition in style |proposition|, cited as \ref{bs:prop}.
-%   \titem[Three] \label{bs:thesis}
+%   \item[Three, style=thesis] \label{bs:thesis}
 %   A proposition in style |thesis|, cited as \ref{bs:thesis}.
 %   \item[Four, style=vignette] \label{bs:vignette}
 %   A proposition in style |vignette|, cited as \ref{bs:vignette}.
-%   \bitem \label{bs:bullet}
+%   \item[style=bullet] \label{bs:bullet}
 %   A proposition in style |bullet|, cited as \ref{bs:bullet}---though
 %   it is not often that one would want to cite an item in this style.
 % \end{prop}
@@ -890,21 +890,20 @@
 % \item[\texttt{roman}] Roman numerals.  At the
 % outer level, they use their own counter (reset every section); inside 
 % nested lists, they use the counter appropriate to the nesting
-% level, so one can easily make roman-numbered sublists.  Shortcut: |\ritem|.  
+% level, so one can easily make roman-numbered sublists.
 % \begin{codebox}
 % \DeclareNumberedStyle{roman}[parent = section,
-%   counter format = \roman{#1}, format = (#1), macro = \ritem]
+%   counter format = \roman{#1}, format = (#1)]
 % \SetPropStyle{roman}{counter = \proplevelchoice{
 %   roman, numpropii, numpropiii, numpropiv, numpropv}}
 % \end{codebox}
 %
 % \item[\texttt{alph}] Letters.  Works the same as |roman|, but with 
 % letters.  Uses its own dedicated counter at the outer level.  
-% Shortcut: |\aitem|.  
 % \begin{codebox}
 % \DeclareNumberedStyle{alph}[parent = section,
 %   counter format = \alph{#1}, display format=#1., 
-%   ref format = (#1), macro = \aitem]
+%   ref format = (#1)]
 % \SetPropStyle{alph}{counter = \proplevelchoice{
 %   alph, numpropii, numpropiii, numpropiv, numpropv}}
 % \end{codebox}
@@ -912,26 +911,26 @@
 % \begin{example}
 % \begin{prop}
 %   \item[Basic classification, ref format={the \textit{#1}}] 
-%   There are three different kinds of people. \label{complex}
+%   There are three kinds of people. \label{complex}
 %   \begin{prop}
-%     \ritem \label{partone} Those who know how to count, 
+%     \item[style=roman] \label{partone} Those who know how to count, 
 %     comprising in turn:
 %     \begin{prop}
-%       \aitem \label{parta} Those who know how to count up to 
+%       \item[style=alph] \label{parta} Those who know how to count up to 
 %    some number, but not beyond.
-%       \aitem \label{partb} Those who can keep going indefinitely.
+%       \item[style=alph] \label{partb} Those who can keep going indefinitely.
 %     \end{prop}
-%     \ritem \label{parttwo} Those who do not know how to count.
+%     \item[style=roman] \label{parttwo} Those who do not know how to count.
 %   \end{prop}
 % \end{prop}
 % For \ref{complex} to serve its purpose, both \ref{partone} (and 
 % its two components \ref{parta} and \ref{partb}) and 
 % \ref{parttwo} are needed.  
 % \begin{prop}
-%   \ritem
+%   \item[style=roman]
 %   The |roman| and |alph| styles are also useful for creating ad-hoc 
 %   numbered lists at the outer level.  
-%   \ritem
+%   \item[style=roman]
 %   Like this one.  
 % \end{prop}
 % \end{example}
@@ -951,7 +950,7 @@
 % \end{codebox}
 % \end{description} 
 % 
-% Note that since the optional arguments of the \refEnv{prop} and \refEnv{inlineprop} environment only affect the |\item|s in the \emph{immediate} scope of that environment (not of any nested environments), styles like |hierarchical| will need to be set using \refCom{propoptions} when one wants to apply the style to an environment and all its sub-environements, sub-sub-environments, etc.  (The scope of \refCom*{propoptions} can be controlled by creating a \TeX{} group.)
+% Note that since the optional arguments of \refEnv{prop} and \refEnv{inlineprop} only affect the |\item|s in the \emph{immediate} scope of that environment (not of any nested environments), styles like |hierarchical|, which one presumably wants to apply to apply an environment along with all its sub-environements, sub-sub-environments, etc., will need to be set using \refCom{propoptions}.  (The scope of \refCom*{propoptions} can be controlled by creating a \TeX{} group.)
 % 
 % \begin{example}
 % \begingroup
@@ -1235,12 +1234,12 @@
 \tl_new:N  \g__props_last_cnt_tl
 
 % --- Anchor counter for hyperref ---
-\newcounter { propanchor }
+\newcounter { prop@anchor }
 % Make hyperref destinations deterministic (not dependent on Hy@linkcounter,
 % which amsmath does not save/restore between measuring and output passes).
-% Note: hyperref prepends "propanchor." automatically in \H@refstepcounter,
-% so \theHpropanchor only needs the unique suffix.
-\def \theHpropanchor { \the\value{propanchor} }
+% Note: hyperref prepends "prop@anchor." automatically in \H@refstepcounter,
+% so \theHprop@anchor only needs the unique suffix.
+\def \theHprop@anchor { \the\value{prop@anchor} }
 
 % --- Prop environment counter ---
 % Stepped by each \begin{prop} / \begin{inlineprop}.  Not displayed;
@@ -2124,10 +2123,10 @@
       }
   }
 
-% Set the cleveref reference type of the next \c{propanchor} label.
+% Set the cleveref reference type of the next \c{prop@anchor} label.
 %
 % A per-item type has to be expressed as the cleveref \emph{alias} of
-% \c{propanchor}, because that is the only thing \cs{label} consults.  Neither
+% \c{prop@anchor}, because that is the only thing \cs{label} consults.  Neither
 % of the more direct routes survives: cleveref records the type in
 % \cs{cref@currentlabel} when the counter is stepped, but the kernel's first-aid
 % file for cleveref (|latex2e-first-aid-for-external-files.ltx|) adds a |label|
@@ -2139,19 +2138,19 @@
 % be several groups away from the \cs{item} that set the type, and the next item
 % must not inherit it.
 \cs_new_protected:Npn \__props_set_cref_type:n #1
-  { \cs_gset:cpn { cref@propanchor@alias } { #1 } }
+  { \cs_gset:cpn { cref@prop@anchor@alias } { #1 } }
 
 \cs_new_protected:Nn \__props_set_ref:
   {
     \__props_build_ref_text:
-    \cs_set:Npx \thepropanchor { \exp_not:V \l__props_ref_result_tl }
+    \cs_set:Npx \theprop@anchor { \exp_not:V \l__props_ref_result_tl }
     \bool_if:NT \g__props_cleveref_bool
       {
         \tl_if_empty:NTF \l__props_crefname_tl
           { \__props_set_cref_type:n { prop } }
           { \exp_args:NV \__props_set_cref_type:n \l__props_crefname_tl }
       }
-    \refstepcounter { propanchor }
+    \refstepcounter { prop@anchor }
   }
 
 % ====================================================================
@@ -2208,9 +2207,9 @@
               }
             \group_end:
           }
-        %% Make \autoref work for propanchor labels (outputs the
+        %% Make \autoref work for prop@anchor labels (outputs the
         %% formatted ref text with no extra prefix).
-        \def \propanchorautorefname { }
+        \def \prop@anchorautorefname { }
         \pdfstringdefDisableCommands
           {
             \def \propapply #1#2{ #2 }
@@ -2242,10 +2241,10 @@
 \cs_new_protected:Nn \__props_cleveref_setup:
   {
     \bool_gset_true:N \g__props_cleveref_bool
-    %% Map the propanchor counter to a private cleveref type "prop".  We use
+    %% Map the prop@anchor counter to a private cleveref type "prop".  We use
     %% "prop", not "proposition", so we do not commandeer the name a user may
     %% want for their own Proposition theorems (a common \newtheorem type).
-    \crefalias { propanchor } { prop }
+    \crefalias { prop@anchor } { prop }
     %% Empty name: \cref just outputs the formatted ref text
     \crefname  { prop } {} {}
     \Crefname  { prop } {} {}
@@ -2376,19 +2375,19 @@
 
 % Deferred ref-setting for ptags.  Amsmath typesets equations in two
 % passes (measuring + output); we must only set the ref on the output
-% pass (\ifmeasuring@ is false) to avoid double-stepping propanchor.
+% pass (\ifmeasuring@ is false) to avoid double-stepping prop@anchor.
 % \#1 = ref text, \#2 = crefname (may be empty).
 \cs_new_protected:Nn \__props_ptag_finish_ref:nn
   {
     \ifmeasuring@ \else
-    \cs_set:Npx \thepropanchor { \exp_not:n { #1 } }
+    \cs_set:Npx \theprop@anchor { \exp_not:n { #1 } }
     \bool_if:NT \g__props_cleveref_bool
       {
         \tl_if_empty:nTF { #2 }
           { \__props_set_cref_type:n { prop } }
           { \__props_set_cref_type:n { #2 } }
       }
-    \refstepcounter { propanchor }
+    \refstepcounter { prop@anchor }
     \fi
   }
 
@@ -3643,7 +3642,6 @@
     display~format = \textsc{#1} ,
     ref~format     = #1 ,
     align          = flush ,
-    macro          = \titem ,
   }
 
 \SetPropStyle { vignette }
@@ -3664,7 +3662,6 @@
                        \textperiodcentered
                      } ,
     display~format = #1 ,
-    macro          = \bitem ,
   }
 
 %% levelone: the standard level-1 numbered style.
@@ -3715,7 +3712,6 @@
     parent         = section ,
     counter~format = \roman{#1} ,
     format         = (#1) ,
-    macro          = \ritem ,
   ]
 \cs_gset:Npn \theroman { \roman { roman } }
 \SetPropStyle { roman }
@@ -3730,7 +3726,6 @@
     counter~format = \alph{#1} ,
     display~format = #1. ,
     ref~format     = (#1) ,
-    macro          = \aitem ,
   ]
 \cs_gset:Npn \thealph { \alph { alph } }
 \SetPropStyle { alph }
