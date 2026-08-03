@@ -297,36 +297,10 @@
 %   \item With \refCom{SetPropStyle} or \refCom{DeclareNumberedStyle}, to
 % add the key to a given style.  
 % \end{itemize}
-% 
+%
 % \begin{docKey}{style}{=\meta{style}}{no default}
 %   A style, equivalent to a preset collection of keys: see \cref{sect:styles} for details.  
 % \end{docKey}
-% 
-% \begin{docKey}{align}{\docKeyChoices{left,right,center,flush,nextline,flush-nextline}}{initially \docValue{left}}
-%   How the label should be positioned.
-%   \docValue{left} is the standard left-aligned label, its offset controlled by \refKey{labelwidth} and \refKey{labelsep};
-%   \docValue{right} is right-aligned within the label box, like \texttt{enumerate};
-%   \docValue{center} is centred within it;
-%   \docValue{flush} aligns the label with the left margin of the item text;
-%   \docValue{nextline} puts the label on a line of its own, and \docValue{flush-nextline} does both.
-%   Has no effect inside \refEnv{inlineprop} or \refCom{ptag}.
-% \end{docKey}
-% 
-% \begin{example}
-% \begin{prop}
-%   \item[L, align=left] Left aligned label.
-%   \item[C, align=center] Center aligned label.
-%   \item[R, align=right] Right aligned label.
-%   \item[Long label, align=center] As in standard \LaTeX\ lists, 
-%       longer labels expand to fill the label box and then push
-%       the following text along to make room for themsselves.
-%   \item[Flush label, align=flush] Flush aligned label.
-%   \item[Sometimes a long label will deserve its own line,
-%       align=nextline] Nextline aligned label.  
-%   \item[Another rather long label,
-%       align=flush-nextline] Flush-nextline aligned label.
-% \end{prop}
-% \end{example}
 % 
 % \begin{docKey}{name}{=\meta{text}}{no default}
 %   The proposition's name.  A bare string (without \texttt{=}) is equivalent to \texttt{name=}\meta{text}.  (To be precise: if the optional argument contains no \texttt{=} at all, the whole of it is the name; otherwise, it is read as a key list, and any entry of it without an \texttt{=} is the name, so a bare name can be combined with other keys, as in |\item[No Overlap, align=flush]|.  In that case a name containing a comma must be braced---|\item[{Alpha, Beta}, align=flush]|---and a name containing an \texttt{=} needs the explicit \texttt{name=}|{|\meta{text}|}| form.)
@@ -416,7 +390,7 @@
 %
 % Four of the list-dimension keys documented in the next section---\refKey{labelwidth}, \refKey{labelsep}, \refKey{itemindent} and \refKey{labelindent}---may also be given to an individual \cs{item}, where they reposition the label of that item alone, overriding the value in force for the rest of the list.  (The other dimension keys have no effect at item level.)
 % 
-% \subsection{Keys for \texttt{prop} environments}\label{sect:keys-dims}
+% \subsection{Keys for changing the list geometry}\label{sect:keys-dims}
 %
 % The keys in this section can be used in the following places: 
 % \begin{itemize}
@@ -427,8 +401,34 @@
 %   \item With \refCom{SetPropStyle} or \refCom{DeclareNumberedStyle}, to
 % add the key to a given style.  
 % \end{itemize}
-% The keys can also be set in the optional argument of |\item|, \refCom{ptag}, or \refEnv{inlineprop}, or as part of a style used in one of those contexts, but will have no effect there, except for \refKey{labelwidth}, \refKey{labelsep}, \refKey{itemindent} and \refKey{labelindent} which will override the given dimensions for an individual |\item|.  
-%
+% Five of the keys can also be used in the optional argument of |\item| to affect the geometry of that specific proposition (\refKey{align}, \refKey{labelwidth}, \refKey{labelsep}, \refKey{itemindent}, and \refKey{labelindent}).  The other keys will have no effect in an |\item| (or a \refCom{ptag}).  
+% 
+% \begin{docKey}{align}{\docKeyChoices{left,right,center,flush,nextline,flush-nextline}}{initially \docValue{left}}
+%   How the label should be positioned.
+%   \docValue{left} is the standard left-aligned label, its offset controlled by \refKey{labelwidth} and \refKey{labelsep};
+%   \docValue{right} is right-aligned within the label box, like \texttt{enumerate};
+%   \docValue{center} is centred within it;
+%   \docValue{flush} aligns the label with the left margin of the item text;
+%   \docValue{nextline} puts the label on a line of its own, and \docValue{flush-nextline} does both.
+%   Has no effect inside \refEnv{inlineprop} or \refCom{ptag}.
+% \end{docKey}
+% 
+% \begin{example}
+% \begin{prop}
+%   \item[L, align=left] Left aligned label.
+%   \item[C, align=center] Center aligned label.
+%   \item[R, align=right] Right aligned label.
+%   \item[Long label, align=center] As in standard \LaTeX\ lists, 
+%       longer labels expand to fill the label box and then push
+%       the following text along to make room for themsselves.
+%   \item[Flush label, align=flush] Flush aligned label.
+%   \item[Sometimes a long label will deserve its own line,
+%       align=nextline] Nextline aligned label.  
+%   \item[Another rather long label,
+%       align=flush-nextline] Flush-nextline aligned label.
+% \end{prop}
+% \end{example}
+% 
 % \begin{docKeys}[
 %     doc parameter = {=\meta{length}},
 %   ]
@@ -453,12 +453,20 @@
 % \]
 % Whichever of these is not explicitly set will be computed from the ones that are explicitly set (or from the four most recently explicitly set) in such a way as to guarantee this identity.  Each dimension key also accepts the value~\texttt{*}, which means \emph{behave as if the key had not been set}: the dimension takes the document class's default, unless its value must shift to preserve the above identity.  This behaviour is identical to that of package \textsf{enumitem}.
 %
-% The values of these keys can be a macro that expand to a dimension.  For example, one can set different list dimensions for different nesting levels by using \refCom{proplevelchoice}:
+% A dimension key can be set to any macro that expands to a dimension.  For example, one can set different dimensions for different nesting levels by using \refCom{proplevelchoice}:
 % \begin{codebox}
 % \propoptions{leftmargin = \proplevelchoice{2.5em, 0em, *}}
 % \end{codebox}
-% (Note that without the \texttt{*} the last entry 0em would apply at every level below the second.)  
+% (Note that without the \texttt{*}, the last entry 0em would apply at every level below the second.)  
 % \end{docKeys}
+% 
+% \begin{docKey}{tightspacing}{}{no value}
+%   Sets all vertical spacing to the compact defaults that the standard document classes use for level-three lists (\refKey{topsep} and \refKey{itemsep} to \texttt{2pt} with stretch/shrink, \refKey{parsep} to \texttt{0pt}, \refKey{partopsep} to \texttt{1pt}).
+% \end{docKey}
+%
+% \begin{docKey}{nosep}{}{no value}
+%   Sets \cs{topsep}, \cs{itemsep}, and \cs{parsep} all to zero.
+% \end{docKey}
 %
 % \begin{docCommand}{propformlabel}{}
 %   Expands to the formatted label of the (approximately) \texttt{items}-th item in this
@@ -488,23 +496,14 @@
 %   widest label.  Has no effect on actual item processing or counter stepping.
 % \end{docKey}
 %
-% \begin{docKey}{tightspacing}{}{no value}
-%   Sets all vertical spacing to the compact defaults that the standard document classes use for level-three lists (\refKey{topsep} and \refKey{itemsep} to \texttt{2pt} with stretch/shrink, \refKey{parsep} to \texttt{0pt}, \refKey{partopsep} to \texttt{1pt}).
-% \end{docKey}
-%
-% \begin{docKey}{nosep}{}{no value}
-%   Sets \cs{topsep}, \cs{itemsep}, and \cs{parsep} all to zero.
-% \end{docKey}
-%
 % \begin{docKey}{continue}{=\meta{boolean}}{initially \texttt{true}}
-%   When \texttt{true}, a \refEnv{prop} environment that
-%   immediately follows another \refEnv{prop} (with no intervening
+%   When a \refEnv{prop} environment with \texttt{continue=true} is immediately followed by another such environment, (with no intervening
 %   paragraph text) replaces the normal \cs{topsep}-based inter-list
 %   space with \cs{itemsep}\,+\,\cs{parsep}, giving the visual
 %   appearance of a single continuous list.
 % \end{docKey}
 %
-% \subsection{Keys for \texttt{prop} and \texttt{inlineprop} environments}\label{sect:keys-env}
+% \subsection{Other environment-level keys}\label{sect:keys-env}
 %
 % The keys in this section have effect in both the \refEnv{prop} and \refEnv{inlineprop} environments.  They can also be used with \refCom{propoptions}, |\usepackage|, and \refCom{SetPropStyle}, just like the keys in the previous subsection.  
 % 
