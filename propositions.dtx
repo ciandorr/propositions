@@ -309,7 +309,7 @@
 % \begin{docKey}{counter}{=\meta{name}}{no default}
 %   Counter to use.  The counter is automatically stepped, and the item's \refKey{name} is set to \cs{the}\meta{name} (though this can be overridden by \refKey{counter format} or \refKey{name}).
 % 
-% Any counter can be used with \refKey{counter format}.  Special counters \docCounter{numpropii}, \docCounter{numpropiii}, \docCounter{numpropiv}, \docCounter{numpropv} are provided, whose values are automatically reset each time an |\item| is processed at a lower nesting level.  (There is also a counter \docCounter{numpropi} which does not automatically reset.)  A further counter \docCounter{enumprop} is reset at every outermost \refEnv{prop} or \refEnv{inlineprop} environment, so that a list using it begins again at one each time, as \texttt{enumerate} does; this is what the \texttt{enum} style uses.  To begin such a list at some other number, set the counter \emph{inside} the environment, since the reset happens as the environment opens.
+% Any counter can be used with \refKey{counter format}.  Special counters \docCounter{numpropii}, \docCounter{numpropiii}, \docCounter{numpropiv}, \docCounter{numpropv} are provided, whose values are automatically reset each time an |\item| is processed at a lower nesting level.  There is also a counter \docCounter{numpropi} which never automatically resets, and a counter \docCounter{enumprop} which is reset at every \emph{outermost} \refEnv{prop} or \refEnv{inlineprop} environment, so that lists using this counter behave like the standard \texttt{enumerate} environment.
 % \end{docKey}
 %
 % \begin{docKey}{counter format}{=\meta{template}}{no default}
@@ -403,14 +403,15 @@
 % \end{itemize}
 % Five of the keys can also be used in the optional argument of |\item| to affect the geometry of that specific proposition (\refKey{align}, \refKey{labelwidth}, \refKey{labelsep}, \refKey{itemindent}, and \refKey{labelindent}).  The other keys will have no effect in an |\item| (or a \refCom{ptag}).  
 % 
-% \begin{docKey}{align}{\docKeyChoices{left,right,center,flush,nextline,flush-nextline}}{initially \docValue{left}}
+% \begin{docKey}{align}{\docKeyChoices{left,right,center,flush,runin,nextline,flush-nextline}}{initially \docValue{left}}
 %   How the label should be positioned.
 %   \docValue{left} is the standard left-aligned label, its offset controlled by \refKey{labelwidth} and \refKey{labelsep};
 %   \docValue{right} is right-aligned within the label box, like \texttt{enumerate};
 %   \docValue{center} is centred within it;
 %   \docValue{flush} aligns the label with the left margin of the item text;
+%   \docValue{runin} does the same but reserves no label area at all: the label becomes the first word of the item, separated from what follows by an ordinary interword space instead of a \refKey{labelsep}, so that it stretches and breaks with the rest of the line;
 %   \docValue{nextline} puts the label on a line of its own, and \docValue{flush-nextline} does both.
-%   Has no effect inside \refEnv{inlineprop} or \refCom{ptag}.
+%   Has no effect inside \refEnv{inlineprop} or \refCom{ptag}.  (Note that \docValue{runin}, \docValue{nextline} and \docValue{flush-nextline} put the label into the body rather than into the label box.)
 % \end{docKey}
 % 
 % \begin{example}
@@ -422,6 +423,8 @@
 %       longer labels expand to fill the label box and then push
 %       the following text along to make room for themsselves.
 %   \item[Flush label, align=flush] Flush aligned label.
+%   \item[Run-in label, align=runin] Run-in aligned label, which
+%       carries on as ordinary text after a single space.
 %   \item[Sometimes a long label will deserve its own line,
 %       align=nextline] Nextline aligned label.  
 %   \item[Another rather long label,
@@ -447,9 +450,9 @@
 %   }
 %   Override the standard \LaTeX{} list dimensions.  Accept the same values as \cs{setlength}, including rubber lengths (e.g.\ \texttt{itemsep=4pt plus 2pt}).
 % 
-% \refKey{labelindent} is not a standrd \LaTeX{} list dimension.  It positions the left edge of the label box at \meta{length} from the enclosing margin.  This introduces a redundancy: any one of \refKey{labelindent}, \cs{labelwidth}, \cs{leftmargin}, \cs{labelsep}, or \cs{itemindent} can be calculated from the four others, via the expression
+% \refKey{labelindent} is not a standrd \LaTeX{} list dimension.  It positions the left edge of the label box at \meta{length} from the enclosing margin.  This introduces a redundancy: any one of \refKey{labelindent}, \refKey{labelwidth}, \refKey{leftmargin}, \refKey{labelsep}, or \refKey{itemindent} can be calculated from the four others, via the expression
 % \[
-% \refKey{labelindent} + \refKey{labelwidth} + \refKey{itemsep} = \refKey{leftmargin} + \refKey{itemindent}
+% \refKey{labelindent} + \refKey{labelwidth} + \refKey{labelsep} = \refKey{leftmargin} + \refKey{itemindent}
 % \]
 % Whichever of these is not explicitly set will be computed from the ones that are explicitly set (or from the four most recently explicitly set) in such a way as to guarantee this identity.  Each dimension key also accepts the value~\texttt{*}, which means \emph{behave as if the key had not been set}: the dimension takes the document class's default, unless its value must shift to preserve the above identity.  This behaviour is identical to that of package \textsf{enumitem}.
 %
@@ -497,7 +500,7 @@
 % \end{docKey}
 %
 % \begin{docKey}{continue}{=\meta{boolean}}{initially \texttt{true}}
-%   When a \refEnv{prop} environment with \texttt{continue=true} is immediately followed by another such environment, (with no intervening
+%   When a \refEnv{prop} environment with \texttt{continue=true} is immediately followed by another such environment (with no intervening
 %   paragraph text), the normal \cs{topsep}-based inter-list
 %   space is replaced with \cs{itemsep}\,+\,\cs{parsep}, giving the visual
 %   appearance of a single continuous list.
@@ -508,27 +511,24 @@
 % The keys in this section have effect in both the \refEnv{prop} and \refEnv{inlineprop} environments.  They can also be used with \refCom{propoptions}, |\usepackage|, and \refCom{SetPropStyle}, just like the keys in the previous subsection.  
 % 
 % \begin{docKey}{named style}{=\meta{style}}{initially \texttt{proposition}}
-%   The style when an |\item| or \refCom{ptag} has a value for \refKey{name} but no explicit \refKey{style}.
-% \end{docKey}
-%
-% \begin{docKey}{named ptag style}{=\meta{style}}{initially empty}
-%   If set, overrides \refKey{named style} for \refCom{ptag} items only.
+%   The base style when an \cs{item} or \refCom{ptag} has a value for \refKey{name}.  Explicitly given keys, including \refKey{style}, will override whatever is set by this style.  
 % \end{docKey}
 %
 % \begin{docKey}{nameless style}{=\meta{style}}{initially \texttt{numbered}}
-%   The style used when \cs{item} or \refCom{ptag} has no value for \refKey{name} and no explicit \refKey{style}.  A \refKey{counter} does not affect the choice: it says how the item is numbered, and this is the style meant to look right around a number.
+%   The base style used when an \cs{item} or \refCom{ptag} has no value for \refKey{name}.  
+% 
+% The choice whether to assign an item \refKey{named style} or the \refKey{nameless style} turns on whether its \refKey{name} is set (either by its own optional argument, or by inheritance from its environment or \refCom{propoptions}).  
 % \end{docKey}
 %
-% \begin{docKey}{nameless ptag style}{=\meta{style}}{initially empty}
-%   If set, overrides \refKey{nameless style} for \refCom{ptag} items only.
-% \end{docKey}
-% 
-% The choice between them turns on \refKey{name} alone, read from the whole key
-% list---\refCom{propoptions}, then the environment argument, then the item's
-% own argument.  An item counts as named if a name reaches it from any of those,
-% so \verb|\begin{prop}[name=foo]\item bar| gives the same result as
-% \verb|\begin{prop}\item[name=foo] bar|.  An explicit \refKey{style} overrides
-% the choice wherever it is set.
+% \begin{docKeys}[
+%       doc parameter = {= \meta{style}},
+%   ]
+%   {
+%     { doc name  = named ptag style },
+%     { doc name  = nameless ptag style },
+%   }
+%   If set, override \refKey{named style} and \refKey{nameless style} for \refCom{ptag} items only.
+% \end{docKeys}
 % 
 % \begin{docKeys}[
 %     doc parameter = {=\meta{code}},
@@ -755,7 +755,7 @@
 % \end{docCommand}
 %
 % \begin{docKey}{parent}{=\meta{counter}}{no default}
-%   A parent counter; the new counter resets when the parent steps (same mechanism as \cs{numberwithin}).  A dedicated \texttt{prop} counter (stepped by each \refEnv{prop} and \refEnv{inlineprop}) is available for non-persistent numbering.
+%   A parent counter; the new counter resets when the parent steps (same mechanism as \cs{numberwithin}).  For numbering that begins again at each list rather than running through the document, see \docCounter{enumprop} under \refKey{counter}.
 % \end{docKey}
 %
 % \begin{example}
@@ -864,27 +864,14 @@
 % \item[\texttt{enum}] Like |numbered| again, but at the outer level it uses
 % \texttt{enumprop}, which restarts at every outermost \refEnv{prop}, so
 % that the list is numbered from one however many have gone before.  This is
-% the style for a one-off list---the behaviour of \texttt{enumerate}---where
-% \texttt{numbered} is for propositions that carry on through the document
-% and are referred to from elsewhere.  Nesting is unaffected: a sublist does
-% not restart the count, and its items take the usual level-two and lower
-% styles.
+% the style for a one-off lists---the behaviour of \texttt{enumerate}---where
+% \texttt{numbered}/\texttt{eqnum} is for numbered propositions that carry on through the document.
 % \begin{codebox}
 % \SetPropStyle{enumprop}{counter = enumprop, format = (#1)}
 % \SetPropStyle{enum}{style = \proplevelchoice{
 %   enumprop, leveltwo, levelthree, levelfour, levelfive}}
 % \end{codebox}
 % \end{description}
-%
-% \begin{example}
-% \begin{prop}[style=enum]
-%   \item A one-off list, numbered from one.
-%   \item However many numbered items came before it.
-% \end{prop}
-% \begin{prop}[style=enum]
-%   \item And the next such list starts again.
-% \end{prop}
-% \end{example}
 % 
 % \begin{example}
 % \begin{prop}
@@ -912,7 +899,14 @@
 %   \end{prop}
 % \end{prop}
 % We hope you enjoyed reading \ref{outer}, \ref{second}, \ref{third},
-% \ref{fourth}, and \ref{fifth}. 
+% \ref{fourth}, and \ref{fifth}.  
+% 
+% \begin{prop}[style=enum]
+%   \item This list will be numbered from one.
+%   \item If both kinds of lists are used in the same 
+%     document, they had better be formatted differently
+%     so readers don't get confused.  
+% \end{prop}
 % \end{example}
 % 
 % \begin{description}
@@ -1233,7 +1227,7 @@
 \tl_new:N   \l__props_keylist_tl        %% the three default layers plus the item argument, assembled
 \bool_new:N \l__props_valueless_key_bool %% true when an entry of that argument is a key given without a value
 \bool_new:N \l__props_ptag_bool          %% true during \ptag processing
-\bool_new:N \l__props_nextline_bool     %% true when an align=nextline label has already started the body
+\bool_new:N \l__props_body_started_bool %% true when the label has already begun the item body (nextline, flush-nextline, runin)
 \bool_new:N \l__props_counter_stepped_bool %% true if this item stepped its counter
 \bool_new:N \l__props_titlecase_bool    %% true when \Ref etc. want titlecasing
 \bool_new:N \l__props_reset_bool        %% true (default) = reset sub-level counter on \item
@@ -1269,12 +1263,6 @@
 % Note: hyperref prepends "prop@anchor." automatically in \H@refstepcounter,
 % so \theHprop@anchor only needs the unique suffix.
 \def \theHprop@anchor { \the\value{prop@anchor} }
-
-% --- Prop environment counter ---
-% Stepped by each \begin{prop} / \begin{inlineprop}.  Not displayed;
-% exists solely so that \numberwithin{equation}{prop} can reset the
-% equation counter per prop block if desired.
-\newcounter { prop }
 
 % ====================================================================
 % \propapply — format/content separation for cross-references
@@ -2076,15 +2064,17 @@
     \__props_set_ref:
     \tl_if_empty:NF \l__props_label_tl
       { \exp_args:NV \label \l__props_label_tl }
-    %% An align=nextline label ends with \noindent, so the item body has already
-    %% begun: the space that follows \item[...] in the source would be typeset.
+    %% Three alignments put the label into the body rather than into the label
+    %% box --- nextline and flush-nextline end with \noindent, runin emits the
+    %% label as the body's first word --- so by now the body has begun and the
+    %% space that follows \item[...] in the source would be typeset.
     %% \ignorespaces has to be the last token this command leaves behind, which
     %% is why it is issued here and not where the label was output.  For the
     %% other alignments the body has not started yet and TeX drops the space
     %% itself, in vertical mode --- and in inlineprop that space is wanted, as
     %% it separates the inline label from the text.
-    \bool_if:NT \l__props_nextline_bool
-      { \bool_set_false:N \l__props_nextline_bool \ignorespaces }
+    \bool_if:NT \l__props_body_started_bool
+      { \bool_set_false:N \l__props_body_started_bool \ignorespaces }
   }
 
 % Save the ambient (kernel) \item at load time.  When a wrapper environment
@@ -2496,9 +2486,16 @@
     \dim_compare:nNnTF { \box_wd:N \l_tmpa_box } = { \c_zero_dim }
       { \__props_list_item: [ ] }
       {
-        \bool_lazy_or:nnTF
-          { \str_if_eq_p:Vn \l__props_alignment_tl { nextline } }
-          { \str_if_eq_p:Vn \l__props_alignment_tl { flush-nextline } }
+        %% The three alignments that put the label into the body rather than
+        %% into the label box.  They are settled before the per-item dimension
+        %% question below, since a label that never enters the box cannot be
+        %% positioned by the dimensions that size it.
+        \bool_lazy_any:nTF
+          {
+            { \str_if_eq_p:Vn \l__props_alignment_tl { nextline } }
+            { \str_if_eq_p:Vn \l__props_alignment_tl { flush-nextline } }
+            { \str_if_eq_p:Vn \l__props_alignment_tl { runin } }
+          }
           { \__props_output_item_align: }
           {
             %% Sequential rather than \bool_lazy_any:n, whose predicates must
@@ -2722,9 +2719,22 @@
                 - \leftmargin \relax }
           \l__props_item_output_tl \par }
         \vspace { -\parsep } \__props_start_body_unindented:
-        \bool_set_true:N \l__props_nextline_bool
+        \bool_set_true:N \l__props_body_started_bool
       }
       {
+        \str_if_eq:VnTF \l__props_alignment_tl { runin }
+          {
+            %% Label as the first word of the body, separated from what
+            %% follows by an ordinary interword space rather than \labelsep.
+            %% Like flush, but without reserving the label area: the list item
+            %% is opened with no label at all and the label is simply the text
+            %% the body starts with, so it wraps and stretches with the rest of
+            %% the line.
+            \__props_list_item: []
+            \l__props_item_output_tl \space
+            \bool_set_true:N \l__props_body_started_bool
+          }
+          {
         \str_if_eq:VnTF \l__props_alignment_tl { flush-nextline }
           {
             %% Label on own line(s), starting at the text margin.
@@ -2733,9 +2743,10 @@
             \__props_list_item: []
             \l__props_item_output_tl \par
             \vspace { -\parsep } \__props_start_body_unindented:
-            \bool_set_true:N \l__props_nextline_bool
+            \bool_set_true:N \l__props_body_started_bool
           }
           { \__props_emit_aligned_item: }
+          }
       }
   }
 
@@ -3044,7 +3055,6 @@
 
 \NewDocumentEnvironment { prop } { O{} }
   {
-    \stepcounter { prop }
     \int_gincr:N \g__props_level_int
     %% enumprop restarts at every outermost environment, so that a list using
     %% it numbers from one each time, the way enumerate does.  Reset here
@@ -3310,7 +3320,6 @@
 
 \NewDocumentEnvironment { inlineprop } { O{} }
   {
-    \stepcounter { prop }
     \int_gincr:N \g__props_level_int
     %% enumprop restarts at every outermost environment, so that a list using
     %% it numbers from one each time, the way enumerate does.  Reset here

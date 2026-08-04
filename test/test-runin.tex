@@ -1,0 +1,90 @@
+\documentclass{article}
+\usepackage{propositions}
+
+%% align=runin.  Like flush, in that the label sits at the text margin and no
+%% label area is reserved, but the label is simply the first word of the body
+%% and is followed by an ordinary interword space rather than \labelsep.  It
+%% takes the same route as nextline and flush-nextline -- the label never
+%% enters the label box -- which is why per-item dimensions have no bearing on
+%% it.
+
+\begin{document}
+
+\section{\texttt{runin} beside \texttt{flush} and the default}
+
+The three lists differ only in \texttt{align}.  Under \verb|runin| the gap
+after the label must be one interword space, and the first line must justify
+like any other; under \verb|flush| it is a \verb|\labelsep| and the first line
+is set within the label machinery; under the default the label occupies its
+box at the margin.
+
+\noindent\rule{\textwidth}{0.3pt}
+\begin{prop}
+  \item[Physicalism, align=runin] Everything is physical, and this item is long
+  enough to wrap onto a second line so that the continuation can be compared.
+  \item[A considerably longer name, align=runin] Second item.
+\end{prop}
+\noindent\rule{\textwidth}{0.3pt}
+\begin{prop}
+  \item[Physicalism, align=flush] Everything is physical, and this item is long
+  enough to wrap onto a second line so that the continuation can be compared.
+  \item[A considerably longer name, align=flush] Second item.
+\end{prop}
+\noindent\rule{\textwidth}{0.3pt}
+\begin{prop}
+  \item[Physicalism] Everything is physical (the default, \texttt{left}).
+\end{prop}
+\noindent\rule{\textwidth}{0.3pt}
+
+\section{Exactly one space, however the source is written}
+
+The body has already begun by the time the label is emitted, so the space
+following \verb|\item[...]| in the source would otherwise be typeset on top of
+the one the label supplies.  All three items below must look identical.
+
+\begin{prop}
+  \item[One, align=runin] Text.
+  \item[Two, align=runin]      Text.
+  \item[Three, align=runin]
+  Text.
+\end{prop}
+
+\section{An empty label leaves no trace}
+
+\verb|counter=none| with no name gives an item with nothing to display; it must
+produce neither a label nor a leading space.
+
+\begin{prop}
+  \item[counter=none, align=runin] Body with no label at all.
+\end{prop}
+
+\section{A body that opens with a sublist}
+
+The label is real content, so the paragraph it starts is not empty and the
+sublist simply follows it.  The item after the sublist must be unaffected.
+
+\begin{prop}
+  \item[Outer, align=runin]
+  \begin{prop}
+    \item Sub-item.
+  \end{prop}
+  \item[Next, align=runin] After the sublist.
+\end{prop}
+
+\section{Numbered items, and \texttt{inlineprop}}
+
+A run-in label need not be a name:
+
+\begin{prop}
+  \item[align=runin] A numbered run-in item. \label{r:num}
+\end{prop}
+
+Reference: \ref{r:num}, which must be \texttt{(1)} --- \texttt{align} governs
+placement only, never the label's content or its reference.
+
+\verb|align| has no effect inside \verb|inlineprop|, as for every other value:
+\begin{inlineprop}
+  \item[Inline, align=runin] the body follows inline, as usual.
+\end{inlineprop}
+
+\end{document}
