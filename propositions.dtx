@@ -309,7 +309,7 @@
 % \begin{docKey}{counter}{=\meta{name}}{no default}
 %   Counter to use.  The counter is automatically stepped, and the item's \refKey{name} is set to \cs{the}\meta{name} (though this can be overridden by \refKey{counter format} or \refKey{name}).
 % 
-% Any counter can be used with \refKey{counter format}.  Special counters \docCounter{numpropii}, \docCounter{numpropiii}, \docCounter{numpropiv}, \docCounter{numpropv} are provided, whose values are automatically reset each time an |\item| is processed at a lower nesting level.  (There is also a counter \docCounter{numpropi} which does not automatically reset.) 
+% Any counter can be used with \refKey{counter format}.  Special counters \docCounter{numpropii}, \docCounter{numpropiii}, \docCounter{numpropiv}, \docCounter{numpropv} are provided, whose values are automatically reset each time an |\item| is processed at a lower nesting level.  (There is also a counter \docCounter{numpropi} which does not automatically reset.)  A further counter \docCounter{enumprop} is reset at every outermost \refEnv{prop} or \refEnv{inlineprop} environment, so that a list using it begins again at one each time, as \texttt{enumerate} does; this is what the \texttt{enum} style uses.  To begin such a list at some other number, set the counter \emph{inside} the environment, since the reset happens as the environment opens.
 % \end{docKey}
 %
 % \begin{docKey}{counter format}{=\meta{template}}{no default}
@@ -860,7 +860,31 @@
 % \SetPropStyle{eqnum}{style = \proplevelchoice{
 %   equation, leveltwo, levelthree, levelfour, levelfive}}
 % \end{codebox}
+%
+% \item[\texttt{enum}] Like |numbered| again, but at the outer level it uses
+% \texttt{enumprop}, which restarts at every outermost \refEnv{prop}, so
+% that the list is numbered from one however many have gone before.  This is
+% the style for a one-off list---the behaviour of \texttt{enumerate}---where
+% \texttt{numbered} is for propositions that carry on through the document
+% and are referred to from elsewhere.  Nesting is unaffected: a sublist does
+% not restart the count, and its items take the usual level-two and lower
+% styles.
+% \begin{codebox}
+% \SetPropStyle{enumprop}{counter = enumprop, format = (#1)}
+% \SetPropStyle{enum}{style = \proplevelchoice{
+%   enumprop, leveltwo, levelthree, levelfour, levelfive}}
+% \end{codebox}
 % \end{description}
+%
+% \begin{example}
+% \begin{prop}[style=enum]
+%   \item A one-off list, numbered from one.
+%   \item However many numbered items came before it.
+% \end{prop}
+% \begin{prop}[style=enum]
+%   \item And the next such list starts again.
+% \end{prop}
+% \end{example}
 % 
 % \begin{example}
 % \begin{prop}
@@ -3022,6 +3046,12 @@
   {
     \stepcounter { prop }
     \int_gincr:N \g__props_level_int
+    %% enumprop restarts at every outermost environment, so that a list using
+    %% it numbers from one each time, the way enumerate does.  Reset here
+    %% rather than at \end, so that it is right even if the document leaves an
+    %% environment by some other route.
+    \int_compare:nNnT { \g__props_level_int } = { 1 }
+      { \setcounter { enumprop } { 0 } }
     %% Push last item's template/content onto parent stacks
     \seq_gpush:NV \g__props_parent_tpl_seq \g__props_last_tpl_tl
     \seq_gpush:NV \g__props_parent_cnt_seq \g__props_last_cnt_tl
@@ -3282,6 +3312,12 @@
   {
     \stepcounter { prop }
     \int_gincr:N \g__props_level_int
+    %% enumprop restarts at every outermost environment, so that a list using
+    %% it numbers from one each time, the way enumerate does.  Reset here
+    %% rather than at \end, so that it is right even if the document leaves an
+    %% environment by some other route.
+    \int_compare:nNnT { \g__props_level_int } = { 1 }
+      { \setcounter { enumprop } { 0 } }
     %% Push last item's template/content onto parent stacks
     \seq_gpush:NV \g__props_parent_tpl_seq \g__props_last_tpl_tl
     \seq_gpush:NV \g__props_parent_cnt_seq \g__props_last_cnt_tl
@@ -3677,6 +3713,18 @@
     format      = (#1) ,
   }
 
+%% enumprop: like numpropi, but restarted at every outermost prop or
+%% inlineprop environment (see those environments), so that a list numbers
+%% from one each time it is used, as enumerate does.  numpropi runs on through
+%% the document instead, which is what one wants for propositions that are
+%% referred to from elsewhere, and not what one wants for a one-off list.
+\newcounter { enumprop }
+\SetPropStyle { enumprop }
+  {
+    counter     = enumprop ,
+    format      = (#1) ,
+  }
+
 %% equation: uses the equation counter.
 %% When the equations option is active, the equation hooks
 %% (\tagform@ and \p@equation) are synced from this style's formats.
@@ -3691,6 +3739,13 @@
   {
     style = \proplevelchoice {
               levelone , leveltwo , levelthree , levelfour , levelfive } ,
+  }
+
+%% enum: like numbered, but uses the restarting enumprop counter at level 1.
+\SetPropStyle { enum }
+  {
+    style = \proplevelchoice {
+              enumprop , leveltwo , levelthree , levelfour , levelfive } ,
   }
 
 %% eqnum: like numbered, but uses equation counter at level 1.

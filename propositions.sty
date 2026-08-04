@@ -1448,6 +1448,12 @@
   {
     \stepcounter { prop }
     \int_gincr:N \g__props_level_int
+    %% enumprop restarts at every outermost environment, so that a list using
+    %% it numbers from one each time, the way enumerate does.  Reset here
+    %% rather than at \end, so that it is right even if the document leaves an
+    %% environment by some other route.
+    \int_compare:nNnT { \g__props_level_int } = { 1 }
+      { \setcounter { enumprop } { 0 } }
     %% Push last item's template/content onto parent stacks
     \seq_gpush:NV \g__props_parent_tpl_seq \g__props_last_tpl_tl
     \seq_gpush:NV \g__props_parent_cnt_seq \g__props_last_cnt_tl
@@ -1705,6 +1711,12 @@
   {
     \stepcounter { prop }
     \int_gincr:N \g__props_level_int
+    %% enumprop restarts at every outermost environment, so that a list using
+    %% it numbers from one each time, the way enumerate does.  Reset here
+    %% rather than at \end, so that it is right even if the document leaves an
+    %% environment by some other route.
+    \int_compare:nNnT { \g__props_level_int } = { 1 }
+      { \setcounter { enumprop } { 0 } }
     %% Push last item's template/content onto parent stacks
     \seq_gpush:NV \g__props_parent_tpl_seq \g__props_last_tpl_tl
     \seq_gpush:NV \g__props_parent_cnt_seq \g__props_last_cnt_tl
@@ -2043,6 +2055,18 @@
     format      = (#1) ,
   }
 
+%% enumprop: like numpropi, but restarted at every outermost prop or
+%% inlineprop environment (see those environments), so that a list numbers
+%% from one each time it is used, as enumerate does.  numpropi runs on through
+%% the document instead, which is what one wants for propositions that are
+%% referred to from elsewhere, and not what one wants for a one-off list.
+\newcounter { enumprop }
+\SetPropStyle { enumprop }
+  {
+    counter     = enumprop ,
+    format      = (#1) ,
+  }
+
 %% equation: uses the equation counter.
 %% When the equations option is active, the equation hooks
 %% (\tagform@ and \p@equation) are synced from this style's formats.
@@ -2057,6 +2081,13 @@
   {
     style = \proplevelchoice {
               levelone , leveltwo , levelthree , levelfour , levelfive } ,
+  }
+
+%% enum: like numbered, but uses the restarting enumprop counter at level 1.
+\SetPropStyle { enum }
+  {
+    style = \proplevelchoice {
+              enumprop , leveltwo , levelthree , levelfour , levelfive } ,
   }
 
 %% eqnum: like numbered, but uses equation counter at level 1.

@@ -1,0 +1,126 @@
+\documentclass{article}
+\usepackage{propositions}
+
+%% The `enum' style and the `enumprop' counter.
+%%
+%% enum is `numbered' with a counter that restarts, so that a list numbers from
+%% one each time it is used, the way enumerate does.  numpropi, which
+%% `numbered' uses at level one, runs on through the document instead -- right
+%% for propositions referred to from elsewhere, wrong for a one-off list.
+%%
+%% The counter is reset at every outermost prop or inlineprop environment, so
+%% nesting must not reset it: a sublist is not an outer environment.
+
+\begin{document}
+
+\section{A one-off list restarts; \texttt{numbered} does not}
+
+\begin{prop}[style=enum]
+  \item First. \label{e:a}
+  \item Second. \label{e:b}
+\end{prop}
+
+\begin{prop}[style=enum]
+  \item Must restart at one. \label{e:c}
+  \item Second again. \label{e:d}
+\end{prop}
+
+References: \ref{e:a}, \ref{e:b}, \ref{e:c}, \ref{e:d}.  Expected:
+(1), (2), (1), (2) --- each list numbered independently.
+
+The default \texttt{numbered} style, for contrast, carries on:
+
+\begin{prop}
+  \item Runs on. \label{n:a}
+\end{prop}
+
+\begin{prop}
+  \item Still running. \label{n:b}
+\end{prop}
+
+References: \ref{n:a}, \ref{n:b}.  Expected: two consecutive numbers, not
+\texttt{(1)} twice.
+
+\section{Nesting does not restart the counter}
+
+A sublist is not an outermost environment, so the outer numbering must
+continue across it, and the inner levels take the usual sub-item styles.
+
+\begin{prop}[style=enum]
+  \item First. \label{e:n1}
+  \begin{prop}
+    \item Sub-item. \label{e:n1a}
+    \item Another sub-item. \label{e:n1b}
+  \end{prop}
+  \item Second, after a sublist. \label{e:n2}
+  \item Third. \label{e:n3}
+\end{prop}
+
+The \emph{labels} must read (1), a., b., (2), (3): the outer count is
+unaffected by the sublist, and the sub-items take the level-two style.
+
+References: \ref{e:n1}, \ref{e:n1a}, \ref{e:n1b}, \ref{e:n2}, \ref{e:n3}.
+Expected: (1), (1a), (1b), (2), (3) --- a sub-item's \emph{reference} carries
+its parent's number, which is what \texttt{leveltwo} is for; only the label
+is the bare letter.
+
+\section{The restart survives an intervening list}
+
+\begin{prop}[style=enum]
+  \item One. \label{e:x1}
+  \item Two. \label{e:x2}
+\end{prop}
+
+\begin{prop}
+  \item An ordinary numbered list in between.
+\end{prop}
+
+\begin{prop}[style=enum]
+  \item Must be one again. \label{e:y1}
+\end{prop}
+
+References: \ref{e:x1}, \ref{e:x2}, \ref{e:y1}.  Expected: (1), (2), (1).
+
+\section{\texttt{inlineprop} counts as an outermost environment}
+
+\begin{prop}[style=enum]
+  \item One. \label{e:i1}
+\end{prop}
+
+\begin{inlineprop}[style=enum]
+  \item An inline item. \label{e:i2}
+\end{inlineprop}
+
+\begin{prop}[style=enum]
+  \item One again. \label{e:i3}
+\end{prop}
+
+References: \ref{e:i1}, \ref{e:i2}, \ref{e:i3}.  Expected: (1), (1), (1) ---
+each is an outermost environment, so each restarts.
+
+\section{Starting at a chosen number}
+
+The reset happens at \verb|\begin{prop}|, so setting the counter just before
+the environment has no effect --- the reset overwrites it.
+
+\begingroup
+\setcounter{enumprop}{40}
+\begin{prop}[style=enum]
+  \item Set before the environment. \label{e:s1}
+\end{prop}
+\endgroup
+
+To start a list elsewhere than one, set the counter \emph{inside} the
+environment, after the reset has run:
+
+\begingroup
+\begin{prop}[style=enum]
+  \setcounter{enumprop}{40}
+  \item Set inside the environment. \label{e:s2}
+  \item And the next. \label{e:s3}
+\end{prop}
+\endgroup
+
+References: \ref{e:s1}, \ref{e:s2}, \ref{e:s3}.  Expected: (1), (41), (42).
+
+\end{document}
