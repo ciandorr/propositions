@@ -1150,6 +1150,18 @@
 % \section{Release notes}
 %
 % \begin{description}
+% \item[0.91 (unreleased)] New \refKey{align} value \texttt{runin}. 
+%
+%   New style \texttt{enum} and counter \docCounter{enumprop}.
+%
+%   The \texttt{prop} counter, stepped by every \refEnv{prop} and
+%   \refEnv{inlineprop} but never displayed, has been withdrawn.
+%
+%   Stray spaces around a \refKey{name} are trimmed, so that
+%   \verb|\item[ Alpha ]| places its label like \verb|\item[Alpha]|.
+%
+%   Equation tags hand \refKey{display format} a bare number, rather than one
+%   wrapped in \textsf{amsmath}'s spacing guards.
 % \item[0.9] Initial public release.
 % \end{description}
 %
@@ -1232,6 +1244,7 @@
 \bool_new:N \l__props_titlecase_bool    %% true when \Ref etc. want titlecasing
 \bool_new:N \l__props_reset_bool        %% true (default) = reset sub-level counter on \item
 \bool_new:N \l__props_pi_any_bool       %% true if any per-item dimension is set for this item
+\tl_new:N   \l__props_eqtag_tl          %% equation number handed to the display format by \tagform@
 %% Two layers of item-level defaults.  The cascading layer (\l__props_defaults_tl)
 %% is fed by \propoptions and is inherited by nested environments; the env-local
 %% layer (\l__props_env_defaults_tl) is fed by a prop's own optional argument and
@@ -1917,6 +1930,18 @@
         \bool_set_false:N \l__props_loading_defaults_bool
       }
 
+    %% --- Trim the name ---
+    %% Once, here, rather than at each place the name is formatted: it feeds
+    %% both the label and the reference, so trimming at the source fixes both.
+    %% l3keys already strips spaces around a key's value, which covers
+    %% |name = Alpha |, but not the two routes that bypass it --- a bare name,
+    %% where the whole argument is wrapped as name={...} verbatim, and a braced
+    %% value, where the trimming stops at the brace.  Untrimmed, the leading
+    %% space of |\item[ Alpha ]| was typeset inside the label box and pushed
+    %% the label 3.8pt off the margin.  A name that genuinely wants to begin
+    %% with a space can say so with ~ or \space, neither of which is trimmed.
+    \tl_trim_spaces:N \l__props_name_tl
+
     %% --- Expand counter name ---
     \tl_set:Nx \l__props_counter_tl { \l__props_counter_tl }
 
@@ -2320,11 +2345,30 @@
         \cs_set:cpn { p@equation } #1
           { \propapply { \__props_eqreffmt:n { \propfmtarg } } { #1 } }
         %% Redefine \tagform@ so that displayed equation tags use
-        %% the display format.  \tag* (used by \ptag) bypasses this.
+        %% the display format.  \tag* (used by \ptag) bypasses this, and so
+        %% reaches the format by the ordinary item path instead.
+        %%
+        %% amsmath writes \maketag@@@{(\ignorespaces#1\unskip\@@italiccorr)},
+        %% guarding the number against stray spaces and adding an italic
+        %% correction before its closing parenthesis.  We take over the
+        %% parentheses, so those guards would land *inside* the format's
+        %% argument and become part of #1 --- harmless to a format that prints
+        %% #1, but not to one that uses it as data: \index{eq #1} then wrote
+        %% the key "eq \ignorespaces 1\unskip \@@italiccorr".  Trimming the
+        %% token list does the same work in the data domain, and \tag{ 5 } is
+        %% still tagged 5 rather than " 5 ".
+        %%
+        %% The italic correction is dropped rather than moved outside, where it
+        %% would sit after the closing parenthesis instead of before it.  A
+        %% format wanting an italic number should say display~format =
+        %% (\textit{#1}), which supplies the correction itself.
         \cs_set:Npn \tagform@ #1
-          { \maketag@@@
-              { \__props_eqdispfmt:n
-                  { \ignorespaces #1 \unskip \@@italiccorr } } }
+          {
+            \tl_set:Nn \l__props_eqtag_tl {#1}
+            \tl_trim_spaces:N \l__props_eqtag_tl
+            \maketag@@@
+              { \exp_args:NV \__props_eqdispfmt:n \l__props_eqtag_tl }
+          }
       }
   }
 

@@ -1,0 +1,66 @@
+\documentclass{article}
+\usepackage{amsmath}
+\usepackage[equations]{propositions}
+
+%% Stray spaces around a name must not reach the label or the reference.
+%%
+%% l3keys strips spaces around a key's value, which covers `name = Alpha ',
+%% but two routes bypass it: a bare name, where the whole argument is wrapped
+%% as name={...} verbatim, and a braced value, where the trimming stops at the
+%% brace.  Untrimmed, the leading space of \item[ Alpha ] was typeset inside
+%% the label box and pushed the label 3.8pt off the margin.
+
+\begin{document}
+
+\section{Every spelling of the same name places identically}
+
+The rule marks the text margin.  All five labels must begin at it.
+
+\noindent\rule{\textwidth}{0.3pt}
+\begin{prop}
+  \item[Alpha] Bare name. \label{s:1}
+  \item[ Alpha ] Bare name written with spaces around it. \label{s:2}
+  \item[name=Alpha] Explicit key. \label{s:3}
+  \item[name = Alpha ] Explicit key with spaces, which l3keys already
+    trimmed. \label{s:4}
+  \item[name = { Alpha }] Braced value, where l3keys cannot reach the
+    spaces. \label{s:5}
+\end{prop}
+\noindent\rule{\textwidth}{0.3pt}
+
+The references must match one another too, since the name feeds both the label
+and the reference: \ref{s:1}/\ref{s:2}/\ref{s:3}/\ref{s:4}/\ref{s:5}.
+
+\section{A space asked for explicitly survives}
+
+Trimming removes only incidental space.  A name that really does want to begin
+with one can say so, and the label below must sit further right than those
+above.
+
+\noindent\rule{\textwidth}{0.3pt}
+\begin{prop}
+  \item[{~Alpha}] Deliberate leading space, written \verb|~|.
+\end{prop}
+\noindent\rule{\textwidth}{0.3pt}
+
+\section{Equation tags are handed a clean number}
+
+\verb|\tagform@| used to pass the display format
+\verb|\ignorespaces #1 \unskip \@@italiccorr|, amsmath's guards for the number,
+which became part of \verb|#1|.  A format that prints \verb|#1| never noticed;
+one that uses it as data --- an index key, say --- got the guards in the key.
+The guards are now applied to the token list instead, so \verb|\tag{ 5 }| is
+still tagged \texttt{5} rather than \texttt{\ 5\ }.
+
+\begingroup
+\SetPropStyle{equation}{display format = [#1]}
+\begin{equation} a = b \end{equation}
+\begin{equation} c = d \tag{ 5 } \end{equation}
+\begin{equation} e = f \tag*{ 7 } \end{equation}
+\endgroup
+
+Expected: \texttt{[1]}, then \texttt{[5]} with the spaces gone, then
+\texttt{7} --- \verb|\tag*| bypasses the hook, which is how \verb|\ptag|
+reaches the format by the ordinary item path instead.
+
+\end{document}
