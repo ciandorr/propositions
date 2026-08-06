@@ -30,3 +30,6 @@ test/*.pdf
 
 # CTAN upload archive
 *.zip
+
+# Claude Code local settings
+.claude/
