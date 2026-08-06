@@ -1,0 +1,209 @@
+\documentclass{article}
+\usepackage{amsmath}
+\usepackage[equations]{propositions}
+
+%% Footnote-sensitive numbering.
+%%
+%% Two behaviours, both automatic:
+%%
+%%   (i)  the nesting level is zeroed inside footnote text and restored on
+%%        leaving it, so a prop in a footnote hanging from a prop starts
+%%        afresh rather than nesting inside the item it hangs from;
+%%   (ii) the level-1 entry of the `numbered' and `eqnum' dispatchers
+%%        branches to `footnumprop' there, so a footnote does not consume a
+%%        document number.  Branching in the dispatcher rather than in
+%%        `levelone'/`equation' keeps the behaviour when a document redefines
+%%        those styles.
+%%
+%% footnumprop numbers with \proprepeat{footprop}{*}: (*), (**), (***).
+
+\begin{document}
+
+\section{Body numbering is untouched}
+
+\begin{prop}
+  \item First in the body. \label{b:1}
+  \item Second in the body. \label{b:2}
+\end{prop}
+
+\section{A footnote numbers separately, and restarts}
+
+Here is a footnote.%
+\footnote{Its own list, which must be numbered with asterisks and must not
+  continue the body's count:
+  \begin{prop}
+    \item First in this footnote. \label{f1:1}
+    \item Second in this footnote. \label{f1:2}
+    \item Third in this footnote. \label{f1:3}
+  \end{prop}
+  and the counter must restart in the next footnote.}
+And a second one.%
+\footnote{A second footnote, whose list must start again at one asterisk:
+  \begin{prop}
+    \item First in the second footnote. \label{f2:1}
+  \end{prop}}
+
+\section{The body count is undisturbed}
+
+\begin{prop}
+  \item Third in the body. \label{b:3}
+\end{prop}
+
+\section{A footnote inside a prop starts at the outer level}
+
+A prop inside a footnote must not inherit the level of the prop the footnote
+hangs from.  Without the reset the inner item would be a sub-item of the outer
+one and would refer as \texttt{(1a)}.
+
+Nothing the footnote's list does may be visible to the list it hangs from.
+Two things to look at below, neither of which shows up in the references: the
+second item must begin on a line of its own --- restoring the level but not
+the display mode leaves the outer list set inline, so that the item after the
+footnote runs on from the item before it --- and the sub-item must take its
+parent from the body list rather than from the footnote's.
+
+\begin{prop}
+  \item An outer item.%
+  \footnote{A footnote hanging from it, containing:
+    \begin{prop}
+      \item This must be an outer-level item of its own. \label{fn:in}
+    \end{prop}}
+  \item A second outer item, whose level must be undisturbed. \label{fn:after}
+  \begin{prop}
+    \item A sub-item of it. \label{fn:sub}
+  \end{prop}
+\end{prop}
+
+\section{Nesting inside a footnote}
+
+Sub-levels must still work: only the outer level of the footnote's own list
+is affected.%
+\footnote{A third footnote:
+  \begin{prop}
+    \item Outer. \label{f3:1}
+    \begin{prop}
+      \item Inner. \label{f3:2}
+    \end{prop}
+    \item Outer again. \label{f3:3}
+  \end{prop}}
+
+\section{Minipage footnotes}
+
+The reset is driven by the footnote text, not by the \texttt{footnote}
+counter, so a \texttt{minipage} footnote --- which counts with
+\texttt{mpfootnote} --- behaves the same way.
+
+\begin{center}
+\begin{minipage}{0.7\textwidth}
+A minipage with a footnote.%
+\footnote{Whose list must be asterisked and start from one:
+  \begin{prop}
+    \item First in the minipage footnote. \label{m:1}
+    \item Second in the minipage footnote. \label{m:2}
+  \end{prop}}
+\end{minipage}
+\end{center}
+
+\section{Equations}
+
+\begin{equation} a = b \label{e:1} \end{equation}
+An equation in a footnote.%
+\footnote{Like this:
+  \begin{equation} c = d \label{e:2} \end{equation}}
+
+The \texttt{equations} option rewires the hooks that \emph{format} the number
+amsmath supplies; the counter for a tag-less equation is always amsmath's own
+\texttt{equation}, which no branching in our styles can reach.  So the
+footnoted equation above carries an ordinary equation number.  An equation
+that wants the footnote system must tag itself:
+
+\begin{equation} g = h \ptag \label{e:3} \end{equation}
+A tagged equation in a footnote.%
+\footnote{With a bare tag:
+  \begin{equation} i = j \ptag \label{e:4} \end{equation}
+  and with the style named explicitly (no \texttt{verb} here: it is fragile
+  inside a footnote argument unless the document arranges otherwise):
+  \begin{equation} k = l \ptag[style=eqnum] \label{e:5} \end{equation}}
+
+\section{Redefining the outer style must not lose the behaviour}
+
+This is the point of branching in the dispatcher rather than in the outer
+style itself.  Since this document loads \texttt{equations}, nameless outer
+items use \texttt{eqnum}, hence the \texttt{equation} style and counter --- so
+that is the style to redefine here.
+
+\begingroup
+\SetPropStyle{equation}{counter = equation, format = [#1]}
+\begin{prop}
+  \item Body item, now in square brackets. \label{r:1}
+\end{prop}
+A footnote after the redefinition.%
+\footnote{Its list must still use asterisks:
+  \begin{prop}
+    \item Still asterisked. \label{r:2}
+  \end{prop}}
+\endgroup
+
+\section{The \texttt{numbered} dispatcher branches too}
+
+This document loads \texttt{equations}, so the sections above exercise
+\texttt{eqnum}.  Under \texttt{numbered} the level-1 style is
+\texttt{levelone}, and the footnote branch must work there as well.
+
+\begingroup
+\propoptions{nameless style = numbered}
+\begin{prop}
+  \item A body item counted by \texttt{numpropi}. \label{n:1}
+\end{prop}
+A footnote under \texttt{numbered}.%
+\footnote{Whose list must be asterisked:
+  \begin{prop}
+    \item Asterisked under \texttt{numbered}. \label{n:2}
+  \end{prop}}
+\endgroup
+
+\section{Repeated tokens elsewhere}
+
+The command is not tied to footnotes: any counter and any token.
+
+\begin{prop}[counter = enumprop, counter format = \proprepeat{#1}{\dag},
+             format = (#1)]
+  \item One dagger. \label{d:1}
+  \item Two daggers. \label{d:2}
+\end{prop}
+
+References: \ref{d:1}, \ref{d:2}.
+
+\section{References}
+
+Body: \ref{b:1}, \ref{b:2}, \ref{b:3} --- expected (1), (2), (3).
+
+First footnote: \ref{f1:1}, \ref{f1:2}, \ref{f1:3} --- expected
+(*), (**), (***).
+
+Second footnote: \ref{f2:1} --- expected (*).
+
+Footnote inside a prop: \ref{fn:in} --- must be asterisked, showing it was
+treated as an outer-level item of the footnote, and emphatically not
+\texttt{(1a)}; \ref{fn:after} --- an ordinary body number, showing the outer
+level resumed; \ref{fn:sub} --- that number with a letter appended, showing
+the parent is the body item and not the footnote's.
+
+Under \texttt{numbered}: \ref{n:1} --- an ordinary \texttt{numpropi} number;
+\ref{n:2} --- expected (*).
+
+Nested: \ref{f3:1}, \ref{f3:2}, \ref{f3:3} --- expected (*), (*a), (**).
+
+Minipage footnote: \ref{m:1}, \ref{m:2} --- expected (*), (**).
+
+Equations: \ref{e:1}, \ref{e:2} --- both ordinary equation numbers, the
+footnoted one included.
+
+Tagged: \ref{e:3} in the body; \ref{e:4} and \ref{e:5} in a footnote ---
+the last two expected to be asterisked.
+
+After redefining the outer style: \ref{r:1} --- an ordinary body number in
+square brackets; \ref{r:2} --- expected (*), the footnote behaviour surviving
+the redefinition.
+
+\end{document}

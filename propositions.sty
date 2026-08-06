@@ -54,6 +54,16 @@
 
 \int_new:N  \g__props_level_int
 
+\bool_new:N \l__props_in_footnote_bool
+\int_new:N  \l__props_saved_level_int
+\bool_new:N \l__props_saved_dispmode_bool
+\bool_new:N \l__props_saved_lastprop_bool
+\bool_new:N \l__props_saved_topsep_bool
+\tl_new:N   \l__props_saved_last_tpl_tl
+\tl_new:N   \l__props_saved_last_cnt_tl
+\seq_new:N  \l__props_saved_parent_tpl_seq
+\seq_new:N  \l__props_saved_parent_cnt_seq
+
 \tl_new:N   \l__props_name_tl
 \tl_new:N   \l__props_style_tl
 \tl_new:N   \l__props_counter_tl
@@ -2049,6 +2059,45 @@
         { \int_min:nn { \g__props_level_int } { \clist_count:n { #1 } } } }
   }
 
+\NewExpandableDocumentCommand \propfootnotechoice { m m }
+  { \bool_if:NTF \l__props_in_footnote_bool { #2 } { #1 } }
+
+\NewExpandableDocumentCommand \proprepeat { m m }
+  { \prg_replicate:nn { \value {#1} } {#2} }
+
+\cs_new_protected:Nn \__props_footnote_begin:
+  {
+    \bool_set_true:N \l__props_in_footnote_bool
+    \int_set_eq:NN  \l__props_saved_level_int      \g__props_level_int
+    \bool_set_eq:NN \l__props_saved_dispmode_bool  \g__props_display_mode_bool
+    \bool_set_eq:NN \l__props_saved_lastprop_bool  \g__props_last_was_prop_bool
+    \bool_set_eq:NN \l__props_saved_topsep_bool    \g__props_suppress_topsep_bool
+    \tl_set_eq:NN   \l__props_saved_last_tpl_tl    \g__props_last_tpl_tl
+    \tl_set_eq:NN   \l__props_saved_last_cnt_tl    \g__props_last_cnt_tl
+    \seq_set_eq:NN  \l__props_saved_parent_tpl_seq \g__props_parent_tpl_seq
+    \seq_set_eq:NN  \l__props_saved_parent_cnt_seq \g__props_parent_cnt_seq
+    \int_gzero:N        \g__props_level_int
+    \bool_gset_false:N  \g__props_display_mode_bool
+    \bool_gset_false:N  \g__props_last_was_prop_bool
+    \setcounter { footprop } { 0 }
+  }
+\cs_new_protected:Nn \__props_footnote_end:
+  {
+    \bool_set_false:N \l__props_in_footnote_bool
+    \int_gset_eq:NN  \g__props_level_int            \l__props_saved_level_int
+    \bool_gset_eq:NN \g__props_display_mode_bool    \l__props_saved_dispmode_bool
+    \bool_gset_eq:NN \g__props_last_was_prop_bool   \l__props_saved_lastprop_bool
+    \bool_gset_eq:NN \g__props_suppress_topsep_bool \l__props_saved_topsep_bool
+    \tl_gset_eq:NN   \g__props_last_tpl_tl          \l__props_saved_last_tpl_tl
+    \tl_gset_eq:NN   \g__props_last_cnt_tl          \l__props_saved_last_cnt_tl
+    \seq_gset_eq:NN  \g__props_parent_tpl_seq       \l__props_saved_parent_tpl_seq
+    \seq_gset_eq:NN  \g__props_parent_cnt_seq       \l__props_saved_parent_cnt_seq
+  }
+\AddToHook { cmd/@footnotetext/before }   { \__props_footnote_begin: }
+\AddToHook { cmd/@footnotetext/after }    { \__props_footnote_end: }
+\AddToHook { cmd/@mpfootnotetext/before } { \__props_footnote_begin: }
+\AddToHook { cmd/@mpfootnotetext/after }  { \__props_footnote_end: }
+
 \NewDocumentCommand \propoptions { m }
   {
     %% \propoptions feeds the cascading layer (env-local routing off).
@@ -2118,6 +2167,17 @@
     format      = (#1) ,
   }
 
+%% footnumprop: for items inside footnote text, where the document's numbering
+%% would be an intrusion.  Asterisks, after the fashion of linguex and philex.
+%% Restarted at every footnote (see \__props_footnote_begin:).
+\newcounter { footprop }
+\SetPropStyle { footnumprop }
+  {
+    counter        = footprop ,
+    counter~format = \proprepeat {#1} {*} ,
+    format         = (#1) ,
+  }
+
 %% equation: uses the equation counter.
 %% When the equations option is active, the equation hooks
 %% (\tagform@ and \p@equation) are synced from this style's formats.
@@ -2128,10 +2188,16 @@
   }
 
 %% numbered: dispatches to the level-appropriate style via live parent.
+%% The level-1 entry branches on footnote text, so that a footnote does not
+%% consume a document number.  Branching here rather than inside levelone
+%% keeps the behaviour when a document redefines levelone.  Deeper levels do
+%% not branch: the level is zeroed on entering a footnote, so anything deeper
+%% than 1 there is a sublist of the footnote's own outer item.
 \SetPropStyle { numbered }
   {
     style = \proplevelchoice {
-              levelone , leveltwo , levelthree , levelfour , levelfive } ,
+              \propfootnotechoice { levelone } { footnumprop } ,
+              leveltwo , levelthree , levelfour , levelfive } ,
   }
 
 %% enum: like numbered, but uses the restarting enumprop counter at level 1.
@@ -2145,7 +2211,8 @@
 \SetPropStyle { eqnum }
   {
     style = \proplevelchoice {
-              equation , leveltwo , levelthree , levelfour , levelfive } ,
+              \propfootnotechoice { equation } { footnumprop } ,
+              leveltwo , levelthree , levelfour , levelfive } ,
   }
 
 

@@ -275,7 +275,11 @@
 % 
 % This macro can be used, for example, to set different list dimensions for different nesting levels (see \cref{sect:keys-dims}) or to create styles that produce different results depending on the nesting depth where they are used (see \cref{sect:styles}).
 % \end{docCommand}
-% 
+%
+% \begin{docCommand}{propfootnotechoice}{\marg{outside}\marg{inside}}
+%   Expands to \meta{inside} within the text of a footnote, and to \meta{outside} anywhere else.  The built-in \texttt{numbered} and \texttt{eqnum} styles use it to select \texttt{footnumprop} in footnotes (see \cref{sect:styles}).
+% \end{docCommand}
+%
 % 
 % Further commands are described below, especially in \cref{sect:xref} (cross-referencing) and \cref{sect:styles} (defining styles).
 % 
@@ -309,12 +313,26 @@
 % \begin{docKey}{counter}{=\meta{name}}{no default}
 %   Counter to use.  The counter is automatically stepped, and the item's \refKey{name} is set to \cs{the}\meta{name} (though this can be overridden by \refKey{counter format} or \refKey{name}).
 % 
-% Any counter can be used with \refKey{counter format}.  Special counters \docCounter{numpropii}, \docCounter{numpropiii}, \docCounter{numpropiv}, \docCounter{numpropv} are provided, whose values are automatically reset each time an |\item| is processed at a lower nesting level.  There is also a counter \docCounter{numpropi} which never automatically resets, and a counter \docCounter{enumprop} which is reset at every \emph{outermost} \refEnv{prop} or \refEnv{inlineprop} environment, so that lists using this counter behave like the standard \texttt{enumerate} environment.
+% Any counter can be used with \refKey{counter format}.  Special counters \docCounter{numpropii}, \docCounter{numpropiii}, \docCounter{numpropiv}, \docCounter{numpropv} are provided, whose values are automatically reset each time an |\item| is processed at a lower nesting level.  There is also a counter \docCounter{numpropi} which never automatically resets, and a counter \docCounter{enumprop} which is reset at every \emph{outermost} \refEnv{prop} or \refEnv{inlineprop} environment, so that lists using this counter behave like the standard \texttt{enumerate} environment.  Finally, there is a counter \docCounter{footprop}, reset at the beginning of every footnote, used by the \texttt{footnumprop} style (see \cref{sect:styles}).
 % \end{docKey}
 %
 % \begin{docKey}{counter format}{=\meta{template}}{no default}
 %   How to display the counter value.  Use \texttt{\#1} for the counter name, e.g.\ \texttt{counter format=\string\roman\{\#1\}}.  When both this key and \refKey{counter} are set, this is used instead of \cs{the}\meta{counter} for generating the item's \refKey{name}.
 % \end{docKey}
+% \noindent Along with the standard commands (\cs{arabic}, \cs{roman}, \cs{Roman}, \cs{alph}, \cs{Alph}, and \cs{fnsymbol}), the following command is available:
+% 
+% 
+% \begin{docCommand}{proprepeat}{\marg{counter}\marg{token}}
+%   Prints \meta{token} as many times as the value of \meta{counter}.
+% \end{docCommand}
+%
+% \begin{example}
+% \begin{prop}[counter = enumprop, format = (#1),
+%   counter format = \proprepeat{#1}{*}]
+%   \item An item labelled with one asterisk.
+%   \item And another, labelled with two.
+% \end{prop}
+% \end{example}
 %
 % \begin{docKey}{display format}{=\meta{template}}{no default}
 %   Format for displaying the name or counter value in the proposition's label.  Use \texttt{\#1} for the argument, e.g.\ \texttt{display format=\string\textbf\{\#1\}}.  Does not affect cross-references.
@@ -830,7 +848,7 @@
 % \begin{description}
 % \item[\texttt{numbered}] The default nameless style.  Selects one of 
 %    the helper styles \texttt{levelone}--\texttt{levelfive}, depending
-%    on nesting depth.    
+%    on nesting depth, ofr \texttt{footnumprop} if in a footnote and not nested.  
 % \begin{codebox}
 % \SetPropStyle{levelone}{counter = numpropi, format = (#1)}
 % \SetPropStyle{leveltwo}{counter = numpropii,
@@ -842,9 +860,19 @@
 % \SetPropStyle{levelfive}{counter = numpropv,
 %   display format = (#1), ref format = \parentref{.#1}}
 % \SetPropStyle{numbered}{style = \proplevelchoice{
-%   levelone, leveltwo, levelthree, levelfour, levelfive}}
+%   \propfootnotechoice{levelone}{footnumprop},
+%   leveltwo, levelthree, levelfour, levelfive}}
 % \end{codebox}
-% 
+%
+% \item[\texttt{footnumprop}] The counter is displayed as a string of asterisks.  This style is designed to be used for numbered propositions in footnotes, which should not interrupt the numbering in the main text.  Note that the nesting
+% level resets to zero inside footnotes, so a \texttt{numbered} (or
+% \texttt{eqnum}) proposition immediately inside a footnote will always use
+% this style.
+% \begin{codebox}
+% \SetPropStyle{footnumprop}{counter = footprop,
+%   counter format = \proprepeat{#1}{*}, format = (#1)}
+% \end{codebox}
+%
 % \item[\texttt{equation}] Uses the |equation| counter.  Note that this style has a special behavior when the |equations| option is active: changing its \refKey{display format} and \refKey{ref format} keys (or both, by setting \refKey{format}) will also change the corresponding hooks used to create the tags for numbered equations make the \texttt{equation} environment and \textsf{amstex} environments like \texttt{gather}.
 % \begin{codebox}
 % \SetPropStyle{equation}{counter = equation, format = (#1)}
@@ -858,7 +886,8 @@
 % its outer-level nameless items use the |equation| style.
 % \begin{codebox}
 % \SetPropStyle{eqnum}{style = \proplevelchoice{
-%   equation, leveltwo, levelthree, levelfour, levelfive}}
+%   \propfootnotechoice{equation}{footnumprop},
+%   leveltwo, levelthree, levelfour, levelfive}}
 % \end{codebox}
 %
 % \item[\texttt{enum}] Like |numbered| again, but at the outer level it uses
@@ -1154,6 +1183,11 @@
 %
 %   New style \texttt{enum} and counter \docCounter{enumprop}.
 %
+%   Propositions in footnotes are numbered with asterisks by the new style
+%   \texttt{footnumprop} and counter \docCounter{footprop}, and the nesting
+%   level now resets inside a footnote.  New commands \refCom{proprepeat} and
+%   \refCom{propfootnotechoice}.
+%
 %   The \texttt{prop} counter, stepped by every \refEnv{prop} and
 %   \refEnv{inlineprop} but never displayed, has been withdrawn.
 %
@@ -1183,6 +1217,19 @@
 
 % --- Nesting level ---
 \int_new:N  \g__props_level_int
+
+% --- Footnotes ---
+% Whether we are inside footnote text, and the state to restore on leaving it
+% (see \__props_footnote_begin:).
+\bool_new:N \l__props_in_footnote_bool
+\int_new:N  \l__props_saved_level_int
+\bool_new:N \l__props_saved_dispmode_bool
+\bool_new:N \l__props_saved_lastprop_bool
+\bool_new:N \l__props_saved_topsep_bool
+\tl_new:N   \l__props_saved_last_tpl_tl
+\tl_new:N   \l__props_saved_last_cnt_tl
+\seq_new:N  \l__props_saved_parent_tpl_seq
+\seq_new:N  \l__props_saved_parent_cnt_seq
 
 % --- Per-item state (set during \item / \ptag processing) ---
 % These are cleared at the start of \__props_resolve_item:n and then
@@ -3703,6 +3750,79 @@
         { \int_min:nn { \g__props_level_int } { \clist_count:n { #1 } } } }
   }
 
+% \cs{propfootnotechoice}\marg{outside}\marg{inside}
+% expands to the second argument inside footnote text and the first
+% elsewhere.  Expandable, so that it can stand where a style name or a
+% counter name is wanted.
+\NewExpandableDocumentCommand \propfootnotechoice { m m }
+  { \bool_if:NTF \l__props_in_footnote_bool { #2 } { #1 } }
+
+% \cs{proprepeat}\marg{counter}\marg{token} prints \meta{token} as many times
+% as the value of \meta{counter}: the counter format behind (*), (**), (***).
+% Expandable, since a counter format is expanded as the item resolves.
+\NewExpandableDocumentCommand \proprepeat { m m }
+  { \prg_replicate:nn { \value {#1} } {#2} }
+
+% --- Footnote text ---
+%
+% Two things happen on entering footnote text.
+%
+% The footprop counter is restarted, so that each footnote numbers from one.
+% (Declaring the counter within \texttt{footnote} would reset it when the mark
+% is placed rather than when the text is set, and would miss \texttt{minipage}
+% footnotes, which count with \texttt{mpfootnote}.)
+%
+% The nesting level is zeroed, so that a prop inside a footnote hanging from a
+% prop starts afresh instead of nesting inside the item it hangs from.
+%
+% Everything else that records where we are in the prop structure is saved and
+% restored with it.  All of it is global by necessity---it has to survive the
+% prop environment's own group---so the group around footnote text will not
+% restore it; and footnote text is set out of order with respect to the
+% structure it interrupts, so none of what happens inside it should be visible
+% to the list it hangs from.  Restoring the level alone is not enough: a prop
+% closing at level 1 inside the footnote would take \g__props_display_mode_bool
+% global false, and the item after the footnote would then be set inline,
+% running on from the item before it.  The saved values are local, so nested
+% boxes unwind by themselves.
+%
+% Patching \cs{@footnotetext} directly, as \textsf{linguex} does, would clash
+% with any other package that patches it (\textsf{setspace}, for one).  The
+% generic command hooks are applied at \cs{begin}\texttt{\{document\}}, and so
+% land on whatever definition is finally in force.
+\cs_new_protected:Nn \__props_footnote_begin:
+  {
+    \bool_set_true:N \l__props_in_footnote_bool
+    \int_set_eq:NN  \l__props_saved_level_int      \g__props_level_int
+    \bool_set_eq:NN \l__props_saved_dispmode_bool  \g__props_display_mode_bool
+    \bool_set_eq:NN \l__props_saved_lastprop_bool  \g__props_last_was_prop_bool
+    \bool_set_eq:NN \l__props_saved_topsep_bool    \g__props_suppress_topsep_bool
+    \tl_set_eq:NN   \l__props_saved_last_tpl_tl    \g__props_last_tpl_tl
+    \tl_set_eq:NN   \l__props_saved_last_cnt_tl    \g__props_last_cnt_tl
+    \seq_set_eq:NN  \l__props_saved_parent_tpl_seq \g__props_parent_tpl_seq
+    \seq_set_eq:NN  \l__props_saved_parent_cnt_seq \g__props_parent_cnt_seq
+    \int_gzero:N        \g__props_level_int
+    \bool_gset_false:N  \g__props_display_mode_bool
+    \bool_gset_false:N  \g__props_last_was_prop_bool
+    \setcounter { footprop } { 0 }
+  }
+\cs_new_protected:Nn \__props_footnote_end:
+  {
+    \bool_set_false:N \l__props_in_footnote_bool
+    \int_gset_eq:NN  \g__props_level_int            \l__props_saved_level_int
+    \bool_gset_eq:NN \g__props_display_mode_bool    \l__props_saved_dispmode_bool
+    \bool_gset_eq:NN \g__props_last_was_prop_bool   \l__props_saved_lastprop_bool
+    \bool_gset_eq:NN \g__props_suppress_topsep_bool \l__props_saved_topsep_bool
+    \tl_gset_eq:NN   \g__props_last_tpl_tl          \l__props_saved_last_tpl_tl
+    \tl_gset_eq:NN   \g__props_last_cnt_tl          \l__props_saved_last_cnt_tl
+    \seq_gset_eq:NN  \g__props_parent_tpl_seq       \l__props_saved_parent_tpl_seq
+    \seq_gset_eq:NN  \g__props_parent_cnt_seq       \l__props_saved_parent_cnt_seq
+  }
+\AddToHook { cmd/@footnotetext/before }   { \__props_footnote_begin: }
+\AddToHook { cmd/@footnotetext/after }    { \__props_footnote_end: }
+\AddToHook { cmd/@mpfootnotetext/before } { \__props_footnote_begin: }
+\AddToHook { cmd/@mpfootnotetext/after }  { \__props_footnote_end: }
+
 \NewDocumentCommand \propoptions { m }
   {
     %% \propoptions feeds the cascading layer (env-local routing off).
@@ -3778,6 +3898,17 @@
     format      = (#1) ,
   }
 
+%% footnumprop: for items inside footnote text, where the document's numbering
+%% would be an intrusion.  Asterisks, after the fashion of linguex and philex.
+%% Restarted at every footnote (see \__props_footnote_begin:).
+\newcounter { footprop }
+\SetPropStyle { footnumprop }
+  {
+    counter        = footprop ,
+    counter~format = \proprepeat {#1} {*} ,
+    format         = (#1) ,
+  }
+
 %% equation: uses the equation counter.
 %% When the equations option is active, the equation hooks
 %% (\tagform@ and \p@equation) are synced from this style's formats.
@@ -3788,10 +3919,16 @@
   }
 
 %% numbered: dispatches to the level-appropriate style via live parent.
+%% The level-1 entry branches on footnote text, so that a footnote does not
+%% consume a document number.  Branching here rather than inside levelone
+%% keeps the behaviour when a document redefines levelone.  Deeper levels do
+%% not branch: the level is zeroed on entering a footnote, so anything deeper
+%% than 1 there is a sublist of the footnote's own outer item.
 \SetPropStyle { numbered }
   {
     style = \proplevelchoice {
-              levelone , leveltwo , levelthree , levelfour , levelfive } ,
+              \propfootnotechoice { levelone } { footnumprop } ,
+              leveltwo , levelthree , levelfour , levelfive } ,
   }
 
 %% enum: like numbered, but uses the restarting enumprop counter at level 1.
@@ -3805,7 +3942,8 @@
 \SetPropStyle { eqnum }
   {
     style = \proplevelchoice {
-              equation , leveltwo , levelthree , levelfour , levelfive } ,
+              \propfootnotechoice { equation } { footnumprop } ,
+              leveltwo , levelthree , levelfour , levelfive } ,
   }
 
 % ====================================================================
