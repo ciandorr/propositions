@@ -811,10 +811,10 @@
 %   ref format=#1, align = flush}
 % \end{codebox}
 %
-% \item[\texttt{vignette}] Intended for things like example vignettes and comments.  Italic name at the text margin, and italic references, separated from the text by a colon.
+% \item[\texttt{vignette}] Intended for things like example vignettes and comments.  Italic name at the text margin, and italic references, separated from the text by a colon.  The name runs into the text (\texttt{runin} alignment), an ordinary interword space after the colon.
 % \begin{codebox}
 % \SetPropStyle{vignette}{ref format = \textit{#1},
-%   align = flush, label format = \textit{#1:}}
+%   align = runin, label format = \textit{#1:}}
 % \end{codebox}
 %
 % \item[\texttt{bullet}] Bullet symbol varying by depth (like |\itemize|).
@@ -1182,7 +1182,7 @@
 % \section{Release notes}
 %
 % \begin{description}
-% \item[0.91 (unreleased)] New \refKey{align} value \texttt{runin}. 
+% \item[0.91 (unreleased)] New \refKey{align} value \texttt{runin}, and the built-in style \texttt{vignette} changed to use it.
 %
 %   New style \texttt{enum} and counter \docCounter{enumprop}.
 %
@@ -3936,7 +3936,7 @@
   {
     display~format = #1 ,
     ref~format     = \textit{#1} ,
-    align          = flush ,
+    align          = runin ,
     label~format   = \textit{#1:} ,
   }
 
