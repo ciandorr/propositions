@@ -109,8 +109,7 @@
 % Items may be given names like `(P)' or
 % `Physicalism', or auto-numbered using different counters; all carry robust
 % cross-references with configurable formatting.
-% The package integrates with \textsf{amsmath}, \textsf{hyperref},
-% and \textsf{cleveref}.
+% The package integrates with \textsf{amsmath}, \textsf{hyperref}, \textsf{cleveref}, and \textsf{zref-clever}.
 % \end{abstract}
 %
 % \tableofcontents
@@ -403,7 +402,7 @@
 % \end{docKey}
 %
 % \begin{docKey}{crefname}{=\meta{type}}{no default}
-%   When \textsf{cleveref} or \textsf{zref-clever} is loaded, assigns an arbitrary reference type to this proposition.  For example, \texttt{crefname=lemma} causes \cs{cref} to use the names defined by \cs{crefname}\texttt{\{lemma\}\{...\}\{...\}} instead of the default (private) \refEnv{prop} type.  The \meta{type} must be known to the package in use; new types can be declared with \cs{crefname} or, under \textsf{zref-clever}, with \cs{zcRefTypeSetup}, whose names \cs{zcref} then uses.  The key works the same way for both packages, and the same setting serves whichever is loaded.
+%   When \textsf{cleveref} or \textsf{zref-clever} is loaded, assigns an arbitrary reference type to this proposition.  For example, \texttt{crefname=lemma} on an item for which |\ref| would produce ‘(17)’ causes \cs{cref} (\textsf{cleveref}) or \cs{zcref} (\textsf{zref-clever}) to produce ‘lemma (17)’, and \cs{Cref} or \cs{zcref}\texttt{[cap]} to produce ‘Lemma (17)’.  The \meta{type} must be known to the package in use; new types can be declared with \cs{crefname} (with \textsf{cleveref}) or \cs{zcRefTypeSetup} (with \textsf{zref-clever}).  (Bear in mind that a type carrying a format of its own will apply it to the reference this package has already formatted: \texttt{crefname=equation} turns ‘(17)’ into ‘eq.\ ((17))’, since both packages parenthesise references of that type.)
 % \end{docKey}
 %
 % Four of the list-dimension keys documented in the next section---\refKey{labelwidth}, \refKey{labelsep}, \refKey{itemindent} and \refKey{labelindent}---may also be given to an individual \cs{item}, where they reposition the label of that item alone, overriding the value in force for the rest of the list.  (The other dimension keys have no effect at item level.)
@@ -1146,9 +1145,7 @@
 %    With \textsf{hyperref} loaded, all cross-referencing 
 %    commands generate hyperlinks, as usual.  
 %    \item
-%    With \textsf{cleveref} loaded, all proposition items are assigned to a private |prop| ``reference type'', which by default has no special name, so |\cref| and |\ref| will generate the same output.  The |crefname| key can override this.
-%    \item
-%    \textsf{zref-clever} is supported in the same way and with the same key, so a document can migrate to it without changing anything but its |\cref|s.  Items are assigned to a private |prop| reference type with no name, leaving |\zcref| and |\ref| in agreement.  The type is deliberately not \textsf{zref-clever}'s own |proposition|, which keeps the names it came with, in case the document is using it for theorems of its own.  Inside display math, use |\label| rather than |\zlabel|, as \textsf{zref-clever} itself advises.
+%    With \textsf{cleveref} or \textsf{zref-clever} loaded, all proposition items are assigned to a private |prop| ``reference type'', which by default has no special name, so |\cref| (with \textsf{cleveref}) or |\zcref| (with \textsf{zref-clever}) will generate the same output as |\ref|.  The |crefname| key can override this and set a different reference type..
 %    \item
 %    The built-in \texttt{framed} style requires \textsf{tcolorbox} to be loaded.
 % \end{itemize}
@@ -1156,15 +1153,7 @@
 % \textsf{propositions}: each is detected either at load time or at
 % \verb|\begin{document}|, whichever is needed.  The usual external conventions
 % still apply---\textsf{hyperref} late, and \textsf{cleveref} after
-% \textsf{hyperref}---which gives:
-% \begin{Verbatim}[gobble=2]
-% \usepackage{amsmath}      % if using \ptag or the equations option
-% \usepackage{tcolorbox}    % if using the framed style
-% \usepackage{hyperref}
-% \usepackage{propositions}
-% \usepackage{cleveref}     % if used
-% \end{Verbatim}
-% \textsf{zref-clever} may be loaded on either side of \textsf{propositions}.
+% \textsf{hyperref}.
 %
 % \section{Known issues}
 %
