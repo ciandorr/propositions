@@ -375,18 +375,24 @@ And without \texttt{reset=false}, for contrast:
 
 References: \ref{mcd}, \ref{cl1}, \ref{cl2}, \ref{cl3}, \ref{cl4}, \ref{cl5}.
 
-Expected: (\textbf{P5}), (\textbf{P5a}), (\textbf{P5b}), (6c), (6d), (6a).
-The prefix of each sub-reference is its parent item, which is why clause three
-is \texttt{6c}.  Clause four is \texttt{6d} although its own parent is
-unlabelled: an item with no reference of its own does not become the parent of
-what follows, so the sub-list is still referred to through the last item that
-had one --- which is what makes an unlabelled aside usable as an intertext
-break in a run of clauses.
+Expected: (\textbf{P5}), (\textbf{P5a}), (\textbf{P5b}), (\textbf{P5c}),
+(\textbf{P5d}), \texttt{a}.
 
-The final list is the price of that.  It restarts, having no \texttt{reset =
-false}, so its sub-item comes out as \texttt{6a} and collides with clause one.
-An unlabelled parent with a restarting sub-list has no reference that could
-tell the two apart; the remedy is to give the parent a label, or to continue
-the count.
+All four clauses answer to \textbf{P5}, though only the first two sit in a
+list under it.  An item carrying \texttt{reset = false} continues its
+predecessor's sub-numbering rather than starting afresh, so it does not become
+the parent of the sub-list that follows it: the run belongs to whatever it
+began under.  Taking each intervening item as the parent instead would give
+\texttt{P5a}, \texttt{P5b}, \texttt{6c}, \texttt{6d}, whose letters answer
+to one parent and whose prefixes to another.  It makes no difference whether
+the intervening item is labelled --- clause three's is numbered \texttt{6},
+clause four's is unlabelled --- since what matters is that the count carries
+on.
+
+The final list has no \texttt{reset = false}, so it does start afresh, and its
+item duly becomes the parent.  That parent is unlabelled, so the reference is
+bare \texttt{a}: a fresh run under an unlabelled item has no prefix to offer,
+which is the honest answer and keeps it from colliding with clause one.
+\texttt{[style = nolabel, reset = true]} is the way to ask for exactly this.
 
 \end{document}

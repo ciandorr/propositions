@@ -67,8 +67,31 @@ referred to through the item it belongs to.
 
 References: \ref{n:outer}, \ref{n:a}, \ref{n:b} --- the last must carry the
 outer item's number and continue the letters, so it is that number followed by
-\texttt{b}, not a bare \texttt{b}: an item with no reference of its own does
-not become the parent of what follows.
+\texttt{b}, not a bare \texttt{b}.  An item carrying \texttt{reset = false}
+does not become the parent of the sub-list that follows it: the run belongs to
+whatever it began under, and taking the aside as the parent would give letters
+answering to one parent and a prefix to another.
+
+\section{An unlabelled item that starts a fresh sub-list}
+
+\texttt{reset = true} undoes both halves at once: the sub-list starts again at
+\texttt{a}, and the aside does become its parent.  Being unlabelled, it has no
+prefix to pass on, so the reference is bare --- which is right, since the new
+run is not a continuation of the old one and must not borrow its number.
+
+\begin{prop}
+  \item An outer item. \label{n:r1}
+  \begin{prop}
+    \item Sub a. \label{n:ra}
+  \end{prop}
+  \item[style=nolabel, reset=true] An aside that starts a fresh run:
+  \begin{prop}
+    \item A fresh sub-item. \label{n:rb}
+  \end{prop}
+\end{prop}
+
+References: \ref{n:r1}, \ref{n:ra}, \ref{n:rb} --- the last must be a bare
+\texttt{a}: lettered afresh, and with no prefix.
 
 \section{Sub-items, \texttt{inlineprop}, and a named list}
 

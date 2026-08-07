@@ -401,7 +401,9 @@
 %   When \texttt{true} (the default), processing an \cs{item} resets the
 %   sub-level counter one nesting depth below the current level
 %   (e.g.\ \texttt{numpropii} at level~1).  \texttt{reset=false} suppresses this behaviour, so that sub-item numbering continues from where it
-%   left off across consecutive parent items. 
+%   left off across consecutive parent items.
+%
+% An item that continues a run in this way does not become the parent of the sub-list that follows it: the run belongs, for referring purposes, to whatever item it began under.  Taking each intervening item as the parent instead would give a run reading \texttt{1a}, \texttt{1b}, \texttt{2c}, \texttt{2d}, whose letters answer to one parent and whose prefixes to another.  This is what lets an aside between two sub-lists---the \texttt{nolabel} style of \cref{sect:builtin-styles}---interrupt a run of clauses without breaking it.  An unlabelled item that should start a fresh sub-list instead wants \texttt{[style\,=\,nolabel, reset\,=\,true]}; its sub-items then refer with no prefix, having no parent reference to inherit.
 % \end{docKey}
 %
 % \begin{docKey}{crefname}{=\meta{type}}{no default}
@@ -1193,11 +1195,14 @@
 %
 %   New style \texttt{nolabel}, for an item with no label at all, and
 %   \refKey{counter}\,=\,\texttt{none} is now documented.  An item with
-%   nothing to refer to no longer takes a \refKey{ref format}---\cs{ref} to it
-%   printed \texttt{()} rather than nothing---and no longer becomes the parent
-%   of a following sub-list, which is now referred to through the last item that
-%   had a reference of its own.  (That last is a change: such sub-references
-%   used to come out with no prefix at all.)
+%   nothing to refer to no longer takes a \refKey{ref format}: \cs{ref} to it
+%   printed \texttt{()} rather than nothing.
+%
+%   An item carrying \refKey{reset}\,=\,\texttt{false} no longer becomes the
+%   parent of the sub-list that follows it, so a run of sub-items interrupted by
+%   an aside keeps the prefix it began with instead of picking up the aside's.
+%   (This is a change: such sub-references used to take each intervening item as
+%   their parent, giving runs like \texttt{1a}, \texttt{1b}, \texttt{2c}.)
 %
 %   Propositions in footnotes are numbered with asterisks by the new style
 %   \texttt{footnumprop} and counter \docCounter{footprop}, and the nesting
@@ -2224,36 +2229,47 @@
 
 % Build propapply-formatted ref text into \l__props_ref_result_tl.
 \tl_new:N \l__props_ref_result_tl
+\tl_new:N \l__props_ref_tpl_tl
+\tl_new:N \l__props_ref_cnt_tl
 
 \cs_new_protected:Nn \__props_build_ref_text:
   {
+    %% Build a \propapply{template}{content} token list for the aux file.
+    %%
     %% An item with nothing to refer to takes no reference format, exactly as
     %% one with nothing to display takes no display format (see
     %% \cs{__props_build_item_output:}).  Otherwise \cs{ref} to an item with no
     %% label would print the format's decoration wrapped around nothing---"()"
     %% under the default nameless style---where it should print nothing.
-    %%
-    %% Nor does such an item become the parent of what follows: \g__props_last_*
-    %% are left as they were, so a sub-list after an unlabelled aside is still
-    %% referred to through the last item that had a reference of its own.  Were
-    %% they overwritten with the empty reference, a sub-item after the aside
-    %% would refer as "b" rather than "(3b)".
     \tl_if_empty:NTF \l__props_ref_text_tl
-      { \tl_clear:N \l__props_ref_result_tl }
+      { \tl_set:Nn \l__props_ref_tpl_tl { \propfmtarg } }
       {
-        %% Build a \propapply{template}{content} token list for the aux file.
-        %% Also save the template and content globally for \lastref and the
-        %% parent stacks (pushed when entering a nested prop environment).
-        \protected@xdef \g__props_last_tpl_tl
+        \protected@edef \l__props_ref_tpl_tl
           { \l__props_reffmt:n { \propfmtarg } }
-        \protected@xdef \g__props_last_cnt_tl
-          { \l__props_ref_text_tl }
-        \protected@edef \l__props_ref_result_tl
-          {
-            \propapply
-              { \exp_not:V \g__props_last_tpl_tl }
-              { \exp_not:V \g__props_last_cnt_tl }
-          }
+      }
+    \protected@edef \l__props_ref_cnt_tl { \l__props_ref_text_tl }
+    \protected@edef \l__props_ref_result_tl
+      {
+        \propapply
+          { \exp_not:V \l__props_ref_tpl_tl }
+          { \exp_not:V \l__props_ref_cnt_tl }
+      }
+    %% The template and content are also saved globally for \lastref and the
+    %% parent stacks (pushed when entering a nested prop environment)---but not
+    %% by an item carrying \texttt{reset = false}.  Such an item continues its
+    %% predecessor's sub-numbering rather than starting afresh, so the sub-list
+    %% that follows it belongs, for referring purposes, to whatever the run
+    %% began under: taking this item as the parent would give a run reading
+    %% 1a, 1b, 2c, 2d, whose letters answer to one parent and whose prefixes to
+    %% another.  This is what makes an unlabelled aside usable as an intertext
+    %% break in a run of clauses, \texttt{nolabel} being \texttt{reset = false};
+    %% \texttt{[style = nolabel, reset = true]} is then the way to have an
+    %% unlabelled item start a fresh sub-list, whose items refer with no prefix
+    %% rather than inheriting one that is no longer theirs.
+    \bool_if:NT \l__props_reset_bool
+      {
+        \tl_gset_eq:NN \g__props_last_tpl_tl \l__props_ref_tpl_tl
+        \tl_gset_eq:NN \g__props_last_cnt_tl \l__props_ref_cnt_tl
       }
   }
 
