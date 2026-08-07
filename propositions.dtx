@@ -403,7 +403,7 @@
 % \end{docKey}
 %
 % \begin{docKey}{crefname}{=\meta{type}}{no default}
-%   When \textsf{cleveref} is loaded, assigns an arbitrary reference type to this proposition.  For example, \texttt{crefname=lemma} causes \cs{cref} to use the names defined by \cs{crefname}\texttt{\{lemma\}\{...\}\{...\}} instead of the default (private) \refEnv{prop} type.  The \meta{type} must be known to \textsf{cleveref}; new types can be declared with \cs{crefname}.
+%   When \textsf{cleveref} or \textsf{zref-clever} is loaded, assigns an arbitrary reference type to this proposition.  For example, \texttt{crefname=lemma} causes \cs{cref} to use the names defined by \cs{crefname}\texttt{\{lemma\}\{...\}\{...\}} instead of the default (private) \refEnv{prop} type.  The \meta{type} must be known to the package in use; new types can be declared with \cs{crefname} or, under \textsf{zref-clever}, with \cs{zcRefTypeSetup}, whose names \cs{zcref} then uses.  The key works the same way for both packages, and the same setting serves whichever is loaded.
 % \end{docKey}
 %
 % Four of the list-dimension keys documented in the next section---\refKey{labelwidth}, \refKey{labelsep}, \refKey{itemindent} and \refKey{labelindent}---may also be given to an individual \cs{item}, where they reposition the label of that item alone, overriding the value in force for the rest of the list.  (The other dimension keys have no effect at item level.)
@@ -1138,7 +1138,7 @@
 %
 % \section{Compatibility}
 %
-% The \textsf{propositions} package is designed to work with \textsf{hyperref}, \textsf{cleveref}, \textsf{amsmath}, and \textsf{tcolorbox}.
+% The \textsf{propositions} package is designed to work with \textsf{hyperref}, \textsf{cleveref}, \textsf{zref-clever}, \textsf{amsmath}, and \textsf{tcolorbox}.
 % \begin{itemize}
 %    \item 
 %    \textsf{amsmath} is required for \refCom{ptag} and the |equations| option.  
@@ -1146,8 +1146,10 @@
 %    With \textsf{hyperref} loaded, all cross-referencing 
 %    commands generate hyperlinks, as usual.  
 %    \item
-%    With \textsf{cleveref} loaded, all proposition items are assigned to a private |prop| ``reference type'', which by default has no special name, so |\cref| and |\ref| will generate the same output.  The |crefname| key can override this.  
-%    \item 
+%    With \textsf{cleveref} loaded, all proposition items are assigned to a private |prop| ``reference type'', which by default has no special name, so |\cref| and |\ref| will generate the same output.  The |crefname| key can override this.
+%    \item
+%    \textsf{zref-clever} is supported in the same way and with the same key, so a document can migrate to it without changing anything but its |\cref|s.  Items are assigned to a private |prop| reference type with no name, leaving |\zcref| and |\ref| in agreement.  The type is deliberately not \textsf{zref-clever}'s own |proposition|, which keeps the names it came with, in case the document is using it for theorems of its own.  Inside display math, use |\label| rather than |\zlabel|, as \textsf{zref-clever} itself advises.
+%    \item
 %    The built-in \texttt{framed} style requires \textsf{tcolorbox} to be loaded.
 % \end{itemize}
 % None of these packages has to be loaded in any particular order relative to
@@ -1162,6 +1164,7 @@
 % \usepackage{propositions}
 % \usepackage{cleveref}     % if used
 % \end{Verbatim}
+% \textsf{zref-clever} may be loaded on either side of \textsf{propositions}.
 %
 % \section{Known issues}
 %
@@ -1182,6 +1185,9 @@
 % \item[0.91 (unreleased)] New \refKey{align} value \texttt{runin}. 
 %
 %   New style \texttt{enum} and counter \docCounter{enumprop}.
+%
+%   \textsf{zref-clever} is now supported alongside \textsf{cleveref}, through
+%   the same \refKey{crefname} key.
 %
 %   Propositions in footnotes are numbered with asterisks by the new style
 %   \texttt{footnumprop} and counter \docCounter{footprop}, and the nesting
@@ -2231,6 +2237,19 @@
 \cs_new_protected:Npn \__props_set_cref_type:n #1
   { \cs_gset:cpn { cref@prop@anchor@alias } { #1 } }
 
+% The same for \textsf{zref-clever}, where no such contrivance is needed: the
+% \texttt{countertype} option is read when the label is set, so a local setting
+% made here reaches the item's own \cs{label} exactly as \cs{@currentlabel}
+% does, and is undone with the environment.
+%
+% \texttt{countertype}, and not \texttt{reftype}: the latter overrides the type
+% of whatever label is set next, whichever counter it belongs to, and so would
+% capture an equation---or anything else carrying a label---that followed the
+% item inside the same list.  \texttt{countertype} is keyed to our counter, as
+% the cleveref alias is.
+\cs_new_protected:Nn \__props_set_zc_type:n
+  { \zcsetup { countertype = { prop@anchor = #1 } } }
+
 \cs_new_protected:Nn \__props_set_ref:
   {
     \__props_build_ref_text:
@@ -2240,6 +2259,12 @@
         \tl_if_empty:NTF \l__props_crefname_tl
           { \__props_set_cref_type:n { prop } }
           { \exp_args:NV \__props_set_cref_type:n \l__props_crefname_tl }
+      }
+    \bool_if:NT \g__props_zrefclever_bool
+      {
+        \tl_if_empty:NTF \l__props_crefname_tl
+          { \__props_set_zc_type:n { prop } }
+          { \exp_args:NV \__props_set_zc_type:n \l__props_crefname_tl }
       }
     \refstepcounter { prop@anchor }
   }
@@ -2359,6 +2384,40 @@
     \AtBeginDocument
       { \@ifpackageloaded { cleveref } { \__props_cleveref_setup: } { } }
   }
+
+% ====================================================================
+% zref-clever integration
+% ====================================================================
+
+\bool_new:N \g__props_zrefclever_bool
+
+\cs_new_protected:Nn \__props_zrefclever_setup:
+  {
+    \bool_gset_true:N \g__props_zrefclever_bool
+    %% Map the prop@anchor counter to a private reference type "prop", for the
+    %% same reason as with cleveref, and more pressingly: zref-clever ships a
+    %% "proposition" type of its own, with real names, which a document may
+    %% well be using for its theorems.
+    \zcsetup { countertype = { prop@anchor = prop } }
+    %% No name, and no separator that would leave a space where the name is
+    %% not: \zcref then prints the formatted reference and nothing else, as
+    %% \ref does.  namesep has to go too---an empty name alone still leaves
+    %% the separator behind.
+    \zcRefTypeSetup { prop }
+      {
+        name-sg = { } , name-pl = { } ,
+        Name-sg = { } , Name-pl = { } ,
+        namesep = { } ,
+      }
+  }
+
+% The package hook fires at once if zref-clever is already loaded, and at its
+% \cs{usepackage} otherwise, so either load order works and a document's own
+% \cs{zcRefTypeSetup}\texttt{\{prop\}} always comes later and wins.  Unlike
+% cleveref, nothing here has to beat a begin-document deadline: the type is
+% consulted when a label is set and when \cs{zcref} runs, both of which happen
+% in the document body.
+\AddToHook { package/zref-clever/after } { \__props_zrefclever_setup: }
 
 % ====================================================================
 % Equation formatting integration
@@ -2496,6 +2555,21 @@
         \tl_if_empty:nTF { #2 }
           { \__props_set_cref_type:n { prop } }
           { \__props_set_cref_type:n { #2 } }
+      }
+    \bool_if:NT \g__props_zrefclever_bool
+      {
+        %% zref-clever's amsmath module pins its notion of the current counter
+        %% to \texttt{equation} for the whole of a display, and that pin
+        %% outranks \cs{@currentcounter}, so the \cs{refstepcounter} below does
+        %% not by itself tell zref-clever what this label belongs to: without
+        %% this, a \cs{ptag} would be typed as an equation.  The setting is
+        %% local, hence confined to the display, as zref-clever requires---it
+        %% is not undone by a later \cs{refstepcounter} the way
+        %% \cs{@currentcounter} is.
+        \zcsetup { currentcounter = prop@anchor }
+        \tl_if_empty:nTF { #2 }
+          { \__props_set_zc_type:n { prop } }
+          { \__props_set_zc_type:n { #2 } }
       }
     \refstepcounter { prop@anchor }
     \fi

@@ -1,0 +1,161 @@
+\documentclass{article}
+\usepackage{hyperref}
+\usepackage{amsmath}
+
+%% zref-clever is loaded BEFORE propositions here, so the package's
+%% package/zref-clever/after hook fires the moment it is added rather than at
+%% \usepackage time.  Both routes must give the same result; the other order
+%% runs the hook when zref-clever loads.
+\usepackage{zref-clever}
+\usepackage{propositions}
+
+\newtheorem{proposition}{Proposition}
+\zcRefTypeSetup{lemma}{name-sg=lemma, name-pl=lemmas,
+                       Name-sg=Lemma, Name-pl=Lemmas}
+\zcRefTypeSetup{axiom}{name-sg=axiom, name-pl=axioms,
+                       Name-sg=Axiom, Name-pl=Axioms}
+
+\begin{document}
+
+\section{References to prop items}
+
+\begin{prop}
+  \item[Physicalism] Everything is physical. \label{z:named}
+  \item An unnamed, numbered item. \label{z:numbered}
+  \begin{prop}
+    \item A sub-item. \label{z:sub}
+  \end{prop}
+\end{prop}
+
+\verb|\zcref|: \zcref{z:named}, \zcref{z:numbered}, \zcref{z:sub}.
+
+\verb|\ref|: \ref{z:named}, \ref{z:numbered}, \ref{z:sub}.
+
+Expected: the two lines agree.  The package's \texttt{prop} reference type has
+no name and no \texttt{namesep}, so \verb|\zcref| adds nothing to the formatted
+reference; in particular no \texttt{??} and no ``reference format option
+\texttt{name-sg} undefined'' warning in the log.
+
+\section{Types the package does not touch}
+
+\begin{proposition} \label{z:thm} A theorem of the user's own. \end{proposition}
+
+\begin{equation} a = b \label{z:eq} \end{equation}
+
+\verb|\zcref|: \zcref{z:thm}; \zcref{z:eq}; \zcref{z:sec}.
+
+Expected: \texttt{proposition 1}; \texttt{equation (1)}; \texttt{section 3}.
+The package maps only its own \texttt{prop@anchor} counter, so zref-clever's
+built-in types --- including its \texttt{proposition}, which a document may
+well be using for its theorems --- are left as they were, as are the standard
+counters.
+
+\section{The \texttt{crefname} key} \label{z:sec}
+
+\texttt{crefname} gives one item a reference type of its own.  Under
+zref-clever the type is carried by the \texttt{countertype} association of the
+internal \texttt{prop@anchor} counter, set for each item, so it must reach the
+item's own \verb|\label| and must not leak to the next item.
+
+\begin{prop}
+  \item[name=A1, crefname=lemma] A typed item. \label{z:lemma}
+  \item[name=A2] Untyped, directly after a typed one. \label{z:untyped}
+  \item[name=A3, crefname=axiom] A second, different type. \label{z:axiom}
+  \item Plain numbered, after two typed items. \label{z:plain}
+\end{prop}
+
+\begin{equation} x = y \ptag[name=T1, crefname=lemma] \label{z:ptag} \end{equation}
+\begin{equation} u = v \ptag[name=T2] \label{z:ptagplain} \end{equation}
+
+\begin{prop}
+  \item[name=B1, crefname=lemma] Typed in a later environment. \label{z:later}
+\end{prop}
+
+\verb|\zcref|: \zcref{z:lemma}; \zcref{z:untyped}; \zcref{z:axiom};
+\zcref{z:plain}; \zcref{z:ptag}; \zcref{z:ptagplain}; \zcref{z:later}.
+
+Expected: \texttt{lemma A1}; \texttt{A2}; \texttt{axiom A3}; \texttt{(2)};
+\texttt{lemma T1}; \texttt{T2}; \texttt{lemma B1}.  (The numbered item
+continues the counter from the list in section~1.)
+
+\verb|\zcref[cap]|: \zcref[cap]{z:lemma}; \zcref[cap]{z:untyped};
+\zcref[cap]{z:axiom}.
+
+Expected: \texttt{Lemma A1}; \texttt{A2}; \texttt{Axiom A3}.
+
+\verb|\ref| is unaffected by the type: \ref{z:lemma}, \ref{z:untyped},
+\ref{z:axiom}, \ref{z:plain}, \ref{z:ptag}, \ref{z:ptagplain}, \ref{z:later}.
+
+Expected: A1, A2, A3, (2), T1, T2, B1.
+
+\section{A type must not leak past its own item}
+
+A leak would show up below as a stray ``lemma'' in front of a reference that
+should not have one.
+
+\begin{prop}
+  \item[name=n1] Outer, untyped. \label{z:n1}
+  \begin{prop}
+    \item[name=n2, crefname=lemma] Nested, typed. \label{z:n2}
+  \end{prop}
+  \item[name=n3] Outer again, after the nested typed item. \label{z:n3}
+\end{prop}
+
+\begin{prop}
+  \item[name=n4, crefname=lemma] Typed, last item of its environment.
+    \label{z:n4}
+\end{prop}
+\begin{inlineprop}
+  \item[name=n5] An \texttt{inlineprop} item after it. \label{z:n5}
+\end{inlineprop}
+
+\begin{prop}
+  \item[name=n6, crefname=lemma, label=z:n6] Typed, labelled by the
+    \texttt{label} key.
+  \item[name=n7, label=z:n7] Untyped, labelled by the \texttt{label} key.
+\end{prop}
+
+\subsection{A subsection after a typed item} \label{z:n8}
+
+Nesting: \zcref{z:n1}; \zcref{z:n2}; \zcref{z:n3}.
+Environment boundary: \zcref{z:n4}; \zcref{z:n5}.
+Label key: \zcref{z:n6}; \zcref{z:n7}.
+Other counters: \zcref{z:n8}.
+
+Expected: \texttt{n1}; \texttt{lemma n2}; \texttt{n3}; \texttt{lemma n4};
+\texttt{n5}; \texttt{lemma n6}; \texttt{n7}; \texttt{section 4.1}.
+
+\section{A foreign label inside a typed list}
+
+This is why the type is carried by the counter association and not by
+zref-clever's \texttt{reftype}, which overrides the type of whatever label
+comes next whatever counter it belongs to: the equation below sits inside the
+same list as a typed item, and must keep its own type.
+
+\begin{prop}
+  \item[name=f1, crefname=lemma] A typed item. \label{z:f1}
+  \begin{equation} p = q \label{z:feq} \end{equation}
+  \item[name=f2] An untyped item after the equation. \label{z:f2}
+\end{prop}
+
+\zcref{z:f1}; \zcref{z:feq}; \zcref{z:f2}.
+
+Expected: \texttt{lemma f1}; an ordinary \texttt{equation} reference;
+\texttt{f2}.
+
+\section{Both referencing systems at once}
+
+\verb|\zlabel| may be used directly instead of relying on the kernel label
+hook, and both kinds of label may be mixed in one document.
+
+\begin{prop}
+  \item[name=Z1] Labelled with \verb|\zlabel|. \zlabel{z:zl}
+  \item[name=Z2, crefname=lemma] Typed, labelled with \verb|\zlabel|.
+    \zlabel{z:zlt}
+\end{prop}
+
+\zcref{z:zl}; \zcref{z:zlt}.
+
+Expected: \texttt{Z1}; \texttt{lemma Z2}.
+
+\end{document}

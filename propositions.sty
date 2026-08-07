@@ -853,6 +853,9 @@
 \cs_new_protected:Npn \__props_set_cref_type:n #1
   { \cs_gset:cpn { cref@prop@anchor@alias } { #1 } }
 
+\cs_new_protected:Nn \__props_set_zc_type:n
+  { \zcsetup { countertype = { prop@anchor = #1 } } }
+
 \cs_new_protected:Nn \__props_set_ref:
   {
     \__props_build_ref_text:
@@ -862,6 +865,12 @@
         \tl_if_empty:NTF \l__props_crefname_tl
           { \__props_set_cref_type:n { prop } }
           { \exp_args:NV \__props_set_cref_type:n \l__props_crefname_tl }
+      }
+    \bool_if:NT \g__props_zrefclever_bool
+      {
+        \tl_if_empty:NTF \l__props_crefname_tl
+          { \__props_set_zc_type:n { prop } }
+          { \exp_args:NV \__props_set_zc_type:n \l__props_crefname_tl }
       }
     \refstepcounter { prop@anchor }
   }
@@ -957,6 +966,31 @@
     \AtBeginDocument
       { \@ifpackageloaded { cleveref } { \__props_cleveref_setup: } { } }
   }
+
+
+\bool_new:N \g__props_zrefclever_bool
+
+\cs_new_protected:Nn \__props_zrefclever_setup:
+  {
+    \bool_gset_true:N \g__props_zrefclever_bool
+    %% Map the prop@anchor counter to a private reference type "prop", for the
+    %% same reason as with cleveref, and more pressingly: zref-clever ships a
+    %% "proposition" type of its own, with real names, which a document may
+    %% well be using for its theorems.
+    \zcsetup { countertype = { prop@anchor = prop } }
+    %% No name, and no separator that would leave a space where the name is
+    %% not: \zcref then prints the formatted reference and nothing else, as
+    %% \ref does.  namesep has to go too---an empty name alone still leaves
+    %% the separator behind.
+    \zcRefTypeSetup { prop }
+      {
+        name-sg = { } , name-pl = { } ,
+        Name-sg = { } , Name-pl = { } ,
+        namesep = { } ,
+      }
+  }
+
+\AddToHook { package/zref-clever/after } { \__props_zrefclever_setup: }
 
 
 \cs_new_protected:Nn \__props_sync_equation_hooks:
@@ -1058,6 +1092,21 @@
         \tl_if_empty:nTF { #2 }
           { \__props_set_cref_type:n { prop } }
           { \__props_set_cref_type:n { #2 } }
+      }
+    \bool_if:NT \g__props_zrefclever_bool
+      {
+        %% zref-clever's amsmath module pins its notion of the current counter
+        %% to \texttt{equation} for the whole of a display, and that pin
+        %% outranks \cs{@currentcounter}, so the \cs{refstepcounter} below does
+        %% not by itself tell zref-clever what this label belongs to: without
+        %% this, a \cs{ptag} would be typed as an equation.  The setting is
+        %% local, hence confined to the display, as zref-clever requires---it
+        %% is not undone by a later \cs{refstepcounter} the way
+        %% \cs{@currentcounter} is.
+        \zcsetup { currentcounter = prop@anchor }
+        \tl_if_empty:nTF { #2 }
+          { \__props_set_zc_type:n { prop } }
+          { \__props_set_zc_type:n { #2 } }
       }
     \refstepcounter { prop@anchor }
     \fi
