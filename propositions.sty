@@ -835,18 +835,33 @@
 
 \cs_new_protected:Nn \__props_build_ref_text:
   {
-    %% Build a \propapply{template}{content} token list for the aux file.
-    %% Also save the template and content globally for \lastref and the
-    %% parent stacks (pushed when entering a nested prop environment).
-    \protected@xdef \g__props_last_tpl_tl
-      { \l__props_reffmt:n { \propfmtarg } }
-    \protected@xdef \g__props_last_cnt_tl
-      { \l__props_ref_text_tl }
-    \protected@edef \l__props_ref_result_tl
+    %% An item with nothing to refer to takes no reference format, exactly as
+    %% one with nothing to display takes no display format (see
+    %% \cs{__props_build_item_output:}).  Otherwise \cs{ref} to an item with no
+    %% label would print the format's decoration wrapped around nothing---"()"
+    %% under the default nameless style---where it should print nothing.
+    %%
+    %% Nor does such an item become the parent of what follows: \g__props_last_*
+    %% are left as they were, so a sub-list after an unlabelled aside is still
+    %% referred to through the last item that had a reference of its own.  Were
+    %% they overwritten with the empty reference, a sub-item after the aside
+    %% would refer as "b" rather than "(3b)".
+    \tl_if_empty:NTF \l__props_ref_text_tl
+      { \tl_clear:N \l__props_ref_result_tl }
       {
-        \propapply
-          { \exp_not:V \g__props_last_tpl_tl }
-          { \exp_not:V \g__props_last_cnt_tl }
+        %% Build a \propapply{template}{content} token list for the aux file.
+        %% Also save the template and content globally for \lastref and the
+        %% parent stacks (pushed when entering a nested prop environment).
+        \protected@xdef \g__props_last_tpl_tl
+          { \l__props_reffmt:n { \propfmtarg } }
+        \protected@xdef \g__props_last_cnt_tl
+          { \l__props_ref_text_tl }
+        \protected@edef \l__props_ref_result_tl
+          {
+            \propapply
+              { \exp_not:V \g__props_last_tpl_tl }
+              { \exp_not:V \g__props_last_cnt_tl }
+          }
       }
   }
 
@@ -2194,6 +2209,19 @@
                        \textperiodcentered
                      } ,
     display~format = #1 ,
+  }
+
+%% nolabel: an item with no label at all.  counter=none alone suppresses the
+%% counter but not a name, so it leaves the label standing when one is
+%% inherited from the environment or supplied by a style (bullet, say); as a
+%% style, this displaces the name too.  reset=false because such an item is
+%% typically an aside in the middle of a list, after which a sub-list should
+%% carry on from where the last one left off rather than start again.
+\SetPropStyle { nolabel }
+  {
+    counter = none ,
+    name    = { } ,
+    reset   = false ,
   }
 
 %% levelone: the standard level-1 numbered style.

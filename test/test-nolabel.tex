@@ -1,0 +1,109 @@
+\documentclass{article}
+\usepackage[equations]{propositions}
+
+%% The nolabel style: an item with no label at all.
+%%
+%% counter=none suppresses the counter, and has done so since the beginning,
+%% but not a name -- so on its own it leaves the label standing wherever a
+%% name is inherited from the environment or supplied by a style.  nolabel is
+%% counter=none, name={} and reset=false, which covers all three.
+
+\begin{document}
+
+\section{No label, and no number consumed}
+
+\noindent\rule{\textwidth}{0.3pt}
+\begin{prop}
+  \item Numbered. \label{n:1}
+  \item[style=nolabel] No label at all, and the count must not advance.
+    \label{n:none}
+  \item Numbered again. \label{n:2}
+\end{prop}
+\noindent\rule{\textwidth}{0.3pt}
+
+The text of the unlabelled item must start where the other items' text starts:
+suppressing the label empties the label box, it does not remove it.
+
+References: [\ref{n:1}] [\ref{n:none}] [\ref{n:2}] --- expected (1), then
+nothing at all, then (2).  An item with nothing to refer to takes no reference
+format either: before that rule was mirrored from the display side, the middle
+one printed \texttt{()}.
+
+\section{A name that would otherwise be inherited}
+
+\texttt{counter=none} suppresses the counter but not the name, so it is not
+enough by itself in either list below.
+
+\begin{prop}[name=Inherited]
+  \item An item taking the inherited name.
+  \item[counter=none] \texttt{counter=none}: still labelled \texttt{Inherited}.
+  \item[style=nolabel] \texttt{nolabel}: no label.
+\end{prop}
+
+\begin{prop}[style=bullet]
+  \item An ordinary bullet.
+  \item[counter=none] \texttt{counter=none}: still bulleted, the bullet being
+    a name and not a counter.
+  \item[style=nolabel] \texttt{nolabel}: no bullet.
+\end{prop}
+
+\section{An unlabelled aside between two sub-lists}
+
+This is what \texttt{reset = false} is in the style for.  The aside interrupts
+a run of sub-items; the run must carry on across it, and must still be
+referred to through the item it belongs to.
+
+\begin{prop}
+  \item An outer item. \label{n:outer}
+  \begin{prop}
+    \item Sub a. \label{n:a}
+  \end{prop}
+  \item[style=nolabel] Commentary on why the first sub-item is not enough,
+    and we also need:
+  \begin{prop}
+    \item Sub b, continuing the run. \label{n:b}
+  \end{prop}
+\end{prop}
+
+References: \ref{n:outer}, \ref{n:a}, \ref{n:b} --- the last must carry the
+outer item's number and continue the letters, so it is that number followed by
+\texttt{b}, not a bare \texttt{b}: an item with no reference of its own does
+not become the parent of what follows.
+
+\section{Sub-items, \texttt{inlineprop}, and a named list}
+
+\begin{prop}
+  \item Outer. \label{n:o2}
+  \begin{prop}
+    \item[style=nolabel] An unlabelled sub-item.
+    \item A normal sub-item, which must be lettered \texttt{a}: the unlabelled
+      one took no letter. \label{n:sa}
+  \end{prop}
+\end{prop}
+
+References: \ref{n:o2}, \ref{n:sa}.
+
+\begin{inlineprop}
+  \item[style=nolabel] An unlabelled \texttt{inlineprop} item runs on with no
+    label,
+  \item and here is a second one.
+\end{inlineprop}
+
+\begin{prop}
+  \item[Physicalism] A named item. \label{n:named}
+  \item[style=nolabel] An unlabelled item in a list of named ones.
+  \item[Dualism] Another named item. \label{n:named2}
+\end{prop}
+
+References: \ref{n:named}, \ref{n:named2}.
+
+\section{A gloss survives}
+
+\texttt{counter=none} with a gloss keeps the gloss, which is the one thing an
+otherwise empty label still contributes.
+
+\begin{prop}
+  \item[counter=none, gloss=a gloss] An item whose label is only a gloss.
+\end{prop}
+
+\end{document}

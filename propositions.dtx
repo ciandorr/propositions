@@ -313,6 +313,9 @@
 %   Counter to use.  The counter is automatically stepped, and the item's \refKey{name} is set to \cs{the}\meta{name} (though this can be overridden by \refKey{counter format} or \refKey{name}).
 % 
 % Any counter can be used with \refKey{counter format}.  Special counters \docCounter{numpropii}, \docCounter{numpropiii}, \docCounter{numpropiv}, \docCounter{numpropv} are provided, whose values are automatically reset each time an |\item| is processed at a lower nesting level.  There is also a counter \docCounter{numpropi} which never automatically resets, and a counter \docCounter{enumprop} which is reset at every \emph{outermost} \refEnv{prop} or \refEnv{inlineprop} environment, so that lists using this counter behave like the standard \texttt{enumerate} environment.  Finally, there is a counter \docCounter{footprop}, reset at the beginning of every footnote, used by the \texttt{footnumprop} style (see \cref{sect:styles}).
+% 
+% The special value \texttt{counter\,=\,none} unsets the \refKey{counter} key (potentially useful if it would otherwise have been set by a style).
+
 % \end{docKey}
 %
 % \begin{docKey}{counter format}{=\meta{template}}{no default}
@@ -810,7 +813,7 @@
 %   ref format=#1, align = flush}
 % \end{codebox}
 %
-% \item[\texttt{vignette}] Intended for things like example vignettes and comments.  Italic name at the text margin, and italic references, separated from the text by a colon.  The name runs into the text (\texttt{runin} alignment), an ordinary interword space after the colon.
+% \item[\texttt{vignette}] Intended for things like example vignettes and comments.  Italic name at the text margin, and italic references, separated from the text by a colon and ordinary space space.
 % \begin{codebox}
 % \SetPropStyle{vignette}{ref format = \textit{#1},
 %   align = runin, label format = \textit{#1:}}
@@ -824,6 +827,12 @@
 %     \textperiodcentered},
 %   display format = #1}
 % \end{codebox}
+%
+% \item[\texttt{nolabel}] A special style for creating items with no labels.  Also sets \refKey{reset}\,=\,\texttt{false}, so these items will not disrupt the numbering of sub-lists.
+% \begin{codebox}
+% \SetPropStyle{nolabel}{counter = none, name = {},
+%   reset = false}
+% \end{codebox}
 % \end{description}
 %
 % \begin{example}
@@ -835,10 +844,14 @@
 %   \item[Three, style=thesis] \label{bs:thesis}
 %   A proposition in style |thesis|, cited as \ref{bs:thesis}.
 %   \item[Four, style=vignette] \label{bs:vignette}
-%   A proposition in style |vignette|, cited as \ref{bs:vignette}.
+%   A proposition in style |vignette|, cited as \ref{bs:vignette}. \\
+% 
+%   \textit{Test:} Another line as a test.  Less space here, no?
 %   \item[style=bullet] \label{bs:bullet}
 %   A proposition in style |bullet|, cited as \ref{bs:bullet}---though
 %   it is not often that one would want to cite an item in this style.
+%   \item[style=nolabel]
+%   A proposition in style |nolabel|.  
 % \end{prop}
 % \end{example}
 % 
@@ -1177,6 +1190,14 @@
 %
 %   \textsf{zref-clever} is now supported alongside \textsf{cleveref}, through
 %   the same \refKey{crefname} key.
+%
+%   New style \texttt{nolabel}, for an item with no label at all, and
+%   \refKey{counter}\,=\,\texttt{none} is now documented.  An item with
+%   nothing to refer to no longer takes a \refKey{ref format}---\cs{ref} to it
+%   printed \texttt{()} rather than nothing---and no longer becomes the parent
+%   of a following sub-list, which is now referred to through the last item that
+%   had a reference of its own.  (That last is a change: such sub-references
+%   used to come out with no prefix at all.)
 %
 %   Propositions in footnotes are numbered with asterisks by the new style
 %   \texttt{footnumprop} and counter \docCounter{footprop}, and the nesting
@@ -2194,18 +2215,33 @@
 
 \cs_new_protected:Nn \__props_build_ref_text:
   {
-    %% Build a \propapply{template}{content} token list for the aux file.
-    %% Also save the template and content globally for \lastref and the
-    %% parent stacks (pushed when entering a nested prop environment).
-    \protected@xdef \g__props_last_tpl_tl
-      { \l__props_reffmt:n { \propfmtarg } }
-    \protected@xdef \g__props_last_cnt_tl
-      { \l__props_ref_text_tl }
-    \protected@edef \l__props_ref_result_tl
+    %% An item with nothing to refer to takes no reference format, exactly as
+    %% one with nothing to display takes no display format (see
+    %% \cs{__props_build_item_output:}).  Otherwise \cs{ref} to an item with no
+    %% label would print the format's decoration wrapped around nothing---"()"
+    %% under the default nameless style---where it should print nothing.
+    %%
+    %% Nor does such an item become the parent of what follows: \g__props_last_*
+    %% are left as they were, so a sub-list after an unlabelled aside is still
+    %% referred to through the last item that had a reference of its own.  Were
+    %% they overwritten with the empty reference, a sub-item after the aside
+    %% would refer as "b" rather than "(3b)".
+    \tl_if_empty:NTF \l__props_ref_text_tl
+      { \tl_clear:N \l__props_ref_result_tl }
       {
-        \propapply
-          { \exp_not:V \g__props_last_tpl_tl }
-          { \exp_not:V \g__props_last_cnt_tl }
+        %% Build a \propapply{template}{content} token list for the aux file.
+        %% Also save the template and content globally for \lastref and the
+        %% parent stacks (pushed when entering a nested prop environment).
+        \protected@xdef \g__props_last_tpl_tl
+          { \l__props_reffmt:n { \propfmtarg } }
+        \protected@xdef \g__props_last_cnt_tl
+          { \l__props_ref_text_tl }
+        \protected@edef \l__props_ref_result_tl
+          {
+            \propapply
+              { \exp_not:V \g__props_last_tpl_tl }
+              { \exp_not:V \g__props_last_cnt_tl }
+          }
       }
   }
 
@@ -3939,6 +3975,19 @@
                        \textperiodcentered
                      } ,
     display~format = #1 ,
+  }
+
+%% nolabel: an item with no label at all.  counter=none alone suppresses the
+%% counter but not a name, so it leaves the label standing when one is
+%% inherited from the environment or supplied by a style (bullet, say); as a
+%% style, this displaces the name too.  reset=false because such an item is
+%% typically an aside in the middle of a list, after which a sub-list should
+%% carry on from where the last one left off rather than start again.
+\SetPropStyle { nolabel }
+  {
+    counter = none ,
+    name    = { } ,
+    reset   = false ,
   }
 
 %% levelone: the standard level-1 numbered style.
