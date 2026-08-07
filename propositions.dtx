@@ -2161,8 +2161,20 @@
     %% other alignments the body has not started yet and TeX drops the space
     %% itself, in vertical mode --- and in inlineprop that space is wanted, as
     %% it separates the inline label from the text.
+    %% runin's separating space is emitted here rather than beside the label,
+    %% so that it is the last thing on the horizontal list when the item is
+    %% done.  \refstepcounter above contributes an anchor under hyperref, and
+    %% an anchor between the space and here would leave \lastskip at zero: a
+    %% \label in the source after \item[...] then finds \@savsk zero, so
+    %% \@esphack declines to \ignorespaces, and the space that follows the
+    %% \label is typeset on top of ours.  That is what put a double space
+    %% after every run-in label in a document using hyperref.
     \bool_if:NT \l__props_body_started_bool
-      { \bool_set_false:N \l__props_body_started_bool \ignorespaces }
+      {
+        \str_if_eq:VnT \l__props_alignment_tl { runin } { \space }
+        \bool_set_false:N \l__props_body_started_bool
+        \ignorespaces
+      }
   }
 
 % Save the ambient (kernel) \item at load time.  When a wrapper environment
@@ -2920,8 +2932,11 @@
             %% is opened with no label at all and the label is simply the text
             %% the body starts with, so it wraps and stretches with the rest of
             %% the line.
+            %% The separating space is not emitted here but at the end of
+            %% \__props_item_cmd:, after the cross-referencing machinery: see
+            %% the note there.
             \__props_list_item: []
-            \l__props_item_output_tl \space
+            \l__props_item_output_tl
             \bool_set_true:N \l__props_body_started_bool
           }
           {

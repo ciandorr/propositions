@@ -1,0 +1,69 @@
+\documentclass{article}
+\usepackage{propositions}
+\usepackage{makeidx}\makeindex
+\usepackage{hyperref}
+
+%% align=runin puts the label into the body, so the item is already in
+%% horizontal mode when whatever follows \item[...] is read.  That makes the
+%% separating space vulnerable in a way it is not for the other alignments,
+%% where the body has not begun and TeX drops stray spaces itself.
+%%
+%% \item[...] ends with \ignorespaces, which covers a space written directly
+%% after it.  It does not cover a space after an intervening \label: that one
+%% is left to \label's own \@esphack, which does \ignorespaces only if
+%% \@savsk, the skip it found on entry, was positive.  Under hyperref the
+%% anchor contributed by \refstepcounter used to sit between our space and the
+%% \label, so \@savsk was zero, \@esphack declined, and the space after the
+%% \label was typeset on top of ours: every run-in label in a hyperref
+%% document carried a double space.  The separating space is now emitted after
+%% the cross-referencing machinery, so it is the last thing on the list and
+%% \@esphack does its job.
+%%
+%% This file loads hyperref for that reason.  test-runin.tex covers the rest
+%% of the alignment's behaviour without it.
+
+\begin{document}
+
+\section{One space, whatever intervenes}
+
+Every item below must show exactly one interword space after \texttt{Word},
+matching the control line beneath the list.  A doubled space is the
+regression this file exists to catch.
+
+\noindent\rule{\textwidth}{0.3pt}
+\begin{prop}
+  \item[Word, align=runin] Nothing intervening.
+  \item[Word, align=runin] \label{ri:1} A \verb|\label| after a space.
+  \item[Word, align=runin]\label{ri:2} A \verb|\label| with no space before it.
+  \item[Word, align=runin] \label{ri:3}
+  A \verb|\label|, with the body on the next line.
+  \item[Word, align=runin] \label{ri:4} \label{ri:5} Two labels.
+  \item[Word, align=runin] \index{word} \label{ri:6} An \verb|\index| and a
+  \verb|\label|.
+  \item[Word, align=runin, label=ri:7] The \texttt{label} key rather than a
+  \verb|\label|.
+  \item[Word, align=runin]      Several spaces in the source.
+\end{prop}
+\noindent\rule{\textwidth}{0.3pt}
+
+Word Control: this line's gap after \texttt{Word} is the one to match.
+
+\section{The space still respects the space factor}
+
+A label ending in a period or a colon must still take the wider space, since
+the separator is an ordinary interword space and not a fixed skip.
+
+\begin{prop}
+  \item[{Word.}, align=runin] After a period.
+  \item[{Word:}, align=runin] After a colon.
+  \item[Word, align=runin] After a letter.
+\end{prop}
+
+The first two gaps must be visibly wider than the third.
+
+\section{References are unaffected}
+
+\ref{ri:1}, \ref{ri:3}, \ref{ri:7} --- ordinary numbered references; the
+alignment governs placement only.
+
+\end{document}
