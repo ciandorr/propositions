@@ -575,11 +575,30 @@
 % code---that is, it must not read its body as a macro argument via \cs{collect@body} or similar.
 % \end{docKeys}
 %
-% The following command is provided for use with \refKey{wrapper begin}:
+% The following commands are provided for use with \refKey{wrapper begin} and \refKey{wrapper end}:
 % \begin{docCommand}{propoperativeleftmargin}{}
 %   A read-only length giving the \refKey{leftmargin} a \refEnv{prop} environment (with no optional argument) would use, given the current defaults set by \refCom{propoptions} and the current nesting level.  It is recomputed at every \verb|\begin{prop}|, so it is valid inside a wrapper (before the
 %   environment's own \refKey{leftmargin} has taken effect).  For example, the built-in \texttt{framed} style uses this command in the value of \refKey{wrapper begin} to make the margins of framed environments match those of regular environments.
 % \end{docCommand}
+%
+% \begin{docCommands}{
+%   { doc name = propsetabove,  doc parameter = \oarg{space above}\oarg{space below}\marg{material} },
+%   { doc name = propsetbelow,  doc parameter = \oarg{space above}\oarg{space below}\marg{material} },
+% }
+%   For use in \refKey{wrapper begin} and \refKey{wrapper end} (respectively): sets \meta{material} in the gap above or below the list, at the list's own left margin, and vertically centred between the adjacent line of the list and the line before or after it.  The two optional arguments add vertical space on either side of it, and either may be negative.
+%
+% \end{docCommands}
+%
+% \begin{example}
+% \begin{prop}[
+%   wrapper begin = \propsetabove[0.2em][0.2em]{%
+%     \rule{\linewidth}{0.4pt}},
+%   wrapper end   = \propsetbelow[0.2em][0.2em]{%
+%     \rule{\linewidth}{0.4pt}}]
+%   \item A proposition bracketed by rules.
+%   \item And a second one.
+% \end{prop}
+% \end{example}
 %
 % \subsection{Global key}
 % \label{sect:keys-global}
@@ -1145,8 +1164,24 @@
 % \end{prop}
 % \end{example}
 %
+% \item[\texttt{conclusion}] Draws a rule immediately before the list: intended to be used to display the conclusion of an argument whose premises have just been stated. 
+% \begin{codebox}
+% \SetPropStyle{conclusion}{wrapper begin =
+%   \propsetabove[0.2em][0.2em]{\smash{\rule{\linewidth}{0.4pt}}}}
+% \end{codebox}
+%
+% \begin{example}
+% \begin{prop}[counter=enumprop, format=\textbf{P#1}]
+%   \item Everything mental has physical effects.
+%   \item Everything that has physical effects is physical.
+% \end{prop}
+% \begin{prop}[style=conclusion]
+%   \item[C] Everything mental is physical.
+% \end{prop}
+% \end{example}
+%
 % \item[\texttt{standard}] 
-% A style that resets all the environment-level keys back to their default value.  (This is useful, since there is otherwise no easy way to `unset' a globally-set style.)  Item-level keys like \refKey{align} and \refKey{display format} are not affected, so these will still be set by the the operative \refKey{named style} or \refKey{nameless style} defaults.  (To reset \refKey*{align} along with the other keys, just set \verb|[style=standard, align=left]|.)
+% Resets all the environment-level keys back to their default values---potentially useful, since there is otherwise no easy way to `unset' a globally-set style.  Item-level keys like \refKey{align} and \refKey{display format} are not affected, so these will still be set by the the operative \refKey{named style} or \refKey{nameless style} defaults.  (To reset \refKey*{align} along with the other keys, just set \verb|[style=standard, align=left]|.)
 % \end{description}
 %
 %
@@ -1192,6 +1227,9 @@
 %
 %   \textsf{zref-clever} is now supported alongside \textsf{cleveref}, through
 %   the same \refKey{crefname} key.
+%
+%   New style \texttt{conclusion}, which uses new commands \refCom{propsetabove} and \refCom{propsetbelow} that
+%   place material in the gap above or below a list.
 %
 %   New style \texttt{nolabel}, for an item with no label at all, and
 %   \refKey{counter}\,=\,\texttt{none} is now documented.  An item with
@@ -3224,6 +3262,157 @@
   }
 
 % ====================================================================
+% \cs{propsetabove} / \cs{propsetbelow} --- material set in the gap
+% ====================================================================
+% Set the material in the gap above (below) the list: at the list's own left
+% margin, vertically centred between the text on either side.  The material's
+% own height and depth add to the gap, as they would anywhere else, so a rule
+% that should cost nothing is smashed by the caller.
+%
+% Four things have to be got right, none of them the caller's business.
+%
+% The material must not disturb the seamless join (see \texttt{continue}),
+% which works by depositing the join glue and setting \cs{topsep} to match, so
+% that \cs{@trivlist}'s \cs{addvspace} finds \cs{lastskip} already equal to it
+% and adds nothing.  A box appended after that glue makes \cs{lastskip} zero
+% and the join is laid down a second time.  So the material is slipped inside
+% the glue: step back over it, drop the material in, put it back.
+% \cs{prevdepth} is restored with it, so the line spacing on either side is
+% what it would have been.
+%
+% The gap to bisect is the join glue when the lists are joining---including
+% when that glue is zero, which is what \texttt{itemsep\,=\,0pt} asks for---and
+% the list's own \cs{topsep}+\cs{partopsep} when they are not.  Reading
+% \cs{lastskip}\,>\,0pt as ``is there a join'' mistakes the former for the
+% latter, and puts the rule through the following line.
+%
+% Inside an enclosing list, the paragraph break lets the outer list add its
+% \cs{parsep} as well; that glue lands after our insertion point, where
+% \cs{lastskip} cannot see it.
+%
+% The gap is bounded by ink---descenders on one side, capitals on the
+% other---and ink is sized by the font, not by the leading.  Under
+% \textsf{setspace}'s \cs{doublespacing} the strut grows with
+% \cs{baselineskip} while the letters stay put, so a strut-based calculation
+% drifts up the page.
+\skip_new:N \l__props_gap_join_skip     %% the glue there, to be put back
+\dim_new:N  \l__props_gap_depth_dim     %% depth of the line above, if any
+\dim_new:N  \l__props_gap_saved_dp_dim  %% \prevdepth exactly as found, to restore
+\dim_new:N  \l__props_gap_sep_dim       %% what separates the two baselines
+\dim_new:N  \l__props_gap_cap_dim       %% height of a capital in this font
+\dim_new:N  \l__props_gap_drop_dim      %% how far to lower the material
+\box_new:N  \l__props_gap_box
+\box_new:N  \l__props_gap_out_box
+\dim_new:N  \l__props_gap_half_dim      %% half the gap the material sits in
+\dim_new:N  \l__props_gap_clear_dim     %% clearance to create when nothing is above
+\bool_new:N \l__props_gap_atop_bool     %% nothing above: top of a page or box
+
+\cs_new_protected:Nn \__props_gap_start:
+  {
+    \par
+    \skip_set:Nn \l__props_gap_join_skip { \lastskip }
+    \dim_set:Nn  \l__props_gap_saved_dp_dim { \prevdepth }
+    \dim_set:Nn  \l__props_gap_cap_dim      { \fontcharht \font `X }
+    %% At the top of a page or a box there is no line above and \prevdepth
+    %% holds TeX's -1000pt sentinel, which would throw the material half a
+    %% metre down the page.  Nothing precedes, so nothing descends: take the
+    %% depth as zero for the arithmetic, but restore the sentinel afterwards,
+    %% since it is also what tells TeX to add no glue above the first line.
+    \dim_set_eq:NN \l__props_gap_depth_dim \l__props_gap_saved_dp_dim
+    \bool_set_false:N \l__props_gap_atop_bool
+    \dim_compare:nNnT { \l__props_gap_depth_dim } < { -500pt }
+      {
+        \bool_set_true:N \l__props_gap_atop_bool
+        \dim_zero:N \l__props_gap_depth_dim
+      }
+  }
+
+%% \l__props_gap_sep_dim has been set by the caller.
+%% #1 = space above, #2 = space below, #3 = material.
+\cs_new_protected:Npn \__props_gap_place:nnn #1#2#3
+  {
+    \hbox_set:Nn \l__props_gap_box {#3}
+    %% A box contributed in vertical mode has its *top* at the current
+    %% position, so its height is space above the material and its depth
+    %% space below it: the two arguments are simply added to them.  A rule
+    %% laid into a gap consumes the white that marks the division, so a rule
+    %% given no space reads tighter than the plain gap between two items ---
+    %% the opposite of what it is there to say.
+    \box_set_ht:Nn \l__props_gap_box { \box_ht:N \l__props_gap_box + #1 }
+    \box_set_dp:Nn \l__props_gap_box { \box_dp:N \l__props_gap_box + #2 }
+    \dim_compare:nNnT { \@totalleftmargin } > { 0pt }
+      { \dim_add:Nn \l__props_gap_sep_dim { \parsep } }
+    %% Half the gap, measured between the ink on either side: the descenders
+    %% above and the capitals below.  The material's own size does not enter
+    %% into it --- whatever it is, it ends up with this much white on each
+    %% side, plus whatever the two arguments asked for.
+    \dim_set:Nn \l__props_gap_half_dim
+      {
+        (
+          \baselineskip + \l__props_gap_sep_dim
+          - \l__props_gap_depth_dim - \l__props_gap_cap_dim
+        ) / 2
+      }
+    %% With nothing above, there is no gap to sit in: TeX discards the glue at
+    %% the top of a page or box, so the list begins flush against it.  The
+    %% material goes at the top, and the clearance it would have had lower
+    %% down the page is created below it instead, as depth on the box.  (A
+    %% page break between the premises and their conclusion lands here.)
+    \bool_if:NTF \l__props_gap_atop_bool
+      {
+        \dim_zero:N \l__props_gap_drop_dim
+        \dim_set_eq:NN \l__props_gap_clear_dim \l__props_gap_half_dim
+        \dim_compare:nNnT { \l__props_gap_clear_dim } < { 0pt }
+          { \dim_zero:N \l__props_gap_clear_dim }
+      }
+      {
+        \dim_set_eq:NN \l__props_gap_drop_dim \l__props_gap_half_dim
+        \dim_zero:N \l__props_gap_clear_dim
+      }
+    \vskip -\l__props_gap_join_skip
+    \nointerlineskip
+    %% \parshape indents paragraphs, not boxes: a box contributed in vertical
+    %% mode inside a list would sit at the page margin, not the list's.
+    \hbox_set:Nn \l__props_gap_out_box
+      {
+        \skip_horizontal:n { \@totalleftmargin }
+        \box_move_down:nn { \l__props_gap_drop_dim }
+          { \box_use:N \l__props_gap_box }
+      }
+    %% The box keeps the height and depth of the padded material---that much
+    %% space it does cost---but not the displacement, and no width.
+    \box_set_ht:Nn \l__props_gap_out_box { \box_ht:N \l__props_gap_box }
+    \box_set_dp:Nn \l__props_gap_out_box
+      { \box_dp:N \l__props_gap_box + \l__props_gap_clear_dim }
+    \box_set_wd:Nn \l__props_gap_out_box { \c_zero_dim }
+    \box_use:N \l__props_gap_out_box
+    \prevdepth \l__props_gap_saved_dp_dim
+    \nobreak
+    \vskip \l__props_gap_join_skip
+  }
+
+\NewDocumentCommand \propsetabove { O{0pt} O{0pt} m }
+  {
+    \group_begin:
+      \__props_gap_start:
+      \bool_if:NTF \g__props_suppress_topsep_bool
+        { \dim_set:Nn \l__props_gap_sep_dim { \l__props_gap_join_skip } }
+        { \dim_set:Nn \l__props_gap_sep_dim { \topsep + \partopsep } }
+      \__props_gap_place:nnn {#1} {#2} {#3}
+    \group_end:
+  }
+
+\NewDocumentCommand \propsetbelow { O{0pt} O{0pt} m }
+  {
+    \group_begin:
+      \__props_gap_start:
+      %% Below the list, the glue \endtrivlist has just added is the gap.
+      \dim_set:Nn \l__props_gap_sep_dim { \l__props_gap_join_skip }
+      \__props_gap_place:nnn {#1} {#2} {#3}
+    \group_end:
+  }
+
+% ====================================================================
 % Env-local list configuration: save/restore
 % ====================================================================
 % The list-dimension and wrapper variables below hold the configuration a
@@ -4362,6 +4551,17 @@
             wrapper~end   = { } ,
           }
       }
+  }
+
+%% conclusion: a rule across the text width, immediately above the list, for
+%% the conclusion of an argument whose premises are in the list before it.
+%% Smashed, so that the rule costs no vertical space and the first item sits
+%% exactly where it would have without it.  The 0.2em of space on each side
+%% follows bussproofs and ebproof, which both give an inference line 2pt.
+\SetPropStyle { conclusion }
+  {
+    wrapper~begin = \propsetabove [0.2em] [0.2em]
+                      { \smash { \rule { \linewidth } { 0.4pt } } } ,
   }
 
 % ====================================================================

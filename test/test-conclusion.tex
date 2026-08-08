@@ -1,0 +1,266 @@
+\documentclass{article}
+\usepackage[equations]{propositions}
+\usepackage{setspace}
+
+%% PROTOTYPE of a `conclusion' style: a rule across the text width, drawn
+%% immediately above the list, for the conclusion of an argument whose
+%% premises are in the list before it.
+%%
+%% Two requirements, neither of which a plain \hrule meets:
+%%
+%%   (i)  the rule adds no vertical space -- the first item must sit exactly
+%%        where it would have sat without it;
+%%   (ii) the rule sits midway between the last line above and the first line
+%%        of this list.
+%%
+%% How it is done.  The wrapper-begin code runs in vertical mode, after the
+%% package has deposited the seamless-join glue (see continue=true) and
+%% immediately before \begin{list}.
+%%
+%% The rule cannot simply be added there.  The join works by depositing the
+%% glue and then setting \topsep to match, so that \@trivlist's
+%% \addvspace{\@topsepadd} finds \lastskip already equal to it and adds
+%% nothing.  A box appended after that glue makes \lastskip zero, \addvspace
+%% no longer sees its own value, and the join is laid down a second time --
+%% \itemsep+\parsep of unwanted space.  So the rule is slipped *inside* the
+%% glue: step back over it, drop the rule in, put the glue back.  \lastskip
+%% is then what the list expects.
+%%
+%% Placement.  At that point \prevdepth is the depth of the line above and
+%% the glue is \lastskip, so the next baseline falls \baselineskip past the
+%% glue and the baseline-to-baseline gap is \baselineskip + <glue>.  The rule
+%% belongs midway down that gap -- but midway between the *baselines* is not
+%% midway to the eye, so the strut is used to find the white band instead (see
+%% the code).  Having stepped back over
+%% the glue, the insertion point is the last baseline itself -- measured, not
+%% assumed: with the lowering set to zero the rule lands within half a point
+%% of that baseline, and the residual does not track \prevdepth.  So the rule
+%% is lowered by
+%%
+%%   0.5\baselineskip + 0.5<glue>
+%%
+%% The box has zero height, depth and width, \nointerlineskip stops TeX
+%% adding glue above it, and \prevdepth is restored so the first line of the
+%% list is spaced exactly as if the rule were not there.
+%%
+%% <glue> is \lastskip when the list is joining a previous one.  Standing on
+%% its own after ordinary text there is no join glue, and the separation will
+%% be the list's own \topsep+\partopsep instead.
+
+%% The style and both commands now come from the package; this file only
+%% exercises them.  The prototype that developed them, and the reasoning
+%% behind the placement, is in the implementation section of propositions.dtx.
+
+%% Markers, so the measuring script can find the lines either side.
+\newcommand\PA{PREMISEA}
+\newcommand\PB{PREMISEB}
+\newcommand\CC{CONCLUSION}
+
+\begin{document}
+
+\section{The intended use}
+
+An argument, with the conclusion ruled off from the premises:
+
+\begin{prop}
+  \item Everything that is \PA{} is physical.
+  \item Everything that is mental is \PB.
+\end{prop}
+\begin{prop}[style=conclusion, continue=true]
+  \item Everything that is mental is \CC.
+\end{prop}
+
+The rule must sit midway between the last premise and the conclusion, and the
+conclusion must sit exactly where it would have without the rule.
+
+\section{The same argument with no rule, for comparison}
+
+\begin{prop}
+  \item Everything that is \PA{} is physical.
+  \item Everything that is mental is \PB.
+\end{prop}
+\begin{prop}[continue=true]
+  \item Everything that is mental is \CC.
+\end{prop}
+
+The conclusion's baseline here and in the previous section must be the same
+distance below its premise.
+
+\section{Several premises, and a multi-line conclusion}
+
+\begin{prop}
+  \item Everything that is \PA{} is physical.
+  \item Everything that is physical is spatiotemporal.
+  \item Everything that is mental is \PB.
+\end{prop}
+\begin{prop}[style=conclusion, continue=true]
+  \item Everything that is mental is \CC, and this item runs on long enough to
+    take a second line, so that we can see the rule is placed relative to the
+    first line of the item rather than to the item as a whole.
+\end{prop}
+
+\section{A premise list whose last line is short}
+
+\begin{prop}
+  \item Everything that is \PA.
+\end{prop}
+\begin{prop}[style=conclusion, continue=true]
+  \item Therefore \CC.
+\end{prop}
+
+\section{Without \texttt{continue}, after ordinary text}
+
+Some ordinary text, and then a conclusion list on its own.  Here there is no
+premise list to join, so the rule falls in the list's own \texttt{topsep}
+instead; it should still take no vertical space.
+
+\begin{prop}[style=conclusion]
+  \item A conclusion with nothing above it. \CC
+\end{prop}
+
+\section{Named items}
+
+\begin{prop}
+  \item[Physicalism] Everything is physical. \PA
+\end{prop}
+\begin{prop}[style=conclusion, continue=true]
+  \item[Conclusion] So much the worse for dualism. \CC
+\end{prop}
+
+\section{The whole argument inside another item}
+
+The rule spans \verb|\linewidth|, so within a nested list it should span the
+nested text width, not the page's.
+
+\begin{prop}
+  \item An outer item that contains an argument of its own:
+  \begin{prop}
+    \item Everything that is \PA{} is physical.
+    \item Everything that is mental is \PB.
+  \end{prop}
+  \begin{prop}[style=conclusion, continue=true]
+    \item Everything that is mental is \CC.
+  \end{prop}
+  \item A further outer item, to show the argument has closed properly.
+\end{prop}
+
+\section{With \texttt{itemsep} changed}
+
+The gap the rule has to bisect is the previous list's
+\texttt{itemsep}+\texttt{parsep}, so it should follow whatever those are set
+to.  Widely spaced:
+
+\begin{prop}[itemsep=14pt]
+  \item Everything that is \PA{} is physical.
+  \item Everything that is mental is \PB.
+\end{prop}
+\begin{prop}[style=conclusion, continue=true, itemsep=14pt]
+  \item Everything that is mental is \CC.
+\end{prop}
+
+Tightly spaced:
+
+\begin{prop}[itemsep=0pt, parsep=0pt]
+  \item Everything that is \PA{} is physical.
+  \item Everything that is mental is \PB.
+\end{prop}
+\begin{prop}[style=conclusion, continue=true, itemsep=0pt, parsep=0pt]
+  \item Everything that is mental is \CC.
+\end{prop}
+
+\section{Double spacing}
+
+\textsf{setspace}'s \verb|\doublespacing| widens \verb|\baselineskip| and rescales
+the list dimensions to match, so both terms of the calculation move together
+and the rule should still land midway.
+
+\begin{spacing}{2}
+\begin{prop}
+  \item Everything that is \PA{} is physical.
+  \item Everything that is mental is \PB.
+\end{prop}
+\begin{prop}[style=conclusion, continue=true]
+  \item Everything that is mental is \CC.
+\end{prop}
+\end{spacing}
+
+One-and-a-half spacing, for a second point of comparison:
+
+\begin{spacing}{1.5}
+\begin{prop}
+  \item Everything that is \PA{} is physical.
+  \item Everything that is mental is \PB.
+\end{prop}
+\begin{prop}[style=conclusion, continue=true]
+  \item Everything that is mental is \CC.
+\end{prop}
+\end{spacing}
+
+\section{At the top of a page}
+
+If the page breaks between the premises and their conclusion, the conclusion
+list starts a page: there is no line above it, and \TeX\ has discarded the
+glue that would have separated them.  There is nothing to centre between, so
+the rule goes at the top and the clearance it would have had lower down is put
+below it.  The gap between the rule and the text here should match the gap
+below the rule in the sections above.
+
+\begin{prop}
+  \item A premise at the foot of the page. \PA
+\end{prop}
+\newpage
+\begin{prop}[style=conclusion]
+  \item A conclusion carried to the next page. \CC
+\end{prop}
+
+Text after, so the page is not empty.
+
+\section{Rules above and below}
+
+\verb|\propsetbelow| is the mirror of \verb|\propsetabove| and belongs in
+\texttt{wrapper end}.  A style using both boxes a list in with rules rather
+than a frame.  The two rules should sit the same distance from the text they
+bracket.
+
+\begingroup
+\SetPropStyle{bracketed}{%
+  wrapper begin = \propsetabove[0.2em][0.2em]{\smash{\rule{\linewidth}{0.4pt}}},
+  wrapper end   = \propsetbelow[0.2em][0.2em]{\smash{\rule{\linewidth}{0.4pt}}}}
+
+Some text before the bracketed list.
+
+\begin{prop}[style=bracketed]
+  \item Everything that is \PA{} is physical.
+  \item Everything that is mental is \PB.
+\end{prop}
+
+Some text after the bracketed list, to show where the lower rule falls.
+\endgroup
+
+\section{Tuning: the optional argument}
+
+The material is centred between the descenders of the line above and the tops
+of the letters below.  Where something taller intrudes --- an opening
+parenthesis, say, which rises above cap height --- the result can read a
+little low.  The two optional arguments of \verb|\propsetabove| are the space to leave
+above and below the material; either may be negative.  Equal values widen the
+gap and keep the material centred in it; unequal values shift it.
+
+\newcommand\showraise[3]{%
+  \SetPropStyle{conclusion}{wrapper begin =
+    \propsetabove[#1][#2]{\smash{\rule{\linewidth}{0.4pt}}}}%
+  \begin{prop}
+    \item Everything that is mental is PREMISEB.
+  \end{prop}
+  \begin{prop}[style=conclusion, continue=true]
+    \item Everything that is mental is CONCLUSION \textup{(#3)}.
+  \end{prop}}
+
+\showraise{0.2em}{0.2em}{even, the default}
+\showraise{0pt}{0pt}{no space either side}
+\showraise{0.4em}{0.4em}{twice the space}
+\showraise{0.4em}{0pt}{all the space above}
+\SetPropStyle{conclusion}{wrapper begin =
+  \propsetabove[0.2em][0.2em]{\smash{\rule{\linewidth}{0.4pt}}}}
+
+\end{document}

@@ -1566,6 +1566,123 @@
       { \setlength { #2 } { \l__props_dim_resolved_tl } }
   }
 
+\skip_new:N \l__props_gap_join_skip     %% the glue there, to be put back
+\dim_new:N  \l__props_gap_depth_dim     %% depth of the line above, if any
+\dim_new:N  \l__props_gap_saved_dp_dim  %% \prevdepth exactly as found, to restore
+\dim_new:N  \l__props_gap_sep_dim       %% what separates the two baselines
+\dim_new:N  \l__props_gap_cap_dim       %% height of a capital in this font
+\dim_new:N  \l__props_gap_drop_dim      %% how far to lower the material
+\box_new:N  \l__props_gap_box
+\box_new:N  \l__props_gap_out_box
+\dim_new:N  \l__props_gap_half_dim      %% half the gap the material sits in
+\dim_new:N  \l__props_gap_clear_dim     %% clearance to create when nothing is above
+\bool_new:N \l__props_gap_atop_bool     %% nothing above: top of a page or box
+
+\cs_new_protected:Nn \__props_gap_start:
+  {
+    \par
+    \skip_set:Nn \l__props_gap_join_skip { \lastskip }
+    \dim_set:Nn  \l__props_gap_saved_dp_dim { \prevdepth }
+    \dim_set:Nn  \l__props_gap_cap_dim      { \fontcharht \font `X }
+    %% At the top of a page or a box there is no line above and \prevdepth
+    %% holds TeX's -1000pt sentinel, which would throw the material half a
+    %% metre down the page.  Nothing precedes, so nothing descends: take the
+    %% depth as zero for the arithmetic, but restore the sentinel afterwards,
+    %% since it is also what tells TeX to add no glue above the first line.
+    \dim_set_eq:NN \l__props_gap_depth_dim \l__props_gap_saved_dp_dim
+    \bool_set_false:N \l__props_gap_atop_bool
+    \dim_compare:nNnT { \l__props_gap_depth_dim } < { -500pt }
+      {
+        \bool_set_true:N \l__props_gap_atop_bool
+        \dim_zero:N \l__props_gap_depth_dim
+      }
+  }
+
+%% \l__props_gap_sep_dim has been set by the caller.
+%% #1 = space above, #2 = space below, #3 = material.
+\cs_new_protected:Npn \__props_gap_place:nnn #1#2#3
+  {
+    \hbox_set:Nn \l__props_gap_box {#3}
+    %% A box contributed in vertical mode has its *top* at the current
+    %% position, so its height is space above the material and its depth
+    %% space below it: the two arguments are simply added to them.  A rule
+    %% laid into a gap consumes the white that marks the division, so a rule
+    %% given no space reads tighter than the plain gap between two items ---
+    %% the opposite of what it is there to say.
+    \box_set_ht:Nn \l__props_gap_box { \box_ht:N \l__props_gap_box + #1 }
+    \box_set_dp:Nn \l__props_gap_box { \box_dp:N \l__props_gap_box + #2 }
+    \dim_compare:nNnT { \@totalleftmargin } > { 0pt }
+      { \dim_add:Nn \l__props_gap_sep_dim { \parsep } }
+    %% Half the gap, measured between the ink on either side: the descenders
+    %% above and the capitals below.  The material's own size does not enter
+    %% into it --- whatever it is, it ends up with this much white on each
+    %% side, plus whatever the two arguments asked for.
+    \dim_set:Nn \l__props_gap_half_dim
+      {
+        (
+          \baselineskip + \l__props_gap_sep_dim
+          - \l__props_gap_depth_dim - \l__props_gap_cap_dim
+        ) / 2
+      }
+    %% With nothing above, there is no gap to sit in: TeX discards the glue at
+    %% the top of a page or box, so the list begins flush against it.  The
+    %% material goes at the top, and the clearance it would have had lower
+    %% down the page is created below it instead, as depth on the box.  (A
+    %% page break between the premises and their conclusion lands here.)
+    \bool_if:NTF \l__props_gap_atop_bool
+      {
+        \dim_zero:N \l__props_gap_drop_dim
+        \dim_set_eq:NN \l__props_gap_clear_dim \l__props_gap_half_dim
+        \dim_compare:nNnT { \l__props_gap_clear_dim } < { 0pt }
+          { \dim_zero:N \l__props_gap_clear_dim }
+      }
+      {
+        \dim_set_eq:NN \l__props_gap_drop_dim \l__props_gap_half_dim
+        \dim_zero:N \l__props_gap_clear_dim
+      }
+    \vskip -\l__props_gap_join_skip
+    \nointerlineskip
+    %% \parshape indents paragraphs, not boxes: a box contributed in vertical
+    %% mode inside a list would sit at the page margin, not the list's.
+    \hbox_set:Nn \l__props_gap_out_box
+      {
+        \skip_horizontal:n { \@totalleftmargin }
+        \box_move_down:nn { \l__props_gap_drop_dim }
+          { \box_use:N \l__props_gap_box }
+      }
+    %% The box keeps the height and depth of the padded material---that much
+    %% space it does cost---but not the displacement, and no width.
+    \box_set_ht:Nn \l__props_gap_out_box { \box_ht:N \l__props_gap_box }
+    \box_set_dp:Nn \l__props_gap_out_box
+      { \box_dp:N \l__props_gap_box + \l__props_gap_clear_dim }
+    \box_set_wd:Nn \l__props_gap_out_box { \c_zero_dim }
+    \box_use:N \l__props_gap_out_box
+    \prevdepth \l__props_gap_saved_dp_dim
+    \nobreak
+    \vskip \l__props_gap_join_skip
+  }
+
+\NewDocumentCommand \propsetabove { O{0pt} O{0pt} m }
+  {
+    \group_begin:
+      \__props_gap_start:
+      \bool_if:NTF \g__props_suppress_topsep_bool
+        { \dim_set:Nn \l__props_gap_sep_dim { \l__props_gap_join_skip } }
+        { \dim_set:Nn \l__props_gap_sep_dim { \topsep + \partopsep } }
+      \__props_gap_place:nnn {#1} {#2} {#3}
+    \group_end:
+  }
+
+\NewDocumentCommand \propsetbelow { O{0pt} O{0pt} m }
+  {
+    \group_begin:
+      \__props_gap_start:
+      %% Below the list, the glue \endtrivlist has just added is the gap.
+      \dim_set:Nn \l__props_gap_sep_dim { \l__props_gap_join_skip }
+      \__props_gap_place:nnn {#1} {#2} {#3}
+    \group_end:
+  }
+
 \clist_const:Nn \c__props_env_dims_clist
   {
     leftmargin , rightmargin , topsep , partopsep , itemsep , parsep ,
@@ -2467,6 +2584,17 @@
             wrapper~end   = { } ,
           }
       }
+  }
+
+%% conclusion: a rule across the text width, immediately above the list, for
+%% the conclusion of an argument whose premises are in the list before it.
+%% Smashed, so that the rule costs no vertical space and the first item sits
+%% exactly where it would have without it.  The 0.2em of space on each side
+%% follows bussproofs and ebproof, which both give an inference line 2pt.
+\SetPropStyle { conclusion }
+  {
+    wrapper~begin = \propsetabove [0.2em] [0.2em]
+                      { \smash { \rule { \linewidth } { 0.4pt } } } ,
   }
 
 
