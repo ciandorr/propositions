@@ -1,6 +1,6 @@
 # The `propositions` package
 
-Version 0.9 (2026/08/02)
+Version 0.91 (2026/08/07)
 
 A LaTeX package for typesetting and cross-referencing named and numbered displayed propositions (examples, theses, premises...).
 
