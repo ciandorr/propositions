@@ -252,7 +252,9 @@
 % \end{docEnvironment}
 %
 % \begin{docEnvironment}{inlineprop}{\oarg{keys}}
-%   Like \refEnv{prop}, but does not create a list.  Allows \cs{item} to be used outside list environments, e.g.\ for generating numbers at the beginning of paragraphs.  Steps the \texttt{prop} counter and increments the nesting level.  Accepts the same optional \meta{keys} as \refEnv{prop}.
+%   Like \refEnv{prop}, but does not create a list.  Allows \cs{item} to be used outside list environments, e.g.\ for generating numbers at the beginning of paragraphs.  Resets the \texttt{enumprop} counter and increments the nesting level.  Accepts the same optional \meta{keys} as \refEnv{prop}.
+%
+%   Here the label is set in running text, and the space between it and the body is the source's own---except after an \cs{item} given no optional argument, where the scan for that argument has already consumed it.  Such an \cs{item} is followed by an interword space of its own, so that \verb|\item Alpha| sets like \verb|\item[P] Alpha| rather than running the label into the word.  \verb|\item[]| asks for the other thing: an item with no argument to speak of, whose body follows immediately.
 % \end{docEnvironment}
 %
 % Within \refEnv{prop} and \refEnv{inlineprop}, \cs{item} is redefined to act as the proposition-item command.  Its optional argument is a comma-separated list of \meta{key}=\meta{value} pairs (see \autoref{sect:keys}).  A bare string without \texttt{=} is treated as a proposition name.
@@ -312,7 +314,7 @@
 % \begin{docKey}{counter}{=\meta{name}}{no default}
 %   Counter to use.  The counter is automatically stepped, and the item's \refKey{name} is set to \cs{the}\meta{name} (though this can be overridden by \refKey{counter format} or \refKey{name}).
 % 
-% Any counter can be used with \refKey{counter format}.  Special counters \docCounter{numpropii}, \docCounter{numpropiii}, \docCounter{numpropiv}, \docCounter{numpropv} are provided, whose values are automatically reset each time an |\item| is processed at a lower nesting level.  There is also a counter \docCounter{numpropi} which never automatically resets, and a counter \docCounter{enumprop} which is reset at every \emph{outermost} \refEnv{prop} or \refEnv{inlineprop} environment, so that lists using this counter behave like the standard \texttt{enumerate} environment.  Finally, there is a counter \docCounter{footprop}, reset at the beginning of every footnote, used by the \texttt{footnumprop} style (see \cref{sect:styles}).
+% Any counter can be used with \refKey{counter format}.  Special counters \docCounter{numpropii}, \docCounter{numpropiii}, \docCounter{numpropiv}, \docCounter{numpropv} are provided, whose values are automatically reset each time an |\item| is processed at a lower nesting level.  There is also a counter \docCounter{numpropi}, which resets at each chapter in classes that have them (use \cs{counterwithout}|*{numpropi}{chapter}| if you don't want this), and a counter \docCounter{enumprop} which is reset at every \emph{outermost} \refEnv{prop} or \refEnv{inlineprop} environment, so that lists using this counter behave like the standard \texttt{enumerate} environment.  Finally, there is a counter \docCounter{footprop}, reset at the beginning of every footnote.
 % 
 % The special value \texttt{counter\,=\,none} unsets the \refKey{counter} key (potentially useful if it would otherwise have been set by a style).
 
@@ -865,9 +867,7 @@
 %   \item[Three, style=thesis] \label{bs:thesis}
 %   A proposition in style |thesis|, cited as \ref{bs:thesis}.
 %   \item[Four, style=vignette] \label{bs:vignette}
-%   A proposition in style |vignette|, cited as \ref{bs:vignette}. \\
-% 
-%   \textit{Test:} Another line as a test.  Less space here, no?
+%   A proposition in style |vignette|, cited as \ref{bs:vignette}.
 %   \item[style=bullet] \label{bs:bullet}
 %   A proposition in style |bullet|, cited as \ref{bs:bullet}---though
 %   it is not often that one would want to cite an item in this style.
@@ -881,7 +881,7 @@
 % \begin{description}
 % \item[\texttt{numbered}] The default nameless style.  Selects one of 
 %    the helper styles \texttt{levelone}--\texttt{levelfive}, depending
-%    on nesting depth, ofr \texttt{footnumprop} if in a footnote and not nested.  
+%    on nesting depth, or \texttt{footnumprop} if in a footnote and not nested.  
 % \begin{codebox}
 % \SetPropStyle{levelone}{counter = numpropi, format = (#1)}
 % \SetPropStyle{leveltwo}{counter = numpropii,
@@ -1221,6 +1221,18 @@
 % \section{Release notes}
 %
 % \begin{description}
+% \item[0.92 (unreleased)] [Change] Inside \refEnv{inlineprop}, an \cs{item} used without
+%   an optional argument is now followed by an interword space, so that
+%   \verb|\item Alpha| sets like \verb|\item[P] Alpha|.  Use \verb|\item[]| if 
+%   you don't want the space.
+%
+%   [Change] \docCounter{numpropi} now resets at each chapter under
+%   \textsf{book} and \textsf{report}, as \texttt{equation} does.  (Undo with \cs{counterwithout}|*{numpropi}{chapter}|.)
+%
+%   [Bug fix] An \refEnv{inlineprop} nested inside a \refEnv{prop} now sets 
+%   its items inline, and a \refEnv{prop} inside an \refEnv{inlineprop} creates 
+%   a list.
+% 
 % \item[0.91] New \refKey{align} value \texttt{runin}, and the built-in style \texttt{vignette} changed to use it.
 %
 %   New style \texttt{enum} and counter \docCounter{enumprop}.
@@ -1326,6 +1338,10 @@
 % True inside a prop environment, false inside inlineprop.
 % Controls whether \item outputs a display label or inline text.
 \bool_new:N \g__props_display_mode_bool
+%% The mode in force when a prop or inlineprop began, restored by its \end.
+%% Local, so that nested boxes unwind by themselves, and one per environment
+%% group, so that nesting to any depth keeps each level's own answer.
+\bool_new:N \l__props_env_saved_dispmode_bool
 
 % --- Global settings ---
 \tl_new:N   \l__props_named_style_tl             %% default style for named items
@@ -1349,6 +1365,7 @@
 \bool_new:N \l__props_counter_stepped_bool %% true if this item stepped its counter
 \bool_new:N \l__props_titlecase_bool    %% true when \Ref etc. want titlecasing
 \bool_new:N \l__props_reset_bool        %% true (default) = reset sub-level counter on \item
+\bool_new:N \l__props_item_optarg_bool  %% true when this \item was given an optional argument
 \bool_new:N \l__props_pi_any_bool       %% true if any per-item dimension is set for this item
 \tl_new:N   \l__props_eqtag_tl          %% equation number handed to the display format by \tagform@
 %% Two layers of item-level defaults.  The cascading layer (\l__props_defaults_tl)
@@ -2201,9 +2218,8 @@
     %% space that follows \item[...] in the source would be typeset.
     %% \ignorespaces has to be the last token this command leaves behind, which
     %% is why it is issued here and not where the label was output.  For the
-    %% other alignments the body has not started yet and TeX drops the space
-    %% itself, in vertical mode --- and in inlineprop that space is wanted, as
-    %% it separates the inline label from the text.
+    %% other display alignments the body has not started yet and TeX drops the
+    %% space itself, in vertical mode.
     %% runin's separating space is emitted here rather than beside the label,
     %% so that it is the last thing on the horizontal list when the item is
     %% done.  \refstepcounter above contributes an anchor under hyperref, and
@@ -2218,6 +2234,25 @@
         \bool_set_false:N \l__props_body_started_bool
         \ignorespaces
       }
+    %% In inlineprop the label is set in running text with the body straight
+    %% after it, and the space between them comes from the source --- except
+    %% after a bare \item, where there is no source space left to come: the
+    %% optional-argument scan looks past spaces (and past a line end) for its
+    %% "[", and what it looks past is gone whether or not it finds one.  So
+    %% \item Alpha ran the label into the word while \item[P] Alpha did not,
+    %% and the only ways to space a bare one were \item{} or \item\ .  Supply
+    %% the space here, for the case that has lost it and no other: an \item
+    %% with an argument keeps the source's spacing exactly as before, and
+    %% \item[] --- an argument that says nothing else --- is the way to ask
+    %% for a bare item whose body follows immediately.
+    %% Emitted here, last, for the reason runin's is: an anchor contributed by
+    %% \refstepcounter between the space and this point would leave \lastskip
+    %% at zero, so a \label written after the \item would find \@savsk zero,
+    %% decline to \ignorespaces, and let a source space through on top of it.
+    \bool_lazy_and:nnT
+      { ! \bool_if_p:N \g__props_display_mode_bool }
+      { ! \bool_if_p:N \l__props_item_optarg_bool }
+      { \space }
   }
 
 % Save the ambient (kernel) \item at load time.  When a wrapper environment
@@ -2228,15 +2263,19 @@
 % meaning around the wrapper-begin code (see the prop/inlineprop environments).
 \cs_new_eq:NN \__props_kernel_item: \item
 
-% The proposition \item command used inside prop and inlineprop.
-% Defined with xparse so the optional-argument parser correctly handles
-% nested brackets (e.g. \item[name=\oref[*]{foo}]).  Assigned to \item
-% locally via \cs_set_eq:NN in each environment's begin code.
+% The proposition \item command used inside prop and inlineprop. Assigned to 
+% \item locally via \cs_set_eq:NN in each environment's begin code.
 \NewDocumentCommand \__props_item_cmd: { o }
   {
     \IfValueTF { #1 }
-      { \__props_item_body:n { #1 } }
-      { \__props_item_body:n { } }
+      {
+        \bool_set_true:N \l__props_item_optarg_bool
+        \__props_item_body:n { #1 }
+      }
+      {
+        \bool_set_false:N \l__props_item_optarg_bool
+        \__props_item_body:n { }
+      }
   }
 
 % \item is bound to this dispatcher (not directly to \__props_item_cmd:)
@@ -3475,6 +3514,9 @@
     %% Push last item's template/content onto parent stacks
     \seq_gpush:NV \g__props_parent_tpl_seq \g__props_last_tpl_tl
     \seq_gpush:NV \g__props_parent_cnt_seq \g__props_last_cnt_tl
+    %% Remember the mode this environment interrupts, so that \end can put it
+    %% back exactly (see the note there).
+    \bool_set_eq:NN \l__props_env_saved_dispmode_bool \g__props_display_mode_bool
     \bool_gset_true:N \g__props_display_mode_bool
     %% Reset per-env items= counter (not part of defaults tl).
     \int_set:Nn  \l__props_env_items_int { 1 }
@@ -3711,11 +3753,12 @@
         \tl_gset_eq:NN \g__props_last_cnt_tl \l_tmpb_tl
       }
     \int_gdecr:N \g__props_level_int
-    %% Restore display_mode: true if we're still inside an outer prop,
-    %% false if we've exited to top level (or into an inlineprop).
-    \int_compare:nNnTF { \g__props_level_int } > { 0 }
-      { \bool_gset_true:N \g__props_display_mode_bool }
-      { \bool_gset_false:N \g__props_display_mode_bool }
+    %% Restore the mode this environment interrupted.  Inferring it from the
+    %% nesting level instead --- display if the level is still above zero ---
+    %% reads every enclosing environment as a prop, and an inlineprop is not
+    %% one: the items of an inlineprop after a nested prop were set as list
+    %% items, the environment having been handed back the wrong mode.
+    \bool_gset_eq:NN \g__props_display_mode_bool \l__props_env_saved_dispmode_bool
     %% Signal that the next prop may join seamlessly (cleared by
     %% \begin{prop} or by the para/begin hook if text intervenes).
     %% continue=false suppresses it, which is how the framed style keeps a
@@ -3740,6 +3783,13 @@
     %% Push last item's template/content onto parent stacks
     \seq_gpush:NV \g__props_parent_tpl_seq \g__props_last_tpl_tl
     \seq_gpush:NV \g__props_parent_cnt_seq \g__props_last_cnt_tl
+    %% An inlineprop opens no list, so its items are set inline whatever the
+    %% surroundings: the mode has to be taken here and not merely left alone,
+    %% since an enclosing prop has set it to display and every item of this
+    %% environment would otherwise be emitted as a list item of that one ---
+    %% an inlineprop inside a prop broke its text into displayed sub-items.
+    \bool_set_eq:NN \l__props_env_saved_dispmode_bool \g__props_display_mode_bool
+    \bool_gset_false:N \g__props_display_mode_bool
     %% Reset per-env items= counter (not part of defaults tl).
     \int_set:Nn  \l__props_env_items_int { 1 }
     %% Snapshot cascading config and reset the env-local item layer (same as prop).
@@ -3785,6 +3835,8 @@
         \tl_gset_eq:NN \g__props_last_cnt_tl \l_tmpb_tl
       }
     \int_gdecr:N \g__props_level_int
+    %% Give back the mode this environment interrupted, as prop's \end does.
+    \bool_gset_eq:NN \g__props_display_mode_bool \l__props_env_saved_dispmode_bool
   }
 
 % ====================================================================
@@ -4100,10 +4152,10 @@
 % restore it; and footnote text is set out of order with respect to the
 % structure it interrupts, so none of what happens inside it should be visible
 % to the list it hangs from.  Restoring the level alone is not enough: a prop
-% closing at level 1 inside the footnote would take \g__props_display_mode_bool
-% global false, and the item after the footnote would then be set inline,
-% running on from the item before it.  The saved values are local, so nested
-% boxes unwind by themselves.
+% is not enough: footnote text begins at top level, whereas the mode in force
+% is the interrupted list's, and a prop opened in the footnote would otherwise
+% be read as nested inside a list it has nothing to do with.  The saved values
+% are local, so nested boxes unwind by themselves.
 %
 % Patching \cs{@footnotetext} directly, as \textsf{linguex} does, would clash
 % with any other package that patches it (\textsf{setspace}, for one).  The
@@ -4211,7 +4263,13 @@
   }
 
 %% levelone: the standard level-1 numbered style.
-\newcounter { numpropi }
+%% numpropi restarts at each chapter, where the class has them, as equation
+%% and linguex's ExNo do.  The number is not prefixed with the chapter's, as
+%% equation's is: within a chapter (1) is unambiguous, and the plain form is
+%% what this package's readers are used to.  \counterwithout* undoes it.
+\cs_if_exist:cTF { c@chapter }
+  { \newcounter { numpropi } [ chapter ] }
+  { \newcounter { numpropi } }
 \SetPropStyle { levelone }
   {
     counter     = numpropi ,
@@ -4221,7 +4279,7 @@
 %% enumprop: like numpropi, but restarted at every outermost prop or
 %% inlineprop environment (see those environments), so that a list numbers
 %% from one each time it is used, as enumerate does.  numpropi runs on through
-%% the document instead, which is what one wants for propositions that are
+%% the chapter instead, which is what one wants for propositions that are
 %% referred to from elsewhere, and not what one wants for a one-off list.
 \newcounter { enumprop }
 \SetPropStyle { enumprop }

@@ -1,0 +1,71 @@
+\documentclass{article}
+\usepackage{propositions}
+
+%% Which mode an environment sets its items in, across nesting.
+%%
+%% inlineprop opens no list, so its items are set in running text -- and that
+%% has to hold wherever the environment sits.  The mode used to be inferred
+%% from the nesting level on the way out of a prop (display if the level was
+%% still above zero), which reads every enclosing environment as a prop; an
+%% inlineprop is not one.  So an inlineprop inside a prop set its items as
+%% list items of that prop, and an inlineprop went back to setting list items
+%% after a prop nested inside it closed.  Each environment now remembers the
+%% mode it interrupted and gives that back.
+%%
+%% Also: a bare \item inside an inlineprop supplies its own interword space,
+%% the scan for its optional argument having eaten the source's.  \item[] is
+%% the way to ask for none.
+
+\begin{document}
+
+\section{The mode across nesting}
+
+\noindent\rule{\textwidth}{0.3pt}
+\begin{prop}
+  \item An ordinary displayed item. \label{m:1}
+  Now an inlineprop: \begin{inlineprop}\item alpha. \item beta.\end{inlineprop}
+  Those two must run on inside this paragraph, lettered, not broken out onto
+  lines of their own.
+  \item A second displayed item. \label{m:2}
+\end{prop}
+\noindent\rule{\textwidth}{0.3pt}
+
+\begin{inlineprop}
+  \item first, inline. \label{m:3}
+  \begin{prop}\item A displayed item nested inside the inlineprop.\end{prop}
+  \item second, which must still be inline. \label{m:4}
+\end{inlineprop}
+
+\noindent\rule{\textwidth}{0.3pt}
+
+An inlineprop within an inlineprop stays inline throughout:
+\begin{inlineprop}\item outer. \begin{inlineprop}\item inner one.
+\item inner two.\end{inlineprop} back in the outer one.\end{inlineprop}
+
+A prop within a prop is unaffected:
+\begin{prop}
+  \item One.
+  \begin{prop}\item A sub-item.\end{prop}
+  \item Two.
+\end{prop}
+\noindent\rule{\textwidth}{0.3pt}
+
+A footnote interrupts all of it.\footnote{Inline here:
+\begin{inlineprop}\item x.\end{inlineprop} and displayed here:
+\begin{prop}\item y.\end{prop}}
+\begin{prop}
+  \item The item after the footnote must still be a list item.
+\end{prop}
+\noindent\rule{\textwidth}{0.3pt}
+
+References: [\ref{m:1}] [\ref{m:2}] [\ref{m:3}] [\ref{m:4}].
+
+\section{The space after a bare \texttt{\string\item}}
+
+\begin{inlineprop}
+  \item Bare: the label must be followed by a space. \item[P] With an
+  argument: the source's space, as before. \item[]Empty argument: no space,
+  which is how to ask for none.
+\end{inlineprop}
+
+\end{document}

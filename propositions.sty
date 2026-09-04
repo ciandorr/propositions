@@ -90,6 +90,10 @@
 \bool_new:N \l__props_has_counter_format_bool
 
 \bool_new:N \g__props_display_mode_bool
+%% The mode in force when a prop or inlineprop began, restored by its \end.
+%% Local, so that nested boxes unwind by themselves, and one per environment
+%% group, so that nesting to any depth keeps each level's own answer.
+\bool_new:N \l__props_env_saved_dispmode_bool
 
 \tl_new:N   \l__props_named_style_tl             %% default style for named items
 \tl_new:N   \l__props_named_ptag_style_tl        %% ptag override for named items; empty = fall back
@@ -111,6 +115,7 @@
 \bool_new:N \l__props_counter_stepped_bool %% true if this item stepped its counter
 \bool_new:N \l__props_titlecase_bool    %% true when \Ref etc. want titlecasing
 \bool_new:N \l__props_reset_bool        %% true (default) = reset sub-level counter on \item
+\bool_new:N \l__props_item_optarg_bool  %% true when this \item was given an optional argument
 \bool_new:N \l__props_pi_any_bool       %% true if any per-item dimension is set for this item
 \tl_new:N   \l__props_eqtag_tl          %% equation number handed to the display format by \tagform@
 %% Two layers of item-level defaults.  The cascading layer (\l__props_defaults_tl)
@@ -808,9 +813,8 @@
     %% space that follows \item[...] in the source would be typeset.
     %% \ignorespaces has to be the last token this command leaves behind, which
     %% is why it is issued here and not where the label was output.  For the
-    %% other alignments the body has not started yet and TeX drops the space
-    %% itself, in vertical mode --- and in inlineprop that space is wanted, as
-    %% it separates the inline label from the text.
+    %% other display alignments the body has not started yet and TeX drops the
+    %% space itself, in vertical mode.
     %% runin's separating space is emitted here rather than beside the label,
     %% so that it is the last thing on the horizontal list when the item is
     %% done.  \refstepcounter above contributes an anchor under hyperref, and
@@ -825,6 +829,25 @@
         \bool_set_false:N \l__props_body_started_bool
         \ignorespaces
       }
+    %% In inlineprop the label is set in running text with the body straight
+    %% after it, and the space between them comes from the source --- except
+    %% after a bare \item, where there is no source space left to come: the
+    %% optional-argument scan looks past spaces (and past a line end) for its
+    %% "[", and what it looks past is gone whether or not it finds one.  So
+    %% \item Alpha ran the label into the word while \item[P] Alpha did not,
+    %% and the only ways to space a bare one were \item{} or \item\ .  Supply
+    %% the space here, for the case that has lost it and no other: an \item
+    %% with an argument keeps the source's spacing exactly as before, and
+    %% \item[] --- an argument that says nothing else --- is the way to ask
+    %% for a bare item whose body follows immediately.
+    %% Emitted here, last, for the reason runin's is: an anchor contributed by
+    %% \refstepcounter between the space and this point would leave \lastskip
+    %% at zero, so a \label written after the \item would find \@savsk zero,
+    %% decline to \ignorespaces, and let a source space through on top of it.
+    \bool_lazy_and:nnT
+      { ! \bool_if_p:N \g__props_display_mode_bool }
+      { ! \bool_if_p:N \l__props_item_optarg_bool }
+      { \space }
   }
 
 \cs_new_eq:NN \__props_kernel_item: \item
@@ -832,8 +855,14 @@
 \NewDocumentCommand \__props_item_cmd: { o }
   {
     \IfValueTF { #1 }
-      { \__props_item_body:n { #1 } }
-      { \__props_item_body:n { } }
+      {
+        \bool_set_true:N \l__props_item_optarg_bool
+        \__props_item_body:n { #1 }
+      }
+      {
+        \bool_set_false:N \l__props_item_optarg_bool
+        \__props_item_body:n { }
+      }
   }
 
 \cs_new_protected:Nn \__props_item_dispatch:
@@ -1727,6 +1756,9 @@
     %% Push last item's template/content onto parent stacks
     \seq_gpush:NV \g__props_parent_tpl_seq \g__props_last_tpl_tl
     \seq_gpush:NV \g__props_parent_cnt_seq \g__props_last_cnt_tl
+    %% Remember the mode this environment interrupts, so that \end can put it
+    %% back exactly (see the note there).
+    \bool_set_eq:NN \l__props_env_saved_dispmode_bool \g__props_display_mode_bool
     \bool_gset_true:N \g__props_display_mode_bool
     %% Reset per-env items= counter (not part of defaults tl).
     \int_set:Nn  \l__props_env_items_int { 1 }
@@ -1963,11 +1995,12 @@
         \tl_gset_eq:NN \g__props_last_cnt_tl \l_tmpb_tl
       }
     \int_gdecr:N \g__props_level_int
-    %% Restore display_mode: true if we're still inside an outer prop,
-    %% false if we've exited to top level (or into an inlineprop).
-    \int_compare:nNnTF { \g__props_level_int } > { 0 }
-      { \bool_gset_true:N \g__props_display_mode_bool }
-      { \bool_gset_false:N \g__props_display_mode_bool }
+    %% Restore the mode this environment interrupted.  Inferring it from the
+    %% nesting level instead --- display if the level is still above zero ---
+    %% reads every enclosing environment as a prop, and an inlineprop is not
+    %% one: the items of an inlineprop after a nested prop were set as list
+    %% items, the environment having been handed back the wrong mode.
+    \bool_gset_eq:NN \g__props_display_mode_bool \l__props_env_saved_dispmode_bool
     %% Signal that the next prop may join seamlessly (cleared by
     %% \begin{prop} or by the para/begin hook if text intervenes).
     %% continue=false suppresses it, which is how the framed style keeps a
@@ -1989,6 +2022,13 @@
     %% Push last item's template/content onto parent stacks
     \seq_gpush:NV \g__props_parent_tpl_seq \g__props_last_tpl_tl
     \seq_gpush:NV \g__props_parent_cnt_seq \g__props_last_cnt_tl
+    %% An inlineprop opens no list, so its items are set inline whatever the
+    %% surroundings: the mode has to be taken here and not merely left alone,
+    %% since an enclosing prop has set it to display and every item of this
+    %% environment would otherwise be emitted as a list item of that one ---
+    %% an inlineprop inside a prop broke its text into displayed sub-items.
+    \bool_set_eq:NN \l__props_env_saved_dispmode_bool \g__props_display_mode_bool
+    \bool_gset_false:N \g__props_display_mode_bool
     %% Reset per-env items= counter (not part of defaults tl).
     \int_set:Nn  \l__props_env_items_int { 1 }
     %% Snapshot cascading config and reset the env-local item layer (same as prop).
@@ -2034,6 +2074,8 @@
         \tl_gset_eq:NN \g__props_last_cnt_tl \l_tmpb_tl
       }
     \int_gdecr:N \g__props_level_int
+    %% Give back the mode this environment interrupted, as prop's \end does.
+    \bool_gset_eq:NN \g__props_display_mode_bool \l__props_env_saved_dispmode_bool
   }
 
 
@@ -2369,7 +2411,13 @@
   }
 
 %% levelone: the standard level-1 numbered style.
-\newcounter { numpropi }
+%% numpropi restarts at each chapter, where the class has them, as equation
+%% and linguex's ExNo do.  The number is not prefixed with the chapter's, as
+%% equation's is: within a chapter (1) is unambiguous, and the plain form is
+%% what this package's readers are used to.  \counterwithout* undoes it.
+\cs_if_exist:cTF { c@chapter }
+  { \newcounter { numpropi } [ chapter ] }
+  { \newcounter { numpropi } }
 \SetPropStyle { levelone }
   {
     counter     = numpropi ,
@@ -2379,7 +2427,7 @@
 %% enumprop: like numpropi, but restarted at every outermost prop or
 %% inlineprop environment (see those environments), so that a list numbers
 %% from one each time it is used, as enumerate does.  numpropi runs on through
-%% the document instead, which is what one wants for propositions that are
+%% the chapter instead, which is what one wants for propositions that are
 %% referred to from elsewhere, and not what one wants for a one-off list.
 \newcounter { enumprop }
 \SetPropStyle { enumprop }
