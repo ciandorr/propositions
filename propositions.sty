@@ -161,6 +161,14 @@
           {
             \bool_set_false:N \l__props_titlecase_bool
             \protected@edef \l_tmpa_tl { #1 }
+            %% Uppercase the first character, and only if it is one that has an
+            %% uppercase form.  \text_titlecase_first:n otherwise looks ahead
+            %% for the first letter and uppercases that however far in it is,
+            %% which turned a reference reading (2a) into (2A).  A leading
+            %% *command* is still no obstacle, so a format wrapping its content
+            %% in \textsc or the like titlecases as before.  The switch is
+            %% l3text's own and is local, so the group above scopes it.
+            \bool_set_false:N \l_text_titlecase_check_letter_bool
             \exp_args:NV \text_titlecase_first:n \l_tmpa_tl
           }
       }
@@ -230,10 +238,20 @@
   }
 
 \NewDocumentCommand \nParentref { }
-  { \text_titlecase_first:n { \nparentref } }
+  {
+    \group_begin:
+      \bool_set_false:N \l_text_titlecase_check_letter_bool
+      \text_titlecase_first:n { \nparentref }
+    \group_end:
+  }
 
 \NewDocumentCommand \nLastref { }
-  { \text_titlecase_first:n { \nlastref } }
+  {
+    \group_begin:
+      \bool_set_false:N \l_text_titlecase_check_letter_bool
+      \text_titlecase_first:n { \nlastref }
+    \group_end:
+  }
 
 
 \cs_generate_variant:Nn \tl_gset_eq:NN { cN }
@@ -979,6 +997,9 @@
                   {
                     \bool_set_false:N \l__props_titlecase_bool
                     \protected@edef \l_tmpa_tl { #1 }
+                    %% First character only; see the note in the plain
+                    %% \propapply above.
+                    \bool_set_false:N \l_text_titlecase_check_letter_bool
                     \exp_args:NV \text_titlecase_first:n \l_tmpa_tl
                   }
               }
@@ -2161,6 +2182,9 @@
 \NewDocumentCommand \Nref { s m }
   {
     \group_begin:
+    %% First character only; see the note in \propapply.  Set here rather than
+    %% inside the \propapply below, which stays expandable.
+    \bool_set_false:N \l_text_titlecase_check_letter_bool
     \cs_set:Npn \propapply ##1##2 { \text_titlecase_first:n { ##2 } }
     \IfBooleanTF { #1 }
       { \__props_orig_ref:w * { #2 } }

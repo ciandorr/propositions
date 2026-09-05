@@ -211,15 +211,25 @@ Expected: the four labels of the first list are \textbf{M$'$}, \textbf{M$'$},
   \begin{prop}
     \item Sub-item a. \label{tc:sub}
   \end{prop}
+  \item[style=TC, name={Identity Theory}, ref format={\textbf{the #1}}]
+    The same, with no bracket before the name. \label{tc:nopar}
   \item[test, style=TC] A named TC item with a lower-case name. \label{tc:lower}
   \begin{prop}
     \item Sub-item a. \label{tc:lowersub}
   \end{prop}
 \end{prop}
 
+The titlecase commands uppercase the first character of the output and nothing
+else, so a \texttt{ref format} that opens with a literal `(' leaves them with
+nothing to do: through this style they match their plain counterparts exactly.
+Before that was settled they looked ahead for the first \emph{letter} however
+far in it was, which made a reference reading `(2a)' come back as `(2A)'.  A
+leading \emph{command} is no obstacle---see \verb|tc:nopar| below.
+
 Ref: \ref{tc:id} (expected: (\textbf{the Identity Theory})).
 
-Ref (titlecase): \Ref{tc:id} (expected: (\textbf{The Identity Theory})).
+Ref (titlecase): \Ref{tc:id} (expected: (\textbf{the Identity Theory})---the
+`(' comes first, so there is nothing to uppercase).
 
 Ref* (titlecase, no link): \Ref*{tc:id} (expected: the same, unlinked).
 
@@ -229,19 +239,23 @@ Nref (titlecase): \Nref{tc:id} (expected: Identity Theory).
 
 Oref: \oref[$'$]{tc:id} (expected: (\textbf{the Identity Theory$'$})).
 
-Oref (titlecase): \Oref[$'$]{tc:id} (expected: (\textbf{The Identity
+Oref (titlecase): \Oref[$'$]{tc:id} (expected: (\textbf{the Identity
 Theory$'$})).
 
 Lastref: \lastref{} (expected: (\textbf{test})---the sub-list's items are
 local to it, so once it has closed \verb|\lastref| again refers to the last
 item of the enclosing level).
 
-Lastref (titlecase): \Lastref{} (expected: (\textbf{Test})).
+Lastref (titlecase): \Lastref{} (expected: (\textbf{test})).
 
 Nested ref (titlecase): \Ref{tc:sub} (expected: (\textbf{TC1a})).
 
-Lower-case names: \Ref{tc:lower} (expected: (\textbf{Test})),
-\Ref{tc:lowersub} (expected: (\textbf{Testa})).
+Lower-case names: \Ref{tc:lower} (expected: (\textbf{test})),
+\Ref{tc:lowersub} (expected: (\textbf{testa})).
+
+No leading bracket: \ref{tc:nopar} (expected: \textbf{the Identity Theory}),
+\Ref{tc:nopar} (expected: \textbf{The Identity Theory}---a leading command is
+no obstacle, only a leading character).
 
 \section{Label format and name format keys}
 

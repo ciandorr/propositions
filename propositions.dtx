@@ -630,8 +630,8 @@
 %   { doc name = Ref,  doc parameter = \marg{label} },
 %   { doc name = {Ref*}, doc parameter = \marg{label} },
 % }
-%   Titlecase variants of |\ref| and |\ref*|: uppercases the first letter of the
-%   formatted output.  (For example, if |\ref{thesis}| produces
+%   Titlecase variants of |\ref| and |\ref*|: uppercases the first character of
+%   the formatted output, doing nothing if it has no uppercase form.  (For example, if |\ref{thesis}| produces
 %   `the Identity Theory', then |\Ref{thesis}| produces
 %   `The Identity Theory'.)  The starred form suppresses the hyperlink.
 %   Note: |\Ref| only affects references produced by this package (which are stored
@@ -644,7 +644,7 @@
 %   { doc name = Nref,  doc parameter = \marg{label} },
 %   { doc name = {Nref*}, doc parameter = \marg{label} },
 % }
-%   ``Naked ref.''  Outputs the bare reference content with all formatting stripped.  If \cs{ref}\texttt{\{premise\}} produces~`(P1)', then \cs{nref}\texttt{\{premise\}} produces~`P1'.  The starred form suppresses the hyperlink.  \cs{Nref} is the titlecase variant: it uppercases the first letter of the bare content.
+%   ``Naked ref.''  Outputs the bare reference content with all formatting stripped.  If \cs{ref}\texttt{\{premise\}} produces~`(P1)', then \cs{nref}\texttt{\{premise\}} produces~`P1'.  The starred form suppresses the hyperlink.  \cs{Nref} is the titlecase variant: it uppercases the first character of the bare content.
 % \end{docCommands}
 %
 % |\nref| can be useful in the argument of |\item|, when the
@@ -881,8 +881,11 @@
 % \begin{description}
 % \item[\texttt{numbered}] The default nameless style.  Selects one of 
 %    the helper styles \texttt{levelone}--\texttt{levelfive}, depending
-%    on nesting depth, or \texttt{footnumprop} if in a footnote and not nested.  
+%    on nesting depth, or \texttt{footnumprop} if in a footnote (and not nested).  
 % \begin{codebox}
+% \SetPropStyle{numbered}{style = \proplevelchoice{
+%   \propfootnotechoice{levelone}{footnumprop},
+%   leveltwo, levelthree, levelfour, levelfive}}
 % \SetPropStyle{levelone}{counter = numpropi, format = (#1)}
 % \SetPropStyle{leveltwo}{counter = numpropii,
 %   display format = #1., ref format = \parentref{#1}}
@@ -892,9 +895,6 @@
 %   display format = #1., ref format = \parentref{#1}}
 % \SetPropStyle{levelfive}{counter = numpropv,
 %   display format = (#1), ref format = \parentref{.#1}}
-% \SetPropStyle{numbered}{style = \proplevelchoice{
-%   \propfootnotechoice{levelone}{footnumprop},
-%   leveltwo, levelthree, levelfour, levelfive}}
 % \end{codebox}
 %
 % \item[\texttt{footnumprop}] The counter is displayed as a string of asterisks.  This style is designed to be used for numbered propositions in footnotes, which should not interrupt the numbering in the main text.  Note that the nesting
@@ -915,8 +915,7 @@
 % \begin{description}
 % \item[\texttt{eqnum}] Like |numbered|, but uses |equation| instead 
 % of |levelone| at the outer level.  The |equations| package option sets
-% |default nameless style = eqnum|.  Since this manual uses this option,
-% its outer-level nameless items use the |equation| style.
+% |default nameless style = eqnum|.
 % \begin{codebox}
 % \SetPropStyle{eqnum}{style = \proplevelchoice{
 %   \propfootnotechoice{equation}{footnumprop},
@@ -1229,6 +1228,10 @@
 %   [Change] \docCounter{numpropi} now resets at each chapter under
 %   \textsf{book} and \textsf{report}, as \texttt{equation} does.  (Undo with \cs{counterwithout}|*{numpropi}{chapter}|.)
 %
+%   [Bug fix] \refCom{Ref} and the other titlecase variants uppercase the first
+%   character only, where they used to look ahead for the first letter: a
+%   reference reading `(2a)' came back as `(2A)'.
+%
 %   [Bug fix] An \refEnv{inlineprop} nested inside a \refEnv{prop} now sets 
 %   its items inline, and a \refEnv{prop} inside an \refEnv{inlineprop} creates 
 %   a list.
@@ -1444,6 +1447,14 @@
           {
             \bool_set_false:N \l__props_titlecase_bool
             \protected@edef \l_tmpa_tl { #1 }
+            %% Uppercase the first character, and only if it is one that has an
+            %% uppercase form.  \text_titlecase_first:n otherwise looks ahead
+            %% for the first letter and uppercases that however far in it is,
+            %% which turned a reference reading (2a) into (2A).  A leading
+            %% *command* is still no obstacle, so a format wrapping its content
+            %% in \textsc or the like titlecases as before.  The switch is
+            %% l3text's own and is local, so the group above scopes it.
+            \bool_set_false:N \l_text_titlecase_check_letter_bool
             \exp_args:NV \text_titlecase_first:n \l_tmpa_tl
           }
       }
@@ -1542,12 +1553,23 @@
     \group_end:
   }
 
-% Titlecase variants of \cs{nparentref} and \cs{nlastref}.
+% Titlecase variants of \cs{nparentref} and \cs{nlastref}.  The group is for
+% the first-character switch alone; see the note in \propapply.
 \NewDocumentCommand \nParentref { }
-  { \text_titlecase_first:n { \nparentref } }
+  {
+    \group_begin:
+      \bool_set_false:N \l_text_titlecase_check_letter_bool
+      \text_titlecase_first:n { \nparentref }
+    \group_end:
+  }
 
 \NewDocumentCommand \nLastref { }
-  { \text_titlecase_first:n { \nlastref } }
+  {
+    \group_begin:
+      \bool_set_false:N \l_text_titlecase_check_letter_bool
+      \text_titlecase_first:n { \nlastref }
+    \group_end:
+  }
 
 % ====================================================================
 % Variant generation
@@ -2444,6 +2466,9 @@
                   {
                     \bool_set_false:N \l__props_titlecase_bool
                     \protected@edef \l_tmpa_tl { #1 }
+                    %% First character only; see the note in the plain
+                    %% \propapply above.
+                    \bool_set_false:N \l_text_titlecase_check_letter_bool
                     \exp_args:NV \text_titlecase_first:n \l_tmpa_tl
                   }
               }
@@ -3946,6 +3971,9 @@
 \NewDocumentCommand \Nref { s m }
   {
     \group_begin:
+    %% First character only; see the note in \propapply.  Set here rather than
+    %% inside the \propapply below, which stays expandable.
+    \bool_set_false:N \l_text_titlecase_check_letter_bool
     \cs_set:Npn \propapply ##1##2 { \text_titlecase_first:n { ##2 } }
     \IfBooleanTF { #1 }
       { \__props_orig_ref:w * { #2 } }
