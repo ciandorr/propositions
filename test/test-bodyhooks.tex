@@ -68,4 +68,52 @@ After: \probe.  Expected \texttt{OUT}: the group ended with the environment.
 \begin{inlineprop}[body begin = \itshape]\item one, \item two.\end{inlineprop}
 After, upright.
 
+\section{A level-dependent body font}
+
+\makeatletter
+\DeclareRobustCommand\wt{[\f@series]}
+\makeatother
+
+\verb|\proplevelchoice| is expandable and reads the nesting level where it is
+used, so it can stand in a \texttt{body begin}: the first entry applies at level
+one, the last at every level from its position down.  Each body below reports
+its own weight, and each label reports the label's.
+
+The environment argument is the wrong place for it.  It reaches the items in
+this environment's immediate scope and no further, which is the same rule that
+already sends \texttt{style\,=\,hierarchical} to \verb|\propoptions| rather than
+here.  The inner levels get no \texttt{body begin} of their own, so they stay
+inside the level-one group and come out bold --- and, the style not having
+reached them either, they are numbered by the default \texttt{numbered} style
+rather than hierarchically.  This is the expected result, not a fault:
+
+\begin{prop}[style=hierarchical, body begin=\proplevelchoice{\bfseries,\mdseries}]
+  \item Level one \wt.
+  \begin{prop}
+    \item Level two \wt: bold, and lettered rather than hierarchical.
+  \end{prop}
+  \item Level one again \wt.
+\end{prop}
+
+Set through \verb|\propoptions| it cascades, and both the numbering and the
+weight come out by level:
+
+{\propoptions{style=hierarchical, body begin=\proplevelchoice{\bfseries,\mdseries}}
+\begin{prop}
+  \item Level one \wt: bold.
+  \begin{prop}
+    \item Level two \wt: medium.
+    \begin{prop}
+      \item Level three \wt: medium, the last entry standing for every level
+        from its position down.
+    \end{prop}
+  \end{prop}
+  \item Level one again \wt.
+\end{prop}}
+
+Note that the level-one \emph{label} is not bold.  Labels normalise weight and
+shape whatever the body around them does, so a bold body does not drag its own
+label into bold; a style that wants both would set \texttt{display format} or
+\texttt{label format} as well.
+
 \end{document}
