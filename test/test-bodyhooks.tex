@@ -1,0 +1,71 @@
+\documentclass{article}
+\usepackage{propositions}
+\newcommand\probe{OUT}
+
+%% body begin / body end: material at either end of an item's body.
+%%
+%% An item's body is not an argument -- it runs to the next \item or to the end
+%% of the environment -- so the group it is put in has to be closed from a
+%% distance, at the head of the next item and in the environment's end code.
+%% That is the machinery beamer's overlay specifications also use.
+%%
+%% Nothing is opened for an item whose style asks for neither key, so an item
+%% that wants no group does not get one.
+
+\begin{document}
+
+\section{Scope}
+
+Before: \probe.
+\begin{prop}[body begin = \renewcommand\probe{IN}\itshape,
+             body end = \textup{(end:\probe)}]
+  \item First body: \probe.  Expected \texttt{IN}, in italic, then
+    \texttt{(end:IN)} upright at the end of this line rather than on one of
+    its own.
+  \item Second body: \probe.
+\end{prop}
+After: \probe.  Expected \texttt{OUT}: the group ended with the environment.
+
+\section{Per item, and per style}
+
+\SetPropStyle{ital}{body begin = \itshape}
+\begin{prop}
+  \item[style=ital] Italic body.
+  \item Upright body: an item whose style asks for neither key opens no group.
+  \item[style=ital] Italic again.
+\end{prop}
+
+\section{A nested list is inside its parent item's body}
+
+\begin{prop}[body begin = \bfseries]
+  \item Bold body.
+  \begin{prop}
+    \item This sub-item is inside the outer item's body, so it inherits the
+      bold.  A style for the inner level would have to set its own
+      \texttt{body begin} to get out of it.
+  \end{prop}
+  \item Bold again.
+\end{prop}
+
+\section{Several paragraphs, and the other alignments}
+
+\begin{prop}[body begin = \itshape]
+  \item One paragraph.
+
+  A second paragraph of the same item, still italic.
+  \item The next item.
+\end{prop}
+
+\begin{prop}[align=runin, body begin = \itshape]
+  \item Run-in body. \item Second.
+\end{prop}
+\begin{prop}[align=nextline, body begin = \itshape]
+  \item Next-line body. \item Second.
+\end{prop}
+
+\section{inlineprop}
+
+\begin{inlineprop}[body begin = \itshape]\item one, \item two.\end{inlineprop}
+After, upright.
+
+\end{document}

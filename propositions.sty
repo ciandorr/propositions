@@ -100,10 +100,13 @@
 \tl_new:N   \l__props_ospec_tl        %% this item's overlay spec, <...> or empty
 \bool_new:N \l__props_env_ospec_bool  %% true when \begin{prop} opened an actionenv
 \tl_new:N   \l__props_env_keys_tl     %% the env argument, less any leading <...>
-\tl_new:N   \g__props_inline_close_tl  %% how to close the open inline item, if any
-\seq_new:N  \g__props_inline_close_seq %% one of those per enclosing inlineprop
 \tl_new:N   \l__props_inline_ospec_tl  %% an inline item's spec, the default included
-\tl_new:N   \l__props_inline_pop_tl
+%% What the item whose body is open has left to close: see \__props_item_close:.
+\tl_new:N   \g__props_item_close_tl
+\seq_new:N  \g__props_item_close_seq
+\tl_new:N   \l__props_item_close_pop_tl
+\tl_new:N   \l__props_bodybegin_tl    %% material at the start of an item's body
+\tl_new:N   \l__props_bodyend_tl      %% and at its end
 
 \tl_new:N   \l__props_named_style_tl             %% default style for named items
 \tl_new:N   \l__props_named_ptag_style_tl        %% ptag override for named items; empty = fall back
@@ -340,6 +343,8 @@
     display~format  .cs_set:Np = \l__props_displayfmt:n #1 ,
     label~format    .cs_set:Np = \l__props_labelfmt:n #1 ,
     ref~format      .cs_set:Np = \l__props_reffmt:n #1 ,
+    body~begin      .tl_set:N  = \l__props_bodybegin_tl ,
+    body~end        .tl_set:N  = \l__props_bodyend_tl ,
     format          .code:n    =
       {
         \cs_set:Npn \l__props_displayfmt:n ##1 { #1 }
@@ -404,6 +409,8 @@
     \cs_set:Npn \l__props_displayfmt:n ##1   { ##1 }
     \cs_set:Npn \l__props_labelfmt:n ##1    { ##1 }
     \cs_set:Npn \l__props_reffmt:n ##1      { ##1 }
+    \tl_clear:N \l__props_bodybegin_tl
+    \tl_clear:N \l__props_bodyend_tl
     \cs_set:Npn \l__props_shorthandfmt:n ##1 { ~ [##1] }
     \cs_set:Npn \l__props_glossfmt:n ##1    { ~ (##1) }
     \tl_clear:N \l__props_name_tl
@@ -530,6 +537,8 @@
     display~format  .cs_set:Np = \l__props_displayfmt:n #1 ,
     label~format    .cs_set:Np = \l__props_labelfmt:n #1 ,
     ref~format      .cs_set:Np = \l__props_reffmt:n  #1 ,
+    body~begin      .tl_set:N  = \l__props_bodybegin_tl ,
+    body~end        .tl_set:N  = \l__props_bodyend_tl ,
     format          .code:n =
       {
         \cs_set:Npn \l__props_displayfmt:n ##1 { #1 }
@@ -825,6 +834,13 @@
           { \setcounter { numpropv } { 0 } }
       }
     \__props_output_item:
+    %% If beamer's \item opened an actionenv for this item, it is one of the
+    %% things the body has to close.  Registered after the item is out, so that
+    %% anything opened later closes before it.
+    \bool_lazy_and:nnT
+      { \bool_if_p:N \c__props_beamer_bool }
+      { \bool_if_p:N \g__props_display_mode_bool }
+      { \__props_item_close_add:n { \__props_body_par: \__props_beamer_closeitem: } }
     %% \propformlabel is deliberately NOT updated here to the label just
     %% produced.  It exists to predict the label an environment's items will
     %% carry, so that the dimension keys can be sized to it; and a style's
@@ -853,6 +869,10 @@
     %% \@esphack declines to \ignorespaces, and the space that follows the
     %% \label is typeset on top of ours.  That is what put a double space
     %% after every run-in label in a document using hyperref.
+    %% The body begins here, so its group opens here: after the label, and
+    %% before the \ignorespaces below, which has to stay the last token this
+    %% command leaves behind.
+    \__props_body_open:
     \bool_if:NT \l__props_body_started_bool
       {
         \str_if_eq:VnT \l__props_alignment_tl { runin } { \space }
@@ -886,7 +906,7 @@
   {
     \NewDocumentCommand \__props_item_cmd: { d<> o d<> }
       {
-        \__props_beamer_closeitem:
+        \__props_item_close:
         \tl_clear:N \l__props_ospec_tl
         \IfValueT { #1 } { \tl_set:Nn \l__props_ospec_tl { < #1 > } }
         \IfValueT { #3 } { \tl_set:Nn \l__props_ospec_tl { < #3 > } }
@@ -904,6 +924,7 @@
   {
     \NewDocumentCommand \__props_item_cmd: { o }
       {
+        \__props_item_close:
         \IfValueTF { #1 }
           {
             \bool_set_true:N \l__props_item_optarg_bool
@@ -1279,24 +1300,51 @@
 
 \cs_new_eq:NN \__props_list_item: \item
 
-\cs_new_protected:Nn \__props_beamer_closeitem:
+\cs_new_protected:Nn \__props_item_close_add:n
+  { \tl_gput_left:Nn \g__props_item_close_tl { #1 } }
+
+\cs_new_protected:Nn \__props_item_close:
   {
-    \bool_if:NT \c__props_beamer_bool
-      {
-        \bool_if:NTF \g__props_display_mode_bool
-          {
-            \mode_if_horizontal:T { \unskip \unskip \par }
-            \use:c { beamer@closeitem }
-            \cs_gset:cpn { beamer@closeitem } { }
-          }
-          { \__props_inline_closeitem: }
-      }
+    \g__props_item_close_tl
+    \tl_gclear:N \g__props_item_close_tl
   }
 
-\cs_new_protected:Nn \__props_inline_closeitem:
+\cs_new_protected:Nn \__props_body_par:
   {
-    \g__props_inline_close_tl
-    \tl_gclear:N \g__props_inline_close_tl
+    \bool_if:NT \g__props_display_mode_bool
+      { \mode_if_horizontal:T { \unskip \unskip \par } }
+  }
+
+\cs_new_protected:Nn \__props_item_close_push:
+  {
+    \seq_gpush:NV \g__props_item_close_seq \g__props_item_close_tl
+    \tl_gclear:N \g__props_item_close_tl
+  }
+
+\cs_new_protected:Nn \__props_item_close_pop:
+  {
+    \seq_gpop:NN \g__props_item_close_seq \l__props_item_close_pop_tl
+    \tl_gset_eq:NN \g__props_item_close_tl \l__props_item_close_pop_tl
+  }
+
+\cs_new_protected:Nn \__props_body_open:
+  {
+    \bool_lazy_and:nnF
+      { \tl_if_empty_p:N \l__props_bodybegin_tl }
+      { \tl_if_empty_p:N \l__props_bodyend_tl }
+      {
+        \group_begin:
+        \exp_args:NV \__props_body_close_add:n \l__props_bodyend_tl
+        \l__props_bodybegin_tl
+      }
+  }
+\cs_new_protected:Nn \__props_body_close_add:n
+  { \__props_item_close_add:n { #1 \__props_body_par: \group_end: } }
+
+\cs_new_protected:Nn \__props_beamer_closeitem:
+  {
+    \use:c { beamer@closeitem }
+    \cs_gset:cpn { beamer@closeitem } { }
   }
 
 \cs_new_protected:Nn \__props_list_item_os:n { \__props_list_item: #1 }
@@ -1555,7 +1603,7 @@
     \tl_if_empty:NF \l__props_inline_ospec_tl
       {
         \exp_args:NV \__props_inline_open:n \l__props_inline_ospec_tl
-        \tl_gset:Nn \g__props_inline_close_tl { \end { actionenv } }
+        \__props_item_close_add:n { \end { actionenv } }
       }
     \l__props_item_output_tl
   }
@@ -2103,6 +2151,8 @@
     %% nested list (the dispatcher keys off \makelabel; see its definition).
     %% Local to the list group; undone automatically by \end{list}.
     \cs_set_eq:NN \item \__props_item_dispatch:
+    %% See the note in inlineprop's begin code.
+    \__props_item_close_push:
     %% Restore the cascading list configuration inside the list group.  \begin{list}
     %% above has already consumed this environment's argument values, so nested
     %% props now see the cascading (\propoptions) values, not this environment's
@@ -2112,6 +2162,10 @@
     \__props_env_restore:
   }
   {
+    %% Close the last item's body, before \end{list} closes the group it was
+    %% opened in, and hand back what the enclosing environment was holding.
+    \__props_item_close:
+    \__props_item_close_pop:
     %% Save this list's \itemsep+\parsep as the TARGET spacing for the
     %% immediately following \begin{prop}.  Must be done BEFORE
     %% \end{list}, because \end{list} closes the list group and
@@ -2215,20 +2269,17 @@
     %% nested list resets \makelabel and the dispatcher reverts to ambient \item.
     \cs_set_eq:NN \makelabel \__props_makelabel:n
     \cs_set_eq:NN \item \__props_item_dispatch:
-    %% An item's overlay group is closed by the next item or by \end, so the one
-    %% still open when this environment begins belongs to the environment
-    %% outside it.  Stack that one and start with none of our own; an inlineprop
-    %% inside an inlineprop would otherwise close its parent's group and leave
-    %% its own open.
-    \seq_gpush:NV \g__props_inline_close_seq \g__props_inline_close_tl
-    \tl_gclear:N \g__props_inline_close_tl
+    %% What an item's body has left open is closed by the next item or by \end,
+    %% so anything still open here belongs to the environment outside this one.
+    %% Stack it and start with nothing of our own; an environment inside an
+    %% item's body would otherwise close its parent's things and leave its own.
+    \__props_item_close_push:
   }
   {
-    %% Close the last item's overlay group --- there is no next item to do it
-    %% --- and hand the enclosing environment back the one it was holding.
-    \__props_inline_closeitem:
-    \seq_gpop:NN \g__props_inline_close_seq \l__props_inline_pop_tl
-    \tl_gset_eq:NN \g__props_inline_close_tl \l__props_inline_pop_tl
+    %% Close the last item's body --- there is no next item to do it --- and
+    %% hand the enclosing environment back what it was holding.
+    \__props_item_close:
+    \__props_item_close_pop:
     %% Close the wrapper group (restoring the wrapper variables), then run the
     %% matching wrap-end code.
     \group_end:
