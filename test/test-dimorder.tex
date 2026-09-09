@@ -1,0 +1,82 @@
+\documentclass{article}
+\usepackage{propositions}
+
+%% The order in which list dimensions are applied.
+%%
+%% A dimension may be written in terms of another: rightmargin=\leftmargin
+%% asks for a list symmetric in the manner of quote, at whatever margin each
+%% nesting level or style arrives at.  For that to hold, the dimensions the
+%% labelindent constraint (LI + LW + LS = LM + II) does not speak of have to
+%% be set after it has resolved, since resolving it may move \leftmargin to
+%% absorb a deficit.  They used to be set before, so such a list came out
+%% lopsided by exactly that deficit.
+%%
+%% Every line below must show the same figure twice.
+
+\makeatletter
+\newcommand\lr{\the\leftmargin\ / \the\rightmargin}
+\makeatother
+
+\propoptions{rightmargin=\leftmargin}
+
+\begin{document}
+
+\section{Symmetric margins, unresolved}
+
+Nothing here sets \texttt{labelindent}, so the constraint does not bind and
+\verb|\leftmargin| stands as asked.  These held before the reordering too.
+
+\begin{prop}
+  \item Depth one: \lr.
+  \begin{prop}
+    \item Depth two: \lr.
+    \begin{prop}
+      \item Depth three: \lr.
+    \end{prop}
+  \end{prop}
+\end{prop}
+
+\begin{prop}[leftmargin=5em]
+  \item Explicit leftmargin: \lr.
+\end{prop}
+
+\begin{prop}[style=fitmargin]
+  \item[A rather long proposition name] Computed leftmargin: \lr.
+\end{prop}
+
+\section{Symmetric margins, resolved}
+
+Here the constraint binds.  With \texttt{labelindent} alone the deficit goes
+to \texttt{itemindent}, which the symmetry does not depend on; with
+\texttt{labelwidth} set as well, \texttt{itemindent} is the only candidate
+left before \texttt{leftmargin}, and \verb|\leftmargin| moves.  That is the case
+the order was wrong for.
+
+\begin{prop}[labelindent=1em]
+  \item Deficit absorbed elsewhere: \lr.
+\end{prop}
+
+\begin{prop}[labelindent=1em, labelwidth=2em]
+  \item Deficit absorbed by \verb|\leftmargin|: \lr.
+\end{prop}
+
+\section{Still overridable}
+
+An explicit \texttt{rightmargin} in the environment argument beats the
+inherited one, and the inherited one is scoped like any other
+\verb|\propoptions| setting.
+
+\begin{prop}[rightmargin=0pt]
+  \item Overridden: \lr\ (expected: a left margin and \texttt{0.0pt}).
+\end{prop}
+
+{\propoptions{leftmargin=8em}
+\begin{prop}
+  \item Inside a group: \lr.
+\end{prop}}
+
+\begin{prop}
+  \item After the group: \lr.
+\end{prop}
+
+\end{document}

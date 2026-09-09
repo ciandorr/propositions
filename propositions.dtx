@@ -1228,6 +1228,11 @@
 %   [Change] \docCounter{numpropi} now resets at each chapter under
 %   \textsf{book} and \textsf{report}, as \texttt{equation} does.  (Undo with \cs{counterwithout}|*{numpropi}{chapter}|.)
 %
+%   [Bug fix] A list dimension written in terms of another---\refKey{rightmargin}
+%   \verb|= \leftmargin| for a list symmetric like \texttt{quote}---is now
+%   computed after \refKey{labelindent} resolution, not before, so it sees the
+%   value the list ends up with.
+%
 %   [Bug fix] \refCom{Ref} and the other titlecase variants uppercase the first
 %   character only, where they used to look ahead for the first letter: a
 %   reference reading `(2a)' came back as `(2A)'.
@@ -3623,10 +3628,17 @@
           { \dim_zero:N \labelwidth }
         %% Apply dimension overrides.  Empty or the sentinel * = inherit the
         %% document class default.
-        \__props_apply_dim:Nn \l__props_topsep_tl        \topsep
-        \__props_apply_dim:Nn \l__props_partopsep_tl      \partopsep
-        \__props_apply_dim:Nn \l__props_itemsep_tl        \itemsep
-        \__props_apply_dim:Nn \l__props_parsep_tl         \parsep
+        %%
+        %% Only the four dimensions the constraint below is written in are set
+        %% here, that resolution reading them and possibly moving them.  The
+        %% rest follow it, so that a value written in terms of one of the four
+        %% is computed from the figure this list ends up with rather than the
+        %% one it was asked for.  rightmargin = \leftmargin is the case that
+        %% brought this up --- a list symmetric in the manner of quote, at
+        %% whatever margin each nesting level or style arrives at --- and it
+        %% came out lopsided by the deficit whenever the resolution moved
+        %% \leftmargin to absorb one.
+        %%
         %% \labelsep before \leftmargin, since a leftmargin may be written in
         %% terms of it --- fitmargin's \widthof{\propwidestlabel}+\labelsep is
         %% the built-in case --- and would otherwise be computed from the value
@@ -3634,9 +3646,7 @@
         %% makes no difference, which is why it went unnoticed.
         \__props_apply_dim:Nn \l__props_labelsep_tl       \labelsep
         \__props_apply_dim:Nn \l__props_leftmargin_tl     \leftmargin
-        \__props_apply_dim:Nn \l__props_rightmargin_tl    \rightmargin
         \__props_apply_dim:Nn \l__props_itemindent_tl     \itemindent
-        \__props_apply_dim:Nn \l__props_listparindent_tl  \listparindent
         \__props_apply_dim:Nn \l__props_labelwidth_tl     \labelwidth
         %% Constraint resolution: LI + LW + LS = LM + II.
         %% When the user sets labelindent, one of the four real
@@ -3715,6 +3725,15 @@
                   }
               }
           }
+        %% The dimensions the constraint says nothing about, set now that it
+        %% has settled the ones it does.  \topsep and \partopsep before the
+        %% consecutive-list block below, which reads them.
+        \__props_apply_dim:Nn \l__props_topsep_tl         \topsep
+        \__props_apply_dim:Nn \l__props_partopsep_tl      \partopsep
+        \__props_apply_dim:Nn \l__props_itemsep_tl        \itemsep
+        \__props_apply_dim:Nn \l__props_parsep_tl         \parsep
+        \__props_apply_dim:Nn \l__props_rightmargin_tl    \rightmargin
+        \__props_apply_dim:Nn \l__props_listparindent_tl  \listparindent
         %% Consecutive-list: if signalled, save the natural \@topsepadd
         %% (\topsep+\partopsep, since we are entering from vmode) for
         %% after-spacing restoration, then set \topsep to TARGET so
