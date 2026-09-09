@@ -1197,6 +1197,8 @@
 %    With \textsf{cleveref} or \textsf{zref-clever} loaded, all proposition items are assigned to a private |prop| ``reference type'', which by default has no special name, so |\cref| (with \textsf{cleveref}) or |\zcref| (with \textsf{zref-clever}) will generate the same output as |\ref|.  The |crefname| key can override this and set a different reference type..
 %    \item
 %    The built-in \texttt{framed} style requires \textsf{tcolorbox} to be loaded.
+%    \item
+%    The integration with \textsf{beamer} is described below.  
 % \end{itemize}
 % None of these packages has to be loaded in any particular order relative to
 % \textsf{propositions}: each is detected either at load time or at
@@ -1214,16 +1216,16 @@
 %   \item \verb|\begin{prop}[<+->]|, for the default specification of that
 %     environment's items, followed by keys as usual if wanted:
 %     \verb|[<+->, align=runin]|;
-%   \item \verb|\begin{prop}<2->|, for the environment itself.
+%   \item \verb|\begin{prop}<2->|, for the environment itself (analogous to beamer environments like \texttt{block}.)
 % \end{itemize}
-% The last has no counterpart in \textsf{beamer}'s own lists, but is what its
-% \texttt{block}-shaped environments take.  Specifications compose as they do
-% anywhere in \textsf{beamer}: an item appears where its own and its
-% environment's are both satisfied.  Every counter the package uses is
-% registered with \cs{resetcounteronoverlays}, those a
-% \refCom{DeclareNumberedStyle} creates included, so a list is numbered the same
-% on each overlay of its frame.  \refEnv{inlineprop} is not overlay-aware: its
-% items are set in running text, and there is no box to reveal.
+% Specifications compose as they always do in \textsf{beamer}: an item appears where its own and its
+% environment's are both satisfied.  
+% 
+% \refEnv{inlineprop} takes the same three.  An item not yet reached is covered
+% rather than removed, exactly as in a \refEnv{prop}, so it holds its width and
+% the running text does not reflow as the overlays advance---and a \cs{label}
+% written inside such an item still works, which one hidden with \cs{only} would
+% not.
 %
 % \section{Known issues}
 %
@@ -1242,7 +1244,8 @@
 %
 % \begin{description}
 % \item[0.92 (unreleased)] [New] \textsf{beamer} overlay specifications on
-%   \refEnv{prop} and its \cs{item}s.  See \autoref{sect:beamer}.
+%   \refEnv{prop}, \refEnv{inlineprop} and their \cs{item}s.
+%   See \autoref{sect:beamer}.
 %
 %   [Change] Inside \refEnv{inlineprop}, an \cs{item} used without
 %   an optional argument is now followed by an interword space, so that
@@ -1380,6 +1383,10 @@
 \tl_new:N   \l__props_ospec_tl        %% this item's overlay spec, <...> or empty
 \bool_new:N \l__props_env_ospec_bool  %% true when \begin{prop} opened an actionenv
 \tl_new:N   \l__props_env_keys_tl     %% the env argument, less any leading <...>
+\tl_new:N   \g__props_inline_close_tl  %% how to close the open inline item, if any
+\seq_new:N  \g__props_inline_close_seq %% one of those per enclosing inlineprop
+\tl_new:N   \l__props_inline_ospec_tl  %% an inline item's spec, the default included
+\tl_new:N   \l__props_inline_pop_tl
 
 % --- Global settings ---
 \tl_new:N   \l__props_named_style_tl             %% default style for named items
@@ -2865,14 +2872,25 @@
 % no actionenv, and the \par would break the paragraph the items are set in.
 \cs_new_protected:Nn \__props_beamer_closeitem:
   {
-    \bool_lazy_and:nnT
-      { \bool_if_p:N \c__props_beamer_bool }
-      { \bool_if_p:N \g__props_display_mode_bool }
+    \bool_if:NT \c__props_beamer_bool
       {
-        \mode_if_horizontal:T { \unskip \unskip \par }
-        \use:c { beamer@closeitem }
-        \cs_gset:cpn { beamer@closeitem } { }
+        \bool_if:NTF \g__props_display_mode_bool
+          {
+            \mode_if_horizontal:T { \unskip \unskip \par }
+            \use:c { beamer@closeitem }
+            \cs_gset:cpn { beamer@closeitem } { }
+          }
+          { \__props_inline_closeitem: }
       }
+  }
+
+% The same for an inline item, whose group this package opened and so must
+% close itself.  No \par: an inlineprop's items are set in a paragraph that the
+% items do not own, and ending it here would break it in two.
+\cs_new_protected:Nn \__props_inline_closeitem:
+  {
+    \g__props_inline_close_tl
+    \tl_gclear:N \g__props_inline_close_tl
   }
 
 % Emit the underlying \item carrying this item's overlay specification, which
@@ -3176,9 +3194,48 @@
       }
   }
 
-% Inline mode: just output text
+% This item's specification: its own, or the environment's default standing in
+% for it.  A prop item is given the default by beamer, whose \item reads
+% \beamer@defaultospec for itself; an inline item never reaches that \item, and
+% has to ask.  Beamer's <*> is its way of saying there is no default.
+\cs_new_protected:Nn \__props_inline_ospec:
+  {
+    \tl_clear:N \l__props_inline_ospec_tl
+    \bool_if:NT \c__props_beamer_bool
+      {
+        \tl_if_empty:NTF \l__props_ospec_tl
+          {
+            \tl_set:Nx \l__props_inline_ospec_tl
+              { \use:c { beamer@defaultospec } }
+            \str_if_eq:VnT \l__props_inline_ospec_tl { <*> }
+              { \tl_clear:N \l__props_inline_ospec_tl }
+          }
+          { \tl_set_eq:NN \l__props_inline_ospec_tl \l__props_ospec_tl }
+      }
+  }
+
+% Inline mode: the label, inside an overlay group if this item is to have one.
+% Beamer's \item is not in play --- an inlineprop opens no list and calls none
+% --- so the group is opened here and closed by hand at the next item or at
+% \end{inlineprop}, which is what beamer's own \item does for a list item.
+%
+% The group is the actionenv a prop item gets, not an onlyenv: covered rather
+% than discarded.  An item not yet reached therefore holds its width, so the
+% sentence does not reflow as the overlays advance --- and, which decided it, a
+% \label written inside one still reaches the .aux.  Beamer throws away what
+% \only hides, a label in it included, and the label is then lost for good
+% unless the item happens to be shown on the frame's first overlay.
 \cs_new_protected:Nn \__props_output_item_inline:
-  { \l__props_item_output_tl }
+  {
+    \__props_inline_ospec:
+    \tl_if_empty:NF \l__props_inline_ospec_tl
+      {
+        \exp_args:NV \__props_inline_open:n \l__props_inline_ospec_tl
+        \tl_gset:Nn \g__props_inline_close_tl { \end { actionenv } }
+      }
+    \l__props_item_output_tl
+  }
+\cs_new_protected:Nn \__props_inline_open:n { \begin { actionenv } #1 }
 
 % ====================================================================
 % \propformlabel — formatted preview label, set at \begin{prop} and
@@ -3955,8 +4012,22 @@
 % The inlineprop environment
 % ====================================================================
 
-\NewDocumentEnvironment { inlineprop } { O{} }
+% The three beamer syntaxes prop takes, inlineprop takes too.  Scanning for the
+% "<" is a shade less safe here than after \begin{prop}, an inlineprop being
+% able to carry text before its first \item where a list cannot; but that text
+% belongs to no item, and one beginning with a "<" is not a document anyone
+% writes.
+\NewDocumentEnvironment { inlineprop } { d<> O{} }
   {
+    \bool_set_false:N \l__props_env_ospec_bool
+    \IfValueT { #1 }
+      {
+        \bool_if:NT \c__props_beamer_bool
+          {
+            \bool_set_true:N \l__props_env_ospec_bool
+            \begin { actionenv } < #1 >
+          }
+      }
     \int_gincr:N \g__props_level_int
     %% enumprop restarts at every outermost environment, so that a list using
     %% it numbers from one each time, the way enumerate does.  Reset here
@@ -3981,8 +4052,9 @@
     \tl_clear:N \l__props_env_defaults_tl
     %% Apply the argument (env-local routing on).
     \bool_set_true:N \l__props_env_arg_bool
-    \keys_set_filter:nnnN { props / global } { global-only }
-      { #1 } \l_tmpa_tl
+    \__props_env_split_ospec:n { #2 }
+    \keys_set_filter:nnVN { props / global } { global-only }
+      \l__props_env_keys_tl \l_tmpa_tl
     \bool_set_false:N \l__props_env_arg_bool
     \tl_if_empty:NF \l_tmpa_tl
       {
@@ -4004,8 +4076,20 @@
     %% nested list resets \makelabel and the dispatcher reverts to ambient \item.
     \cs_set_eq:NN \makelabel \__props_makelabel:n
     \cs_set_eq:NN \item \__props_item_dispatch:
+    %% An item's overlay group is closed by the next item or by \end, so the one
+    %% still open when this environment begins belongs to the environment
+    %% outside it.  Stack that one and start with none of our own; an inlineprop
+    %% inside an inlineprop would otherwise close its parent's group and leave
+    %% its own open.
+    \seq_gpush:NV \g__props_inline_close_seq \g__props_inline_close_tl
+    \tl_gclear:N \g__props_inline_close_tl
   }
   {
+    %% Close the last item's overlay group --- there is no next item to do it
+    %% --- and hand the enclosing environment back the one it was holding.
+    \__props_inline_closeitem:
+    \seq_gpop:NN \g__props_inline_close_seq \l__props_inline_pop_tl
+    \tl_gset_eq:NN \g__props_inline_close_tl \l__props_inline_pop_tl
     %% Close the wrapper group (restoring the wrapper variables), then run the
     %% matching wrap-end code.
     \group_end:
@@ -4021,6 +4105,7 @@
     \int_gdecr:N \g__props_level_int
     %% Give back the mode this environment interrupted, as prop's \end does.
     \bool_gset_eq:NN \g__props_display_mode_bool \l__props_env_saved_dispmode_bool
+    \bool_if:NT \l__props_env_ospec_bool { \end { actionenv } }
   }
 
 % ====================================================================

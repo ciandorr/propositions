@@ -72,12 +72,28 @@ then both.
 \begin{prop}[<+->, align=center]\item Centre one \item Centre two\end{prop}
 \end{frame}
 
-\begin{frame}{Not inlineprop}
-An \texttt{inlineprop} opens no list and calls no \texttt{\string\item}, so there is
-nothing for beamer to reveal: one overlay, both items on it.
-\begin{inlineprop}
-  \item Alpha. \item Beta.
-\end{inlineprop}
+\begin{frame}{inlineprop, the same three}
+An \texttt{inlineprop} calls no \texttt{\string\item} of beamer's, so it opens
+and closes the overlay group itself.  It is the same \texttt{actionenv} a
+\texttt{prop} item gets: an item not yet reached holds its width, and a label
+inside one survives.
+Consider: \begin{inlineprop}\item<1-> one,\label{b:i} \item<2-> two,
+\item<3-> three.\label{b:iii}\end{inlineprop} And after.
+\end{frame}
+
+\begin{frame}{inlineprop, environment default and environment specification}
+\begin{inlineprop}[<+->]\item one, \item two.\end{inlineprop}
+
+Before. \begin{inlineprop}<2->\item one, \item two.\end{inlineprop} After.
+\end{frame}
+
+\begin{frame}{inlineprop nested, in a prop item and in itself}
+\begin{prop}
+  \item<1-> Outer, with \begin{inlineprop}\item<2-> in one,
+  \item<3-> in two.\end{inlineprop} done.
+\end{prop}
+\begin{inlineprop}\item<1-> outer, \begin{inlineprop}\item<2-> inner one,
+\item<3-> inner two,\end{inlineprop} \item<4-> outer two.\end{inlineprop}
 \end{frame}
 
 \begin{frame}{Cross-references and \texttt{\string\pause}}
@@ -85,7 +101,7 @@ nothing for beamer to reveal: one overlay, both items on it.
   \item Alpha \label{b:a} \pause
   \item Beta \label{b:b}
 \end{prop}
-References: \ref{b:a}, \ref{b:b}.
+References: \ref{b:a}, \ref{b:b}, \ref{b:i}, \ref{b:iii}.
 \end{frame}
 
 \end{document}

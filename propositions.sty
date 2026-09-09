@@ -100,6 +100,10 @@
 \tl_new:N   \l__props_ospec_tl        %% this item's overlay spec, <...> or empty
 \bool_new:N \l__props_env_ospec_bool  %% true when \begin{prop} opened an actionenv
 \tl_new:N   \l__props_env_keys_tl     %% the env argument, less any leading <...>
+\tl_new:N   \g__props_inline_close_tl  %% how to close the open inline item, if any
+\seq_new:N  \g__props_inline_close_seq %% one of those per enclosing inlineprop
+\tl_new:N   \l__props_inline_ospec_tl  %% an inline item's spec, the default included
+\tl_new:N   \l__props_inline_pop_tl
 
 \tl_new:N   \l__props_named_style_tl             %% default style for named items
 \tl_new:N   \l__props_named_ptag_style_tl        %% ptag override for named items; empty = fall back
@@ -1277,14 +1281,22 @@
 
 \cs_new_protected:Nn \__props_beamer_closeitem:
   {
-    \bool_lazy_and:nnT
-      { \bool_if_p:N \c__props_beamer_bool }
-      { \bool_if_p:N \g__props_display_mode_bool }
+    \bool_if:NT \c__props_beamer_bool
       {
-        \mode_if_horizontal:T { \unskip \unskip \par }
-        \use:c { beamer@closeitem }
-        \cs_gset:cpn { beamer@closeitem } { }
+        \bool_if:NTF \g__props_display_mode_bool
+          {
+            \mode_if_horizontal:T { \unskip \unskip \par }
+            \use:c { beamer@closeitem }
+            \cs_gset:cpn { beamer@closeitem } { }
+          }
+          { \__props_inline_closeitem: }
       }
+  }
+
+\cs_new_protected:Nn \__props_inline_closeitem:
+  {
+    \g__props_inline_close_tl
+    \tl_gclear:N \g__props_inline_close_tl
   }
 
 \cs_new_protected:Nn \__props_list_item_os:n { \__props_list_item: #1 }
@@ -1521,8 +1533,33 @@
       }
   }
 
+\cs_new_protected:Nn \__props_inline_ospec:
+  {
+    \tl_clear:N \l__props_inline_ospec_tl
+    \bool_if:NT \c__props_beamer_bool
+      {
+        \tl_if_empty:NTF \l__props_ospec_tl
+          {
+            \tl_set:Nx \l__props_inline_ospec_tl
+              { \use:c { beamer@defaultospec } }
+            \str_if_eq:VnT \l__props_inline_ospec_tl { <*> }
+              { \tl_clear:N \l__props_inline_ospec_tl }
+          }
+          { \tl_set_eq:NN \l__props_inline_ospec_tl \l__props_ospec_tl }
+      }
+  }
+
 \cs_new_protected:Nn \__props_output_item_inline:
-  { \l__props_item_output_tl }
+  {
+    \__props_inline_ospec:
+    \tl_if_empty:NF \l__props_inline_ospec_tl
+      {
+        \exp_args:NV \__props_inline_open:n \l__props_inline_ospec_tl
+        \tl_gset:Nn \g__props_inline_close_tl { \end { actionenv } }
+      }
+    \l__props_item_output_tl
+  }
+\cs_new_protected:Nn \__props_inline_open:n { \begin { actionenv } #1 }
 
 
 \NewDocumentCommand \propformlabel { } { }
@@ -2119,8 +2156,17 @@
   }
 
 
-\NewDocumentEnvironment { inlineprop } { O{} }
+\NewDocumentEnvironment { inlineprop } { d<> O{} }
   {
+    \bool_set_false:N \l__props_env_ospec_bool
+    \IfValueT { #1 }
+      {
+        \bool_if:NT \c__props_beamer_bool
+          {
+            \bool_set_true:N \l__props_env_ospec_bool
+            \begin { actionenv } < #1 >
+          }
+      }
     \int_gincr:N \g__props_level_int
     %% enumprop restarts at every outermost environment, so that a list using
     %% it numbers from one each time, the way enumerate does.  Reset here
@@ -2145,8 +2191,9 @@
     \tl_clear:N \l__props_env_defaults_tl
     %% Apply the argument (env-local routing on).
     \bool_set_true:N \l__props_env_arg_bool
-    \keys_set_filter:nnnN { props / global } { global-only }
-      { #1 } \l_tmpa_tl
+    \__props_env_split_ospec:n { #2 }
+    \keys_set_filter:nnVN { props / global } { global-only }
+      \l__props_env_keys_tl \l_tmpa_tl
     \bool_set_false:N \l__props_env_arg_bool
     \tl_if_empty:NF \l_tmpa_tl
       {
@@ -2168,8 +2215,20 @@
     %% nested list resets \makelabel and the dispatcher reverts to ambient \item.
     \cs_set_eq:NN \makelabel \__props_makelabel:n
     \cs_set_eq:NN \item \__props_item_dispatch:
+    %% An item's overlay group is closed by the next item or by \end, so the one
+    %% still open when this environment begins belongs to the environment
+    %% outside it.  Stack that one and start with none of our own; an inlineprop
+    %% inside an inlineprop would otherwise close its parent's group and leave
+    %% its own open.
+    \seq_gpush:NV \g__props_inline_close_seq \g__props_inline_close_tl
+    \tl_gclear:N \g__props_inline_close_tl
   }
   {
+    %% Close the last item's overlay group --- there is no next item to do it
+    %% --- and hand the enclosing environment back the one it was holding.
+    \__props_inline_closeitem:
+    \seq_gpop:NN \g__props_inline_close_seq \l__props_inline_pop_tl
+    \tl_gset_eq:NN \g__props_inline_close_tl \l__props_inline_pop_tl
     %% Close the wrapper group (restoring the wrapper variables), then run the
     %% matching wrap-end code.
     \group_end:
@@ -2185,6 +2244,7 @@
     \int_gdecr:N \g__props_level_int
     %% Give back the mode this environment interrupted, as prop's \end does.
     \bool_gset_eq:NN \g__props_display_mode_bool \l__props_env_saved_dispmode_bool
+    \bool_if:NT \l__props_env_ospec_bool { \end { actionenv } }
   }
 
 
