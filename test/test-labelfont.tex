@@ -1,0 +1,82 @@
+\documentclass{article}
+\usepackage{amsmath}
+\usepackage{propositions}
+
+%% Labels normalise weight and shape, but not family.
+%%
+%% A label is furniture: (P1) should read as (P1) wherever the item sits, and
+%% not go bold-italic because the paragraph around it is.  The kernel does the
+%% same for the two labels whose look its design fixes -- \@eqnnum opens with
+%% \normalfont and so does \descriptionlabel -- and does not for enumerate and
+%% itemize, whose labels are counters belonging to the running text.
+%%
+%% Family is left alone, so that a passage set in another family carries its
+%% labels with it.  Reference text is not touched at all.
+%%
+%% \fs reports the font in force where it is typeset.  It has to be robust:
+%% the label is assembled with \protected@edef, which would otherwise expand it
+%% at build time and report the font at the wrong moment.
+
+\makeatletter
+\DeclareRobustCommand\fs{\f@series/\f@shape/\f@family}
+\makeatother
+
+%% The default named style is proposition, whose format is \textbf{#1}; that
+%% would mask the reset, since a style's own setting is meant to win.
+\propoptions{named style = plain}
+
+\begin{document}
+
+\section{Weight and shape}
+
+Ambient here is \fs.
+
+{\bfseries\itshape
+Ambient is now \fs.  Every label below must read \texttt{m/n/cmr}, and every
+body \texttt{bx/it/cmr}.
+
+\begin{prop}
+  \item[\fs] default alignment; body: \fs.
+\end{prop}
+\begin{prop}[align=runin]\item[\fs] run-in; body: \fs.\end{prop}
+\begin{prop}[align=nextline]\item[\fs] next line; body: \fs.\end{prop}
+\begin{prop}[align=flush]\item[\fs] flush; body: \fs.\end{prop}
+\begin{inlineprop}\item[\fs] inline; body: \fs.\end{inlineprop}
+}
+
+\section{Family follows the surroundings}
+
+{\sffamily\bfseries
+Ambient is \fs.  The label must read \texttt{m/n/cmss}: an explainer box set
+in another family carries its labels with it.
+\begin{prop}\item[\fs] body: \fs.\end{prop}}
+
+\section{A style's own setting wins}
+
+The reset goes first in the group, so anything a style sets afterwards beats
+it.  This is how an item asks for the old behaviour back.
+
+{\bfseries\itshape
+\begin{prop}[label format = {\bfseries\itshape #1}]
+  \item[\fs] must read \texttt{bx/it/cmr}.
+\end{prop}
+\begin{prop}[display format = {\textbf{#1}}]
+  \item[\fs] must read \texttt{bx/n/cmr}: the style asked for bold, not italic.
+\end{prop}}
+
+\section{Reference text is untouched}
+
+\begin{prop}
+  \item[Principal Principle, ref format = {the #1}, label = pp] Body.
+\end{prop}
+A reference belongs to the sentence it is in, and follows it: upright
+\ref{pp}; {\bfseries bold \ref{pp}}; {\itshape italic \ref{pp}}.
+
+\section{Equation tags}
+
+{\bfseries\itshape
+\begin{equation}
+  \ptag[\fs] x = y
+\end{equation}}
+
+\end{document}

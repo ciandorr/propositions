@@ -811,6 +811,30 @@
       }
     \protected@edef \l__props_item_output_tl
       { \l__props_labelfmt:n { \l__props_item_output_tl } }
+    %% A label is furniture, not prose: (P1) should read as (P1) wherever the
+    %% item happens to sit, and not go bold-italic because the paragraph around
+    %% it is.  This is what the kernel spends a \normalfont on in \@eqnnum, and
+    %% \descriptionlabel likewise opens with one; enumerate and itemize do not,
+    %% their labels being counters that belong to the running text.  These
+    %% labels are the first kind: a style says what they look like.
+    %%
+    %% Weight and shape only.  Family is left to follow the surroundings, so
+    %% that a passage set in another family --- an explainer box in sans, say
+    %% --- carries its labels with it, which is the one part of the ambient font
+    %% a label plausibly wants.
+    %%
+    %% First in the group, so that anything a style sets afterwards through
+    %% \refKey{display format} or \refKey{label format} wins: label format =
+    %% {\bfseries #1} is how an item asks for the old behaviour back.  The
+    %% reference text is built elsewhere (\__props_build_ref_text:) and is not
+    %% touched: a \ref in a bold sentence should be bold, as any other word
+    %% there would be.
+    \tl_if_empty:NF \l__props_item_output_tl
+      {
+        \tl_put_left:Nn \l__props_item_output_tl
+          { \group_begin: \mdseries \upshape }
+        \tl_put_right:Nn \l__props_item_output_tl { \group_end: }
+      }
   }
 
 
