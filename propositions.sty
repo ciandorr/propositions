@@ -94,6 +94,12 @@
 %% Local, so that nested boxes unwind by themselves, and one per environment
 %% group, so that nesting to any depth keeps each level's own answer.
 \bool_new:N \l__props_env_saved_dispmode_bool
+%% Beamer.  The test is for the overlay machinery rather than for the class, so
+%% that beamerarticle is covered by the same answer.
+\bool_const:Nn \c__props_beamer_bool { \cs_if_exist_p:c { beamer@closeitem } }
+\tl_new:N   \l__props_ospec_tl        %% this item's overlay spec, <...> or empty
+\bool_new:N \l__props_env_ospec_bool  %% true when \begin{prop} opened an actionenv
+\tl_new:N   \l__props_env_keys_tl     %% the env argument, less any leading <...>
 
 \tl_new:N   \l__props_named_style_tl             %% default style for named items
 \tl_new:N   \l__props_named_ptag_style_tl        %% ptag override for named items; empty = fall back
@@ -467,8 +473,10 @@
     \tl_clear:N \l__props_decl_macro_tl
     \keys_set_known:nnN { props / declare-numbered-special }
       { #2 } \l__props_decl_overrides_tl
-    %% Create counter
+    %% Create counter.  A declared counter runs on through the document as
+    %% numpropi does, so it wants the same overlay treatment.
     \newcounter { #1 }
+    \bool_if:NT \c__props_beamer_bool { \resetcounteronoverlays { #1 } }
     %% Set parent counter
     \tl_if_empty:NF \l__props_numdecl_parent_tl
       { \exp_args:NnV \@addtoreset { #1 } \l__props_numdecl_parent_tl }
@@ -870,16 +878,37 @@
 
 \cs_new_eq:NN \__props_kernel_item: \item
 
-\NewDocumentCommand \__props_item_cmd: { o }
+\bool_if:NTF \c__props_beamer_bool
   {
-    \IfValueTF { #1 }
+    \NewDocumentCommand \__props_item_cmd: { d<> o d<> }
       {
-        \bool_set_true:N \l__props_item_optarg_bool
-        \__props_item_body:n { #1 }
+        \__props_beamer_closeitem:
+        \tl_clear:N \l__props_ospec_tl
+        \IfValueT { #1 } { \tl_set:Nn \l__props_ospec_tl { < #1 > } }
+        \IfValueT { #3 } { \tl_set:Nn \l__props_ospec_tl { < #3 > } }
+        \IfValueTF { #2 }
+          {
+            \bool_set_true:N \l__props_item_optarg_bool
+            \__props_item_body:n { #2 }
+          }
+          {
+            \bool_set_false:N \l__props_item_optarg_bool
+            \__props_item_body:n { }
+          }
       }
+  }
+  {
+    \NewDocumentCommand \__props_item_cmd: { o }
       {
-        \bool_set_false:N \l__props_item_optarg_bool
-        \__props_item_body:n { }
+        \IfValueTF { #1 }
+          {
+            \bool_set_true:N \l__props_item_optarg_bool
+            \__props_item_body:n { #1 }
+          }
+          {
+            \bool_set_false:N \l__props_item_optarg_bool
+            \__props_item_body:n { }
+          }
       }
   }
 
@@ -1246,6 +1275,21 @@
 
 \cs_new_eq:NN \__props_list_item: \item
 
+\cs_new_protected:Nn \__props_beamer_closeitem:
+  {
+    \bool_lazy_and:nnT
+      { \bool_if_p:N \c__props_beamer_bool }
+      { \bool_if_p:N \g__props_display_mode_bool }
+      {
+        \mode_if_horizontal:T { \unskip \unskip \par }
+        \use:c { beamer@closeitem }
+        \cs_gset:cpn { beamer@closeitem } { }
+      }
+  }
+
+\cs_new_protected:Nn \__props_list_item_os:n { \__props_list_item: #1 }
+\cs_generate_variant:Nn \__props_list_item_os:n { V }
+
 \cs_new_protected:Nn \__props_output_item:
   {
     \bool_if:NTF \g__props_display_mode_bool
@@ -1257,7 +1301,7 @@
   {
     \hbox_set:Nn \l_tmpa_box { \l__props_item_output_tl }
     \dim_compare:nNnTF { \box_wd:N \l_tmpa_box } = { \c_zero_dim }
-      { \__props_list_item: [ ] }
+      { \__props_list_item_os:V \l__props_ospec_tl [ ] }
       {
         %% The three alignments that put the label into the body rather than
         %% into the label box.  They are settled before the per-item dimension
@@ -1299,8 +1343,9 @@
     \str_if_eq:VnTF \l__props_alignment_tl { flush }
       {
         %% Push label past the label area so it sits at the text margin.
-        \__props_list_item: [ \hspace{\labelwidth} \hspace{\labelsep}
-                \l__props_item_output_tl \hspace{\labelsep} ]
+        \__props_list_item_os:V \l__props_ospec_tl
+          [ \hspace{\labelwidth} \hspace{\labelsep}
+            \l__props_item_output_tl \hspace{\labelsep} ]
       }
       {
         %% Centred and right-aligned labels differ from the default only in
@@ -1309,7 +1354,7 @@
           { \cs_set:Nn \__props_display_label:n { \hss \mbox{##1} \hss } }
         \str_if_eq:VnT \l__props_alignment_tl { right }
           { \cs_set:Nn \__props_display_label:n { \hss \mbox{##1} } }
-        \__props_list_item: [ \l__props_item_output_tl ]
+        \__props_list_item_os:V \l__props_ospec_tl [ \l__props_item_output_tl ]
         \cs_set:Nn \__props_display_label:n { \mbox{##1} \hfill }
       }
   }
@@ -1434,7 +1479,7 @@
         %% the label starts at that distance from the enclosing margin.
         %% Otherwise, the label starts at the standard label position
         %% (which already reflects any global labelindent setting).
-        \__props_list_item: []
+        \__props_list_item_os:V \l__props_ospec_tl []
         { \tl_if_empty:NTF \l__props_pi_labelindent_tl
             { \leftskip = \dimexpr \itemindent
                 - \labelwidth - \labelsep \relax }
@@ -1456,7 +1501,7 @@
             %% The separating space is not emitted here but at the end of
             %% \__props_item_cmd:, after the cross-referencing machinery: see
             %% the note there.
-            \__props_list_item: []
+            \__props_list_item_os:V \l__props_ospec_tl []
             \l__props_item_output_tl
             \bool_set_true:N \l__props_body_started_bool
           }
@@ -1466,7 +1511,7 @@
             %% Label on own line(s), starting at the text margin.
             %% Blank list item, label as ordinary paragraph text,
             %% then cancel the inter-paragraph space.
-            \__props_list_item: []
+            \__props_list_item_os:V \l__props_ospec_tl []
             \l__props_item_output_tl \par
             \vspace { -\parsep } \__props_start_body_unindented:
             \bool_set_true:N \l__props_body_started_bool
@@ -1765,8 +1810,35 @@
       { \setlength \propoperativeleftmargin { \l__props_dim_resolved_tl } }
   }
 
-\NewDocumentEnvironment { prop } { O{} }
+\cs_generate_variant:Nn \keys_set_filter:nnnN { nnVN }
+\cs_new_protected:Nn \__props_env_split_ospec:n
   {
+    \tl_set:Nn \l__props_env_keys_tl { #1 }
+    \bool_if:NT \c__props_beamer_bool
+      {
+        \tl_if_head_eq_charcode:nNT { #1 } <
+          { \__props_env_split_ospec:w #1 \q_stop }
+      }
+  }
+\cs_new_protected:Npn \__props_env_split_ospec:w < #1 > #2 \q_stop
+  {
+    \tl_set:cn { beamer@defaultospec } { < #1 > }
+    \tl_set:Nn \l__props_env_keys_tl { #2 }
+  }
+
+\NewDocumentEnvironment { prop } { d<> O{} }
+  {
+    %% Set before the actionenv opens, so that the end code, which runs
+    %% before the environment's own group closes, can still see it.
+    \bool_set_false:N \l__props_env_ospec_bool
+    \IfValueT { #1 }
+      {
+        \bool_if:NT \c__props_beamer_bool
+          {
+            \bool_set_true:N \l__props_env_ospec_bool
+            \begin { actionenv } < #1 >
+          }
+      }
     \int_gincr:N \g__props_level_int
     %% enumprop restarts at every outermost environment, so that a list using
     %% it numbers from one each time, the way enumerate does.  Reset here
@@ -1793,8 +1865,9 @@
     %% routed to the env-local layer by \l__props_env_arg_bool.  Global-only keys
     %% (equations) are filtered out with a warning.
     \bool_set_true:N \l__props_env_arg_bool
-    \keys_set_filter:nnnN { props / global } { global-only }
-      { #1 } \l_tmpa_tl
+    \__props_env_split_ospec:n { #2 }
+    \keys_set_filter:nnVN { props / global } { global-only }
+      \l__props_env_keys_tl \l_tmpa_tl
     \bool_set_false:N \l__props_env_arg_bool
     \tl_if_empty:NF \l_tmpa_tl
       {
@@ -2036,6 +2109,7 @@
     %% one: the items of an inlineprop after a nested prop were set as list
     %% items, the environment having been handed back the wrong mode.
     \bool_gset_eq:NN \g__props_display_mode_bool \l__props_env_saved_dispmode_bool
+    \bool_if:NT \l__props_env_ospec_bool { \end { actionenv } }
     %% Signal that the next prop may join seamlessly (cleared by
     %% \begin{prop} or by the para/begin hook if text intervenes).
     %% continue=false suppresses it, which is how the framed style keeps a
@@ -2579,6 +2653,24 @@
   }
 
 \newcounter { numpropv }
+
+%% Beamer sets a frame once per overlay, so a counter that runs on through the
+%% document counts again on every one of them: the second overlay of a list
+%% numbered (1), (2) comes out (3), (4).  Beamer's remedy is to save such
+%% counters when a frame begins and put them back for each of its overlays, and
+%% it already does so for linguex's example counters.  Register ours the same
+%% way.  The ones that reset themselves are registered too --- enumprop at every
+%% outermost environment, the sub-level ones at every item above them --- since
+%% nothing says a frame begins where one of those resets falls.
+\bool_if:NT \c__props_beamer_bool
+  {
+    \clist_map_inline:nn
+      {
+        numpropi , numpropii , numpropiii , numpropiv , numpropv ,
+        enumprop , footprop , prop@anchor
+      }
+      { \resetcounteronoverlays { #1 } }
+  }
 \cs_gset:Npn \thenumpropv { \Roman { numpropv } }
 \SetPropStyle { levelfive }
   {

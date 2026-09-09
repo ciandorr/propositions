@@ -1,0 +1,91 @@
+\documentclass{beamer}
+\usepackage{propositions}
+
+%% Beamer overlay specifications on prop and its items.
+%%
+%% Three places take one, as in beamer's own environments: an item, an
+%% environment's items by default, and the environment itself.  What makes
+%% this work is closing the actionenv beamer opens around each item before
+%% the next item's own work rather than in the middle of it; otherwise every
+%% label in a list comes out as the first item's, the group's end having
+%% rolled the variable holding it back.  And the package's counters are
+%% registered with \resetcounteronoverlays, or a list numbered (1), (2) on
+%% its first overlay comes out (3), (4) on its second.
+
+\begin{document}
+
+\begin{frame}{One item at a time}
+Two overlays, numbered (1) and (2) on both of them.
+\begin{prop}
+  \item<1-> Alpha
+  \item<2-> Beta
+\end{prop}
+\end{frame}
+
+\begin{frame}{A specification on either side of the optional argument}
+Both orders are beamer's; both must work.
+\begin{prop}
+  \item<1->[Premise] Alpha
+  \item[Conclusion]<2-> Beta
+\end{prop}
+\end{frame}
+
+\begin{frame}{The environment's default, and keys after it}
+\begin{prop}[<+->]
+  \item Alpha
+  \item Beta
+\end{prop}
+\begin{prop}[<+->, align=runin]
+  \item Gamma
+  \item Delta
+\end{prop}
+\end{frame}
+
+\begin{frame}{A specification on the environment itself}
+Nothing on the first overlay; the whole list on the second.
+\begin{prop}<2->
+  \item Alpha
+  \item Beta
+\end{prop}
+\end{frame}
+
+\begin{frame}{The two composing}
+The environment is \texttt{<2-4>}, the items \texttt{<1->} and \texttt{<3->}.
+An item appears where both are satisfied: nothing, then Alpha, then both,
+then both.
+\begin{prop}<2-4>
+  \item<1-> Alpha
+  \item<3-> Beta
+\end{prop}
+\end{frame}
+
+\begin{frame}{Nesting, and every alignment}
+\begin{prop}
+  \item<1-> Outer
+  \begin{prop}
+    \item<2-> Inner
+  \end{prop}
+  \item<3-> Outer again
+\end{prop}
+\begin{prop}[<+->, align=nextline]\item Nextline one \item Nextline two\end{prop}
+\begin{prop}[<+->, align=flush]\item Flush one \item Flush two\end{prop}
+\begin{prop}[<+->, align=center]\item Centre one \item Centre two\end{prop}
+\end{frame}
+
+\begin{frame}{Not inlineprop}
+An \texttt{inlineprop} opens no list and calls no \texttt{\string\item}, so there is
+nothing for beamer to reveal: one overlay, both items on it.
+\begin{inlineprop}
+  \item Alpha. \item Beta.
+\end{inlineprop}
+\end{frame}
+
+\begin{frame}{Cross-references and \texttt{\string\pause}}
+\begin{prop}
+  \item Alpha \label{b:a} \pause
+  \item Beta \label{b:b}
+\end{prop}
+References: \ref{b:a}, \ref{b:b}.
+\end{frame}
+
+\end{document}

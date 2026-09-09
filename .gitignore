@@ -33,3 +33,5 @@ test/*.pdf
 
 # Claude Code local settings
 .claude/
+test/*.nav
+test/*.snm
