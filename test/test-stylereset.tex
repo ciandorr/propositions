@@ -1,0 +1,77 @@
+\documentclass{article}
+\usepackage{propositions}
+\DeclareNumberedStyle{mydecl}[counter format = \arabic{#1}]
+
+%% Complete looks start from plain; modifiers do not.
+%%
+%% A style only ever set the keys it named, so a key set at an earlier layer
+%% survived a change of style: after \propoptions{style=vignette}, an item
+%% asking for style=plain still came out run-in with vignette's colon.  Styles
+%% that mean to settle an item's whole appearance now name plain as their
+%% parent, and plain sets every appearance key to its default.
+%%
+%% Only appearance.  What an item is -- name, shorthand, gloss, ref, label,
+%% crefname -- and how the list is built -- counter, reset, the per-item
+%% dimensions -- are left alone, and are cleared only by a style that means to.
+%% nolabel is that style for the three that make up a label.
+%%
+%% Modifiers -- fitmargin, framed, conclusion, standard, and the dispatchers
+%% that only delegate -- do not inherit, and go on setting just what they name.
+
+\begin{document}
+
+\section{A complete look settles what it does not mention}
+
+{\propoptions{style=vignette}
+\begin{prop}
+  \item[Alpha] Vignette: run-in, italic, colon after the name.
+  \item[style=plain, name=Beta] Plain: no colon, no italic, not run-in.
+\end{prop}}
+
+\section{Each appearance key}
+
+{\propoptions{label format = {#1!}, gloss format = {~<<#1>>},
+              shorthand format = {~<#1>}, align = flush,
+              counter format = \Roman{#1}, counter = enumprop}
+\begin{prop}
+  \item[name=Gamma, shorthand=S, gloss=G] All five in force.
+  \item[style=plain, name=Delta, shorthand=S, gloss=G] All five back to
+    default: no \texttt{!}, square brackets, round parentheses, left aligned.
+  \item[style=levelone] Counter format back to arabic, and parenthesised.
+\end{prop}}
+
+\section{Content and structure are left alone}
+
+\begin{prop}[name=Premise, counter=enumprop, labelwidth=6em]
+  \item First.
+  \item[style=thesis] Still called Premise, still in the same label area.
+\end{prop}
+
+\section{nolabel clears the whole label}
+
+\begin{prop}[shorthand=S, gloss=G]
+  \item[name=Epsilon] Name, shorthand and gloss.
+  \item[style=nolabel] Nothing at all --- not the name, and not the shorthand
+    or gloss either.
+  \item[name=Zeta] Back to normal.
+\end{prop}
+
+\section{Modifiers still compose}
+
+\begin{prop}[style=fitmargin]
+  \item Numbered as usual, with the margin fitted.
+  \item Second.
+\end{prop}
+
+\begin{prop}
+  \item[style=roman] Roman, parenthesised: carries its own format.
+  \item[style=alph] Alphabetic, with a full stop.
+\end{prop}
+
+\section{A declared style is a complete look}
+
+\begin{prop}[label format = {#1!}]
+  \item[style=mydecl] No exclamation mark: the declared style starts from plain.
+\end{prop}
+
+\end{document}

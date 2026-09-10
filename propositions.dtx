@@ -321,7 +321,7 @@
 % \end{docKey}
 %
 % \begin{docKey}{counter format}{=\meta{template}}{no default}
-%   How to display the counter value.  Use \texttt{\#1} for the counter name, e.g.\ \texttt{counter format=\string\roman\{\#1\}}.  When both this key and \refKey{counter} are set, this is used instead of \cs{the}\meta{counter} for generating the item's \refKey{name}.
+%   How to display the counter value.  Use \texttt{\#1} for the counter name, e.g.\ \texttt{counter format=\string\roman\{\#1\}}.  When both this key and \refKey{counter} are set, this is used instead of \cs{the}\meta{counter} for generating the item's \refKey{name}.  The value \texttt{*} means \enquote{as if unset}, as it does for a dimension key: the counter is displayed by its own \cs{the}\meta{counter} again.
 % \end{docKey}
 % \noindent Along with the standard commands (\cs{arabic}, \cs{roman}, \cs{Roman}, \cs{alph}, \cs{Alph}, and \cs{fnsymbol}), the following command is available:
 % 
@@ -810,6 +810,32 @@
 %
 % If the style \meta{name} already exists, \refCom{SetPropStyle} modifies or adds keys.  For example, |\SetPropStyle{proposition}{align=flush}| changes the alignment of the built-in |proposition| style while preserving its other settings.
 %
+% \subsection{Complete looks and modifiers}\label{sect:stylekinds}
+%
+% A style only sets the keys it names, so a key set at an earlier layer survives
+% a change of style.  That is wanted of a style laid \emph{over} an item---a
+% \emph{modifier}, like \texttt{fitmargin} or \texttt{framed}, which sets its own
+% keys and leaves the rest---but not of one meant to settle an item's whole
+% appearance.  Those name \texttt{plain} as their parent, and \texttt{plain} sets
+% every appearance key to its default, so that switching to such a style settles
+% the keys it does not mention as well as the ones it does.  Do the same in a
+% style of your own that is meant to be a look rather than an overlay; everything
+% \refCom{DeclareNumberedStyle} creates does it already.
+%
+% \texttt{plain} resets appearance only: \refKey{format}, \refKey{label format},
+% \refKey{shorthand format}, \refKey{gloss format}, \refKey{counter format} and
+% \refKey{align}.  What an item \emph{is}---its \refKey{name}, \refKey{shorthand},
+% \refKey{gloss}, \refKey{ref}, \refKey{label}, \refKey{crefname}---and how the
+% list is built---\refKey{counter}, \refKey{reset}, the per-item dimensions---are
+% for the environment and the item to say, and are cleared only by a style that
+% means to clear them.  \texttt{nolabel} is that style for the three that a label
+% is made of.
+%
+% The modifiers are \texttt{fitmargin}, \texttt{outerfit}, \texttt{framed},
+% \texttt{conclusion}, \texttt{standard}, and the dispatchers \texttt{numbered},
+% \texttt{enum}, \texttt{eqnum} and \texttt{hierarchical}, which only delegate
+% through \refKey[setpropstyle]{style}.  Everything else is a complete look.
+%
 %
 % \begin{example}
 % \SetPropStyle{angle}{
@@ -1028,14 +1054,16 @@
 %   \item[Basic classification, ref format={the \textit{#1}}] 
 %   There are three kinds of people. \label{complex}
 %   \begin{prop}
-%     \item[style=roman] \label{partone} Those who know how to count, 
-%     comprising in turn:
+%     \item[style=roman] \label{partone} Those who know how to 
+%    count, comprising in turn:
 %     \begin{prop}
-%       \item[style=alph] \label{parta} Those who know how to count up to 
-%    some number, but not beyond.
-%       \item[style=alph] \label{partb} Those who can keep going indefinitely.
+%       \item[style=alph] \label{parta} Those who know how to count 
+%    up to some number, but not beyond.
+%       \item[style=alph] \label{partb} Those who can keep going 
+%    indefinitely.
 %     \end{prop}
-%     \item[style=roman] \label{parttwo} Those who do not know how to count.
+%     \item[style=roman] \label{parttwo} Those who do not know how 
+%    to count.
 %   \end{prop}
 % \end{prop}
 % For \ref{complex} to serve its purpose, both \ref{partone} (and 
@@ -1274,7 +1302,15 @@
 % \section{Release notes}
 %
 % \begin{description}
-% \item[0.92 (unreleased)] [Change] Item labels now normalise weight and shape,
+% \item[0.92 (unreleased)] [Change] Styles meant to settle an item's whole
+%   appearance now start from \texttt{plain}, so that switching style resets the
+%   appearance keys the new style does not mention instead of leaving them as an
+%   earlier layer had them.  See \autoref{sect:stylekinds}.  \refKey{counter
+%   format} takes \texttt{*} for \enquote{as if unset}, and \texttt{nolabel} now
+%   clears an inherited \refKey{shorthand} and \refKey{gloss} as it already
+%   cleared an inherited \refKey{name}.
+%
+%   [Change] Item labels now normalise weight and shape,
 %   so that a label in a bold or italic block is no longer set in bold or italic.
 %   Family is unaffected, as is reference text.  A style can ask for the old
 %   behaviour with \refKey{label format}\,\texttt{=\,\{\string\bfseries\ \#1\}}.
@@ -1748,10 +1784,22 @@
     itemindent      .tl_set:N  = \l__props_pi_itemindent_tl ,
     labelindent     .tl_set:N  = \l__props_pi_labelindent_tl ,
     counter         .tl_set:N  = \l__props_counter_tl ,
+    %% * means "as if unset" here as it does for a dimension: the counter is
+    %% rendered by its own \the<counter>.  Without it a style could set this key
+    %% and no style could put it back, so plain could not say what the default
+    %% is.  \tl_if_eq:nn and not \str_if_eq:nn, which expands its arguments and
+    %% would choke on the # in a value like \roman{#1}.
     counter~format  .code:n    =
       {
-        \bool_set_true:N \l__props_has_counter_format_bool
-        \cs_set:Npn \l__props_counterfmt:n ##1 { #1 }
+        \tl_if_eq:nnTF { #1 } { * }
+          {
+            \bool_set_false:N \l__props_has_counter_format_bool
+            \cs_set:Npn \l__props_counterfmt:n ##1 { }
+          }
+          {
+            \bool_set_true:N \l__props_has_counter_format_bool
+            \cs_set:Npn \l__props_counterfmt:n ##1 { #1 }
+          }
       } ,
     ref             .tl_set:N  = \l__props_ref_tl ,
     name~format     .cs_set:Np = \l__props_displayfmt:n #1 ,
@@ -1935,7 +1983,10 @@
     %% Register as a style.
     %% Prepend format=(#1) as default (user keys override it).
     %% Append counter=<name> so it always wins (the counter IS the style name).
-    \tl_clear:N \l__props_decl_parent_tl
+    %% A declared style settles an item's whole appearance, so it starts from
+    %% plain as the other complete looks do.  (This command's parent= key names
+    %% the counter's parent counter, which is a different thing.)
+    \tl_set:Nn \l__props_decl_parent_tl { plain }
     \tl_put_left:Nn \l__props_decl_overrides_tl { format=(##1), }
     \tl_put_right:Nn \l__props_decl_overrides_tl { , counter=#1 }
     \__props_store_style:n { #1 }
@@ -1961,10 +2012,22 @@
           }
       } ,
     counter     .tl_set:N = \l__props_counter_tl ,
+    %% * means "as if unset" here as it does for a dimension: the counter is
+    %% rendered by its own \the<counter>.  Without it a style could set this key
+    %% and no style could put it back, so plain could not say what the default
+    %% is.  \tl_if_eq:nn and not \str_if_eq:nn, which expands its arguments and
+    %% would choke on the # in a value like \roman{#1}.
     counter~format .code:n =
       {
-        \bool_set_true:N \l__props_has_counter_format_bool
-        \cs_set:Npn \l__props_counterfmt:n ##1 { #1 }
+        \tl_if_eq:nnTF { #1 } { * }
+          {
+            \bool_set_false:N \l__props_has_counter_format_bool
+            \cs_set:Npn \l__props_counterfmt:n ##1 { }
+          }
+          {
+            \bool_set_true:N \l__props_has_counter_format_bool
+            \cs_set:Npn \l__props_counterfmt:n ##1 { #1 }
+          }
       } ,
     align       .tl_set:N = \l__props_alignment_tl ,
     labelwidth  .tl_set:N = \l__props_pi_labelwidth_tl ,
@@ -4630,18 +4693,39 @@
 % Default type declarations
 % ====================================================================
 
+%% plain: the ordinary look, and the state every other complete look starts
+%% from.  A style that means to settle an item's whole appearance names this as
+%% its parent, so that switching to such a style settles the keys it does not
+%% mention as well as the ones it does; a style meant to be laid over whatever
+%% the item already is --- fitmargin, framed, conclusion, and the dispatchers
+%% that only delegate --- does not, and goes on setting just what it names.
+%%
+%% Only appearance is here.  What an item *is* --- name, shorthand, gloss, ref,
+%% label, crefname --- and how the list is built --- counter, reset, the
+%% per-item dimensions --- are for the environment and the item to say, and are
+%% cleared only by a style that means to clear them, as nolabel clears the three
+%% that a label is made of.
 \SetPropStyle { plain }
   {
-    format      = #1 ,
+    format           = #1 ,
+    label~format     = #1 ,
+    %% Braced: the value's leading space is what separates a shorthand or a
+    %% gloss from the name, and l3keys trims a bare one away.
+    shorthand~format = {~[#1]} ,
+    gloss~format     = {~(#1)} ,
+    counter~format   = * ,
+    align            = left ,
   }
 
 \SetPropStyle { proposition }
   {
+    style       = plain ,
     format      = \textbf{#1} ,
   }
 
 \SetPropStyle { thesis }
   {
+    style       = plain ,
     display~format = \textsc{#1} ,
     ref~format     = #1 ,
     align          = flush ,
@@ -4649,6 +4733,7 @@
 
 \SetPropStyle { vignette }
   {
+    style       = plain ,
     display~format = #1 ,
     ref~format     = \textit{#1} ,
     align          = runin ,
@@ -4657,6 +4742,7 @@
 
 \SetPropStyle { bullet }
   {
+    style       = plain ,
     align          = center ,
     name           = \proplevelchoice {
                        \textbullet ,
@@ -4670,14 +4756,20 @@
 %% nolabel: an item with no label at all.  counter=none alone suppresses the
 %% counter but not a name, so it leaves the label standing when one is
 %% inherited from the environment or supplied by a style (bullet, say); as a
-%% style, this displaces the name too.  reset=false because such an item is
-%% typically an aside in the middle of a list, after which a sub-list should
-%% carry on from where the last one left off rather than start again.
+%% style, this displaces the name too --- and the shorthand and the gloss with
+%% it, those being the rest of what a label is made of: an item with no label
+%% was still carrying "[S] (G)" where a shorthand and gloss had been set for the
+%% whole environment.  reset=false because such an item is typically an aside in
+%% the middle of a list, after which a sub-list should carry on from where the
+%% last one left off rather than start again.
 \SetPropStyle { nolabel }
   {
-    counter = none ,
-    name    = { } ,
-    reset   = false ,
+    style     = plain ,
+    counter   = none ,
+    name      = { } ,
+    shorthand = { } ,
+    gloss     = { } ,
+    reset     = false ,
   }
 
 %% levelone: the standard level-1 numbered style.
@@ -4690,6 +4782,7 @@
   { \newcounter { numpropi } }
 \SetPropStyle { levelone }
   {
+    style       = plain ,
     counter     = numpropi ,
     format      = (#1) ,
   }
@@ -4702,6 +4795,7 @@
 \newcounter { enumprop }
 \SetPropStyle { enumprop }
   {
+    style          = plain ,
     counter     = enumprop ,
     format      = (#1) ,
   }
@@ -4712,6 +4806,7 @@
 \newcounter { footprop }
 \SetPropStyle { footnumprop }
   {
+    style          = plain ,
     counter        = footprop ,
     counter~format = \proprepeat {#1} {*} ,
     format         = (#1) ,
@@ -4722,6 +4817,7 @@
 %% (\tagform@ and \p@equation) are synced from this style's formats.
 \SetPropStyle { equation }
   {
+    style          = plain ,
     counter        = equation ,
     format         = (#1) ,
   }
@@ -4797,6 +4893,7 @@
 \cs_gset:Npn \thenumpropii { \alph { numpropii } }
 \SetPropStyle { leveltwo }
   {
+    style          = plain ,
     counter        = numpropii ,
     display~format = #1. ,
     ref~format     = \parentref{#1} ,
@@ -4806,6 +4903,7 @@
 \cs_gset:Npn \thenumpropiii { \roman { numpropiii } }
 \SetPropStyle { levelthree }
   {
+    style          = plain ,
     counter        = numpropiii ,
     display~format = (#1) ,
     ref~format     = \parentref{.#1} ,
@@ -4815,6 +4913,7 @@
 \cs_gset:Npn \thenumpropiv { \Alph { numpropiv } }
 \SetPropStyle { levelfour }
   {
+    style          = plain ,
     counter        = numpropiv ,
     display~format = #1. ,
     ref~format     = \parentref{#1} ,
@@ -4842,6 +4941,7 @@
 \cs_gset:Npn \thenumpropv { \Roman { numpropv } }
 \SetPropStyle { levelfive }
   {
+    style          = plain ,
     counter        = numpropv ,
     display~format = (#1) ,
     ref~format     = \parentref{.#1} ,
@@ -4851,6 +4951,7 @@
 %% h-base handles level 1 (no parent); h-sub handles levels 2+.
 \SetPropStyle { h-base }
   {
+    style          = plain ,
     counter        = numpropi ,
     counter~format = \arabic{#1} ,
     display~format = #1. ,
@@ -4859,6 +4960,7 @@
 
 \SetPropStyle { h-sub }
   {
+    style          = plain ,
     counter        = \proplevelchoice {
                        numpropi , numpropii , numpropiii ,
                        numpropiv , numpropv } ,
