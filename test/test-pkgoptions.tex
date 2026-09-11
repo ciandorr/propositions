@@ -19,7 +19,7 @@
 %%   * a value containing a macro is expanded on the spot, so anything not yet
 %%     defined fails --- including \widthof (calc is loaded by this package,
 %%     hence later) and the package's own \proplevelchoice, \propformlabel and
-%%     \propwidestlabel.
+%%     \propwidest{\propformlabel}.
 %%
 %% Both work in \propoptions, which runs after the package is loaded.  Neither
 %% can be exercised here: a document testing them would not compile.

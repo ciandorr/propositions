@@ -107,6 +107,19 @@
 \tl_new:N   \l__props_item_close_pop_tl
 \tl_new:N   \l__props_bodybegin_tl    %% material at the start of an item's body
 \tl_new:N   \l__props_bodyend_tl      %% and at its end
+%% Per-item list dimensions beyond the four the label area is built from.
+%% leftmargin and rightmargin are absolute, as the other per-item dimensions
+%% are: the value is the margin the item is to have, and the difference from
+%% the list's is what gets inserted.
+\tl_new:N   \l__props_pi_leftmargin_tl
+\tl_new:N   \l__props_pi_rightmargin_tl
+\tl_new:N   \l__props_pi_parsep_tl
+\tl_new:N   \l__props_pi_listparindent_tl
+\tl_new:N   \l__props_pi_itemsep_tl
+\bool_new:N \l__props_body_group_bool
+\dim_new:N  \l__props_pi_skip_dim
+\dim_new:N  \l__props_pi_lm_dim
+\dim_new:N  \l__props_save_itemsep_dim
 
 \tl_new:N   \l__props_named_style_tl             %% default style for named items
 \tl_new:N   \l__props_named_ptag_style_tl        %% ptag override for named items; empty = fall back
@@ -332,6 +345,11 @@
     labelsep        .tl_set:N  = \l__props_pi_labelsep_tl ,
     itemindent      .tl_set:N  = \l__props_pi_itemindent_tl ,
     labelindent     .tl_set:N  = \l__props_pi_labelindent_tl ,
+    leftmargin      .tl_set:N  = \l__props_pi_leftmargin_tl ,
+    rightmargin     .tl_set:N  = \l__props_pi_rightmargin_tl ,
+    parsep          .tl_set:N  = \l__props_pi_parsep_tl ,
+    listparindent   .tl_set:N  = \l__props_pi_listparindent_tl ,
+    itemsep         .tl_set:N  = \l__props_pi_itemsep_tl ,
     counter         .tl_set:N  = \l__props_counter_tl ,
     %% * means "as if unset" here as it does for a dimension: the counter is
     %% rendered by its own \the<counter>.  Without it a style could set this key
@@ -415,6 +433,11 @@
     \tl_clear:N \l__props_pi_labelsep_tl
     \tl_clear:N \l__props_pi_itemindent_tl
     \tl_clear:N \l__props_pi_labelindent_tl
+    \tl_clear:N \l__props_pi_leftmargin_tl
+    \tl_clear:N \l__props_pi_rightmargin_tl
+    \tl_clear:N \l__props_pi_parsep_tl
+    \tl_clear:N \l__props_pi_listparindent_tl
+    \tl_clear:N \l__props_pi_itemsep_tl
     \tl_set:Nn  \l__props_counter_tl   { none }
     \bool_set_false:N \l__props_has_counter_format_bool
     \cs_set:Npn \l__props_counterfmt:n ##1   { }
@@ -556,6 +579,11 @@
     labelsep    .tl_set:N = \l__props_pi_labelsep_tl ,
     itemindent  .tl_set:N = \l__props_pi_itemindent_tl ,
     labelindent .tl_set:N = \l__props_pi_labelindent_tl ,
+    leftmargin      .tl_set:N  = \l__props_pi_leftmargin_tl ,
+    rightmargin     .tl_set:N  = \l__props_pi_rightmargin_tl ,
+    parsep          .tl_set:N  = \l__props_pi_parsep_tl ,
+    listparindent   .tl_set:N  = \l__props_pi_listparindent_tl ,
+    itemsep         .tl_set:N  = \l__props_pi_itemsep_tl ,
     ref         .code:n =
       {
         \tl_set:Nn \l__props_ref_tl { #1 }
@@ -884,6 +912,13 @@
         \int_compare:nNnT { \g__props_level_int } = { 4 }
           { \setcounter { numpropv } { 0 } }
       }
+    %% \propformlabel becomes this item's own label here, before the dimension
+    %% keys are resolved for its label area --- before, and not after the item
+    %% is out, which is where the preview's update used to sit: read afterwards,
+    %% every item measures the one before it, and under fitmargin each got a
+    %% label box sized for its predecessor.  \proppredictedlabel keeps the
+    %% environment's prediction, so a style can still ask for the constant.
+    \protected@edef \propformlabel { \l__props_item_output_tl }
     \__props_output_item:
     %% If beamer's \item opened an actionenv for this item, it is one of the
     %% things the body has to close.  Registered after the item is out, so that
@@ -892,15 +927,6 @@
       { \bool_if_p:N \c__props_beamer_bool }
       { \bool_if_p:N \g__props_display_mode_bool }
       { \__props_item_close_add:n { \__props_body_par: \__props_beamer_closeitem: } }
-    %% \propformlabel is deliberately NOT updated here to the label just
-    %% produced.  It exists to predict the label an environment's items will
-    %% carry, so that the dimension keys can be sized to it; and a style's
-    %% dimension keys are read again for every item's label area, where they
-    %% would then measure the previous item's label instead of the preview.
-    %% Under style=fitmargin that gave each item after the first a label box
-    %% sized for its predecessor, so a label that had grown a digit overflowed
-    %% and shoved its own first line sideways.  Constant for the whole
-    %% environment is both what the style needs and what the name says.
     \__props_set_ref:
     \tl_if_empty:NF \l__props_label_tl
       { \exp_args:NV \label \l__props_label_tl }
@@ -1380,13 +1406,47 @@
 
 \cs_new_protected:Nn \__props_body_open:
   {
-    \bool_lazy_and:nnF
-      { \tl_if_empty_p:N \l__props_bodybegin_tl }
-      { \tl_if_empty_p:N \l__props_bodyend_tl }
+    \bool_set_false:N \l__props_body_group_bool
+    \tl_if_empty:NF \l__props_bodybegin_tl
+      { \bool_set_true:N \l__props_body_group_bool }
+    \tl_if_empty:NF \l__props_bodyend_tl
+      { \bool_set_true:N \l__props_body_group_bool }
+    \__props_body_wants_group:N \l__props_pi_leftmargin_tl
+    \__props_body_wants_group:N \l__props_pi_rightmargin_tl
+    \__props_body_wants_group:N \l__props_pi_parsep_tl
+    \__props_body_wants_group:N \l__props_pi_listparindent_tl
+    \bool_if:NT \l__props_body_group_bool
       {
         \group_begin:
         \exp_args:NV \__props_body_close_add:n \l__props_bodyend_tl
+        \__props_body_margin:NN \l__props_pi_leftmargin_tl  \leftmargin
+        \bool_if:NT \l__props_dim_set_bool
+          { \skip_set:Nn \leftskip { \l__props_pi_skip_dim } }
+        \__props_body_margin:NN \l__props_pi_rightmargin_tl \rightmargin
+        \bool_if:NT \l__props_dim_set_bool
+          { \skip_set:Nn \rightskip { \l__props_pi_skip_dim } }
+        \__props_dim_resolve:V \l__props_pi_parsep_tl
+        \bool_if:NT \l__props_dim_set_bool
+          { \setlength { \parskip } { \l__props_dim_resolved_tl } }
+        \__props_dim_resolve:V \l__props_pi_listparindent_tl
+        \bool_if:NT \l__props_dim_set_bool
+          { \setlength { \parindent } { \l__props_dim_resolved_tl } }
         \l__props_bodybegin_tl
+      }
+  }
+\cs_new_protected:Nn \__props_body_wants_group:N
+  {
+    \__props_dim_resolve:V #1
+    \bool_if:NT \l__props_dim_set_bool
+      { \bool_set_true:N \l__props_body_group_bool }
+  }
+\cs_new_protected:Nn \__props_body_margin:NN
+  {
+    \__props_dim_resolve:V #1
+    \bool_if:NT \l__props_dim_set_bool
+      {
+        \setlength \l__props_pi_skip_dim { \l__props_dim_resolved_tl }
+        \addtolength \l__props_pi_skip_dim { -#2 }
       }
   }
 \cs_new_protected:Nn \__props_body_close_add:n
@@ -1442,6 +1502,12 @@
             \__props_dim_resolve:V \l__props_pi_itemindent_tl
             \bool_if:NT \l__props_dim_set_bool
               { \bool_set_true:N \l__props_pi_any_bool }
+            \__props_dim_resolve:V \l__props_pi_leftmargin_tl
+            \bool_if:NT \l__props_dim_set_bool
+              { \bool_set_true:N \l__props_pi_any_bool }
+            \__props_dim_resolve:V \l__props_pi_itemsep_tl
+            \bool_if:NT \l__props_dim_set_bool
+              { \bool_set_true:N \l__props_pi_any_bool }
             \bool_if:NTF \l__props_pi_any_bool
               { \__props_output_item_pidim: }
               { \__props_output_item_align: }
@@ -1476,9 +1542,37 @@
     \dim_set:Nn \l__props_save_labelwidth_dim { \labelwidth }
     \dim_set:Nn \l__props_save_labelsep_dim   { \labelsep }
     \dim_set:Nn \l__props_save_itemindent_dim { \itemindent }
-    %% Baseline effective labelindent (before per-item overrides).
+    \dim_set:Nn \l__props_save_itemsep_dim    { \itemsep }
+    %% Baseline effective labelindent (before per-item overrides), and so from
+    %% the list's own margin: it is the value labelindent has when the item does
+    %% not say otherwise.
     \dim_set:Nn \l_tmpa_dim
       { \leftmargin + \itemindent - \labelwidth - \labelsep }
+    %% The margin this item is to have, as a shift from the list's own: the body
+    %% group puts the item there with \leftskip, which moves the whole item, the
+    %% label with it.  Take the shift off the label's side of the constraint, so
+    %% that a label the item has not asked to move stays where it was and the
+    %% deficit falls to labelwidth --- which is what makes an item's leftmargin
+    %% mean the same thing as the list's, and what lets leftmargin and
+    %% labelindent together move the body while pinning the label.
+    %%
+    %% LM stays out of the candidates below, unlike at list level.  There it can
+    %% absorb, because moving the body leaves the label where the enclosing
+    %% margin put it; here it moves both together, so it cannot settle a
+    %% difference between them and is not a degree of freedom the resolver has.
+    \dim_zero:N \l__props_pi_lm_dim
+    \__props_dim_resolve:V \l__props_pi_leftmargin_tl
+    \bool_if:NT \l__props_dim_set_bool
+      {
+        \setlength \l__props_pi_lm_dim { \l__props_dim_resolved_tl }
+        \dim_sub:Nn \l__props_pi_lm_dim { \leftmargin }
+      }
+    %% itemsep is read by \item at its own start, so the override goes on
+    %% before the item is emitted and comes off after: per item it is the space
+    %% above this item.
+    \__props_dim_resolve:V \l__props_pi_itemsep_tl
+    \bool_if:NT \l__props_dim_set_bool
+      { \setlength { \itemsep } { \l__props_dim_resolved_tl } }
     %% Apply per-item overrides to registers.
     \__props_dim_resolve:V \l__props_pi_labelwidth_tl
     \bool_if:NT \l__props_dim_set_bool
@@ -1489,20 +1583,36 @@
     \__props_dim_resolve:V \l__props_pi_itemindent_tl
     \bool_if:NT \l__props_dim_set_bool
       { \setlength { \itemindent } { \l__props_dim_resolved_tl } }
-    %% If labelindent overridden, use it; else keep baseline.
+    %% If labelindent overridden, use it; else keep baseline.  A labelindent
+    %% given with a leftmargin is an absolute position for the label, so the
+    %% shift comes off it: the item moves and the label stays where it was, and
+    %% the deficit falls to labelwidth.  Given without one, the baseline stands
+    %% and the whole item moves together, which is what the list's own
+    %% leftmargin does when no labelindent pins the label.
     \__props_dim_resolve:V \l__props_pi_labelindent_tl
     \bool_if:NT \l__props_dim_set_bool
-      { \dim_set:Nn \l_tmpa_dim { \l__props_dim_resolved_tl } }
+      {
+        \dim_set:Nn \l_tmpa_dim { \l__props_dim_resolved_tl }
+        \dim_sub:Nn \l_tmpa_dim { \l__props_pi_lm_dim }
+      }
     %% Compute deficit = LI + LW + LS - LM - II.
     \dim_set:Nn \l_tmpb_dim
       { \l_tmpa_dim + \labelwidth + \labelsep
         - \leftmargin - \itemindent }
     %% Resolve: try non-user-set candidates in reverse default
-    %% priority.  LM is frozen; LI is not a register.
+    %% priority.  LI is not a register.
     %% Default priority (most→least protected):
-    %%   itemindent(1), labelsep(2), leftmargin(3, frozen),
+    %%   itemindent(1), labelsep(2), leftmargin(3, shifts the item),
     %%   labelwidth(4), labelindent(5, not a register).
-    %% Per-item candidates: LW (pos 4), LS (pos 2), II (pos 1).
+    %% Per-item candidates: LW (pos 4), LM (pos 3), LS (pos 2), II (pos 1).
+    %% LM is a candidate here as it is at list level, though it is not a
+    %% register: the shift is the knob that decides where the label falls when
+    %% the registers are all spoken for.  LI is not something one sets --- it is
+    %% \leftmargin + II - LW - LS, and the shift raises it and LM together --- so
+    %% the deficit is not a violated constraint but the gap between the LI the
+    %% registers give and the LI that was asked for, and delta closes it exactly.
+    %% Deriving LM that way honours all four of the others, where the fallback
+    %% below has to overrule one of them.
     %% For LW and LS the resolved value must be non-negative.
     %% A dimension counts as "user-set" if overridden at either
     %% the per-item level (pi_ variable) or the global level
@@ -1520,6 +1630,24 @@
                   { \labelwidth - \l_tmpb_dim } < { \c_zero_dim }
                   {
                     \dim_sub:Nn \labelwidth { \l_tmpb_dim }
+                    \dim_zero:N \l_tmpb_dim
+                  }
+              }
+          }
+        %% Try leftmargin (position 3) — no sign constraint.  Realised as more
+        %% shift, and written back as the margin it amounts to, since that is
+        %% what the body group reads.
+        \dim_compare:nNnF \l_tmpb_dim = { \c_zero_dim }
+          {
+            \__props_dim_resolve:V \l__props_pi_leftmargin_tl
+            \bool_if:NF \l__props_dim_set_bool
+              {
+                \__props_dim_resolve:V \l__props_leftmargin_tl
+                \bool_if:NF \l__props_dim_set_bool
+                  {
+                    \dim_add:Nn \l__props_pi_lm_dim { \l_tmpb_dim }
+                    \tl_set:Nx \l__props_pi_leftmargin_tl
+                      { \dim_eval:n { \leftmargin + \l__props_pi_lm_dim } }
                     \dim_zero:N \l_tmpb_dim
                   }
               }
@@ -1577,6 +1705,7 @@
     \setlength { \labelwidth } { \l__props_save_labelwidth_dim }
     \setlength { \labelsep }   { \l__props_save_labelsep_dim }
     \setlength { \itemindent } { \l__props_save_itemindent_dim }
+    \setlength { \itemsep }    { \l__props_save_itemsep_dim }
   }
 
 \cs_new_protected:Nn \__props_start_body_unindented:
@@ -1662,6 +1791,7 @@
 
 
 \NewDocumentCommand \propformlabel { } { }
+\NewDocumentCommand \proppredictedlabel { } { }
 
 
 \tl_new:N  \l__props_widen_tl      %% the label, as given
@@ -1706,7 +1836,7 @@
   }
 
 
-\NewDocumentCommand \propwidestlabel { } { \__props_widest:n { \propformlabel } }
+\NewDocumentCommand \propwidest { m } { \__props_widest:n { #1 } }
 
 
 \cs_new_protected:Nn \__props_compute_env_preview:
@@ -1744,7 +1874,11 @@
       %% Save preview label globally so it survives group end.
       \tl_gset_eq:NN \g__props_env_preview_label_tl \l__props_item_output_tl
     \group_end:
-    %% Define \propformlabel to expand to the computed label.
+    %% Define both to the computed label.  \proppredictedlabel keeps it for the
+    %% whole environment; \propformlabel is rebound to each item's own label as
+    %% the item resolves, and stands for the prediction only while there is no
+    %% item to speak of --- which is the state a list dimension is settled in.
+    \protected@edef \proppredictedlabel { \g__props_env_preview_label_tl }
     \protected@edef \propformlabel { \g__props_env_preview_label_tl }
   }
 
@@ -2082,7 +2216,7 @@
         %% \leftmargin to absorb one.
         %%
         %% \labelsep before \leftmargin, since a leftmargin may be written in
-        %% terms of it --- fitmargin's \widthof{\propwidestlabel}+\labelsep is
+        %% terms of it --- fitmargin's \widthof{\propwidest{...}}+\labelsep is
         %% the built-in case --- and would otherwise be computed from the value
         %% this list is about to replace.  With labelsep left alone the order
         %% makes no difference, which is why it went unnoticed.
@@ -2554,15 +2688,59 @@
     %% List dimensions
     topsep            .tl_set:N    = \l__props_topsep_tl ,
     partopsep         .tl_set:N    = \l__props_partopsep_tl ,
-    itemsep           .tl_set:N    = \l__props_itemsep_tl ,
-    parsep            .tl_set:N    = \l__props_parsep_tl ,
-    leftmargin        .tl_set:N    = \l__props_leftmargin_tl ,
-    rightmargin       .tl_set:N    = \l__props_rightmargin_tl ,
-    labelwidth        .tl_set:N    = \l__props_labelwidth_tl ,
-    labelsep          .tl_set:N    = \l__props_labelsep_tl ,
-    itemindent        .tl_set:N    = \l__props_itemindent_tl ,
-    listparindent     .tl_set:N    = \l__props_listparindent_tl ,
-    labelindent       .tl_set:N    = \l__props_labelindent_tl ,
+    %% A dimension set here goes to the list *and* rides down to the items, as a
+    %% style's dimension keys already did.  Without that, a style named in the
+    %% same argument always won: the style reached both levels and an explicit
+    %% key only one, so \begin{prop}[style=geo, labelsep=1em] quietly kept the
+    %% style's labelsep however it was ordered.  Both reaching both levels puts
+    %% the two back on the same footing, and the later one wins, as everywhere
+    %% else.  topsep and partopsep are left out: they are read once, when the
+    %% list opens, and mean nothing per item.
+    itemsep           .code:n      =
+      {
+        \tl_set:Nn \l__props_itemsep_tl { #1 }
+        \__props_defaults_append:n { itemsep = {#1} }
+      } ,
+    parsep            .code:n      =
+      {
+        \tl_set:Nn \l__props_parsep_tl { #1 }
+        \__props_defaults_append:n { parsep = {#1} }
+      } ,
+    leftmargin        .code:n      =
+      {
+        \tl_set:Nn \l__props_leftmargin_tl { #1 }
+        \__props_defaults_append:n { leftmargin = {#1} }
+      } ,
+    rightmargin       .code:n      =
+      {
+        \tl_set:Nn \l__props_rightmargin_tl { #1 }
+        \__props_defaults_append:n { rightmargin = {#1} }
+      } ,
+    labelwidth        .code:n      =
+      {
+        \tl_set:Nn \l__props_labelwidth_tl { #1 }
+        \__props_defaults_append:n { labelwidth = {#1} }
+      } ,
+    labelsep          .code:n      =
+      {
+        \tl_set:Nn \l__props_labelsep_tl { #1 }
+        \__props_defaults_append:n { labelsep = {#1} }
+      } ,
+    itemindent        .code:n      =
+      {
+        \tl_set:Nn \l__props_itemindent_tl { #1 }
+        \__props_defaults_append:n { itemindent = {#1} }
+      } ,
+    listparindent     .code:n      =
+      {
+        \tl_set:Nn \l__props_listparindent_tl { #1 }
+        \__props_defaults_append:n { listparindent = {#1} }
+      } ,
+    labelindent       .code:n      =
+      {
+        \tl_set:Nn \l__props_labelindent_tl { #1 }
+        \__props_defaults_append:n { labelindent = {#1} }
+      } ,
     %% Wrapper: begin/end code injected around the whole list (see
     %% \l__props_wrap_begin_tl).  Settable directly here or via a style.
     wrapper~begin     .tl_set:N    = \l__props_wrap_begin_tl ,
@@ -2906,10 +3084,25 @@
   }
 
 
+%% The margin fits the label, and an item whose label outgrew the prediction
+%% may have more than the list settled on, but never less.  Both arguments of
+%% the \maxof are evaluated wherever the key is read: settling the list's
+%% geometry, \propformlabel is the prediction and the two agree, so the list
+%% gets the fitted margin and a narrow prediction still narrows it; resolving
+%% an item, \propformlabel is that item's own label and can only push the
+%% margin out.  The floor is the prediction rather than the margin the list
+%% arrived at, so a style saying this need know nothing about how the list was
+%% settled.
+%%
+%% The widening that follows from the expansion is the resolver's doing: with
+%% labelindent named here, and so user-set, the deficit falls to labelwidth,
+%% which is what makes the longer label fit the box it is given.
 \SetPropStyle { fitmargin }
   {
     labelindent = 0pt ,
-    leftmargin  = \widthof{\propwidestlabel} + \labelsep ,
+    leftmargin  = \maxof { \widthof { \propwidest { \proppredictedlabel } } }
+                         { \widthof { \propwidest { \propformlabel } } }
+                  + \labelsep ,
   }
 
 
@@ -2917,7 +3110,12 @@
   {
     labelindent = \proplevelchoice { 0pt , * } ,
     leftmargin  =
-      \proplevelchoice { \widthof{\propwidestlabel} + 1.3em , * } ,
+      \proplevelchoice
+        {
+          \maxof { \widthof { \propwidest { \proppredictedlabel } } }
+                 { \widthof { \propwidest { \propformlabel } } }
+          + 1.3em , *
+        } ,
   }
 
 

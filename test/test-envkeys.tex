@@ -133,29 +133,36 @@ Refs: \ref{ec2:first} (P), \ref{ec2:np} (numpropi), \ref{ec2:back} (P).
 % computing the preview label, so propformlabel reflects the label
 % that will appear after approximately that many items.
 %
-% Because \propformlabel is set before the list dimensions are applied,
-% it can be used directly in leftmargin, labelwidth, etc.
+% Because the preview is set before the list dimensions are applied, it can be
+% used directly in leftmargin, labelwidth, etc.  \proppredictedlabel keeps that
+% preview for the whole environment; \propformlabel is the label in hand, and
+% inside an item it is that item's own.
 
 \subsection{Basic use: leftmargin from first label}
 
-% With a numbered style, propformlabel at open is the label for item 1.
-% leftmargin=\widthof{\propformlabel}+0.5em sizes the margin to that label.
+% With a numbered style, the preview at open is the label for item 1, and
+% leftmargin=\widthof{\proppredictedlabel}+0.5em sizes the margin to it.
+% Each item's \propformlabel is its own label; \proppredictedlabel stays at the
+% preview throughout, which is what a list dimension is sized to.
 
-Preview label is ``\propformlabel'' (before any prop).
+Preview label is ``\proppredictedlabel'' (before any prop).
 
-\begin{prop}[leftmargin=\widthof{\propformlabel}+0.5em]
-  \item At open, label previewed as ``\propformlabel''. \label{pfl:1}
-  \item After first item, \texttt{\string\propformlabel} = ``\propformlabel''. \label{pfl:2}
-  \item After second item, \texttt{\string\propformlabel} = ``\propformlabel''. \label{pfl:3}
+\begin{prop}[leftmargin=\widthof{\proppredictedlabel}+0.5em]
+  \item Predicted ``\proppredictedlabel'', own label ``\propformlabel''. \label{pfl:1}
+  \item Predicted ``\proppredictedlabel'', own label ``\propformlabel''. \label{pfl:2}
+  \item Predicted ``\proppredictedlabel'', own label ``\propformlabel''. \label{pfl:3}
 \end{prop}
+
+The three predictions must be identical and the three own labels must be the
+three item labels.
 
 \subsection{items= for a longer list: size for last expected label}
 
 % When items=20, the preview label is what would appear as the 20th item:
 % e.g. "(20)".  This gives enough left margin for the widest label.
 
-\begin{prop}[items=20, leftmargin=\widthof{\propformlabel}+0.5em]
-  \item Margin is sized for ``\propformlabel'' (shown at open). \label{pfl:long1}
+\begin{prop}[items=20, leftmargin=\widthof{\proppredictedlabel}+0.5em]
+  \item Margin is sized for ``\proppredictedlabel'' (the 20th expected label). \label{pfl:long1}
   \item Second item. \label{pfl:long2}
   \item Third item. \label{pfl:long3}
 \end{prop}
@@ -167,7 +174,7 @@ After the list the counter has advanced by 3 (not 20).
 % propformlabel also works with named styles that use counters.
 
 \begin{prop}[style=proposition, counter=P, items=5,
-             leftmargin=\widthof{\propformlabel}+0.5em]
+             leftmargin=\widthof{\proppredictedlabel}+0.5em]
   \item First P with sized margin.   \label{pfl:P1}
   \item Second P with sized margin.  \label{pfl:P2}
 \end{prop}
