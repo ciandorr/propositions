@@ -89,6 +89,9 @@
 \EnableCrossrefs
 \CodelineIndex
 \OnlyDescription
+
+\emergencystretch=2em
+
 \begin{document}
   \DocInput{\jobname.dtx}
 \end{document}
@@ -399,8 +402,7 @@
 % alone, so a passage set in another family carries its labels with it.  The
 % formats are applied after the reset, so a style that wants the surrounding
 % weight or shape need only ask: \texttt{label format\,=\,\{\string\bfseries\
-% \#1\}}.  Reference text is not touched---a \refCom{ref} belongs to the sentence
-% it is in.
+% \#1\}}.
 %
 % \begin{docKeys}{
 %   { doc name = body begin, doc parameter = {=\meta{material}}, doc description = no default },
@@ -443,12 +445,13 @@
 %   When \textsf{cleveref} or \textsf{zref-clever} is loaded, assigns an arbitrary reference type to this proposition.  For example, \texttt{crefname=lemma} on an item for which |\ref| would produce ‘(17)’ causes \cs{cref} (\textsf{cleveref}) or \cs{zcref} (\textsf{zref-clever}) to produce ‘lemma (17)’, and \cs{Cref} or \cs{zcref}\texttt{[cap]} to produce ‘Lemma (17)’.  The \meta{type} must be known to the package in use; new types can be declared with \cs{crefname} (with \textsf{cleveref}) or \cs{zcRefTypeSetup} (with \textsf{zref-clever}).  (Bear in mind that a type carrying a format of its own will apply it to the reference this package has already formatted: \texttt{crefname=equation} turns ‘(17)’ into ‘eq.\ ((17))’, since both packages parenthesise references of that type.)
 % \end{docKey}
 %
-% The list-dimension keys documented in the next section may also be given to an individual \cs{item}, where they apply to that item alone: \refKey{leftmargin}\,=\,\texttt{2em} on an item means the same thing there as it means on the environment, and a value smaller than the list's puts the item outside the list's margin.  Only \refKey{topsep} and \refKey{partopsep} have no item-level meaning, being read once when the list opens.
 % 
 % \subsection{Keys for changing the list geometry}\label{sect:keys-dims}
 %
 % The keys in this section can be used in the following places: 
 % \begin{itemize}
+%   \item 
+%   In the optional argument of |\item| (except for \refKey{topsep} and \refKey{partopsep} which only apply to complete lists), where they apply to that item alone.  
 %   \item In the optional argument of \refEnv{prop}: the key applies to that environment only, not to any other \refEnv{prop} or \refEnv{inlineprop} environments that may be nested within it.  
 %   \item In the argument of \refCom{propoptions}: the key 
 % will apply to every subsequent \refEnv{prop} environment (in the current group), unless overridden by that environment's optional argument.
@@ -456,7 +459,6 @@
 %   \item With \refCom{SetPropStyle} or \refCom{DeclareNumberedStyle}, to
 % add the key to a given style.  
 % \end{itemize}
-% All of these keys except \refKey{topsep} and \refKey{partopsep} can also be used in the optional argument of |\item|, where they apply to that item alone.  \refKey{itemsep} there is the space above the item; the others mean for the item what they mean for the list.  The five-way constraint below is resolved the same way at either level, so an item that names four of the dimensions has the fifth derived for it.
 % 
 % \begin{docKey}{align}{\docKeyChoices{left,right,center,flush,runin,nextline,flush-nextline}}{initially \docValue{left}}
 %   How the label should be positioned.
@@ -505,12 +507,15 @@
 %   }
 %   Override the standard \LaTeX{} list dimensions.  Accept the same values as \cs{setlength}, including rubber lengths (e.g.\ \texttt{itemsep=4pt plus 2pt}).
 % 
-% \refKey{labelindent} is not a standrd \LaTeX{} list dimension.  It positions the left edge of the label box at \meta{length} from the enclosing margin.  This introduces a redundancy: any one of \refKey{labelindent}, \refKey{labelwidth}, \refKey{leftmargin}, \refKey{labelsep}, or \refKey{itemindent} can be calculated from the four others, via the expression
+% All but \refKey{topsep} and \refKey{partopsep} can be set for individual items as well as whole environments. For an item, \refKey{itemsep} determines the space \emph{above} that item.
+%
+% 
+% \refKey{labelindent} is not a standard \LaTeX{} list dimension.  It positions the left edge of the label box at \meta{length} from the enclosing margin.  This introduces a redundancy: any one of \refKey{labelindent}, \refKey{labelwidth}, \refKey{leftmargin}, \refKey{labelsep}, or \refKey{itemindent} can be calculated from the four others, via the expression
 % \[
 % \refKey{labelindent} + \refKey{labelwidth} + \refKey{labelsep} = \refKey{leftmargin} + \refKey{itemindent}
 % \]
 % Whichever of these is not explicitly set will be computed from the ones that are explicitly set (or from the four most recently explicitly set) in such a way as to guarantee this identity.  Each dimension key also accepts the value~\texttt{*}, which means \emph{behave as if the key had not been set}: the dimension takes the document class's default, unless its value must shift to preserve the above identity.  This behaviour is identical to that of package \textsf{enumitem}.
-%
+% 
 % A dimension key can be set to any macro that expands to a dimension.  For example, one can set different dimensions for different nesting levels by using \refCom{proplevelchoice}:
 % \begin{codebox}
 % \propoptions{leftmargin = \proplevelchoice{2.5em, 0em, *}}
@@ -793,9 +798,6 @@
 %
 % Styles, equivalent to bundles of key-value settings,
 % can be defined, and used freely in the optional arguments of |\item|, \refCom{ptag}, \refEnv{prop}, \refEnv{inlineprop}, and the argument of \refCom{propoptions}.  
-% Styles can freely be combined, and the definition of 
-% one style can reference another (in which case redefining
-% the latter style will change the effect of the former style.)
 %  
 % \begin{docCommand}{SetPropStyle}{\marg{name}\marg{keys}}
 %   Defines or modifies a prop style for use with the \refKey{style} key.  All item-level keys (\autoref{sect:keys-item}) are accepted, plus the following:
@@ -813,32 +815,9 @@
 %
 % If the style \meta{name} already exists, \refCom{SetPropStyle} modifies or adds keys.  For example, |\SetPropStyle{proposition}{align=flush}| changes the alignment of the built-in |proposition| style while preserving its other settings.
 %
-% \subsection{Complete looks and modifiers}\label{sect:stylekinds}
-%
-% A style only sets the keys it names, so a key set at an earlier layer survives
-% a change of style.  That is wanted of a style laid \emph{over} an item---a
-% \emph{modifier}, like \texttt{fitmargin} or \texttt{framed}, which sets its own
-% keys and leaves the rest---but not of one meant to settle an item's whole
-% appearance.  Those name \texttt{plain} as their parent, and \texttt{plain} sets
-% every appearance key to its default, so that switching to such a style settles
-% the keys it does not mention as well as the ones it does.  Do the same in a
-% style of your own that is meant to be a look rather than an overlay; everything
-% \refCom{DeclareNumberedStyle} creates does it already.
-%
-% \texttt{plain} resets appearance only: \refKey{format}, \refKey{label format},
-% \refKey{shorthand format}, \refKey{gloss format}, \refKey{counter format} and
-% \refKey{align}.  What an item \emph{is}---its \refKey{name}, \refKey{shorthand},
-% \refKey{gloss}, \refKey{ref}, \refKey{label}, \refKey{crefname}---and how the
-% list is built---\refKey{counter}, \refKey{reset}, the per-item dimensions---are
-% for the environment and the item to say, and are cleared only by a style that
-% means to clear them.  \texttt{nolabel} is that style for the three that a label
-% is made of.
-%
-% The modifiers are \texttt{fitmargin}, \texttt{outerfit}, \texttt{framed},
-% \texttt{conclusion}, \texttt{standard}, and the dispatchers \texttt{numbered},
-% \texttt{enum}, \texttt{eqnum} and \texttt{hierarchical}, which only delegate
-% through \refKey[setpropstyle]{style}.  Everything else is a complete look.
-%
+% Styles can freely be combined, and the definition of 
+% one style can reference another (in which case redefining
+% the latter style will change the effect of the former style.)  If you want to ensure that your style will reset appearance keys like \refKey{format}, include |style=plain|, which specifies as parent the built-in \texttt{plain} which resets all appearance keys to their default values.
 %
 % \begin{example}
 % \SetPropStyle{angle}{
@@ -854,7 +833,7 @@
 % \end{example}
 %
 % \begin{docCommand}{DeclareNumberedStyle}{\marg{name}\oarg{keys}}
-%   Creates a new \LaTeX{} counter named \meta{name} and a matching prop style with \texttt{counter=}\meta{name}.  All \refCom{SetPropStyle} keys are accepted, plus:
+%   Creates a new \LaTeX{} counter named \meta{name} and a matching prop style with \texttt{counter=}\meta{name} and parent style \texttt{plain} (so appearance keys are reset).  All \refCom{SetPropStyle} keys are accepted, plus:
 % \end{docCommand}
 %
 % \begin{docKey}{parent}{=\meta{counter}}{no default}
@@ -1140,7 +1119,7 @@
 %     {\widthof{\propwidest{\propformlabel}}}
 %     + \labelsep}
 % \end{codebox}
-%  (Explanation: settling the list's geometry the two agree, so the margin fits the prediction; resolving an item, \refCom{propformlabel} is that item's own label and can only push the margin out.  Setting \refKey{labelindent} to zero makes the \refKey{labelwidth} size itself to the resulting \refKey{leftmargin}.)  
+%  (Explanation: at the start of an environment \refCom{propformlabel} and \refCom{proppredictedlabel} are identical, so the margin is set to the prediction.  At each item, the left margin will be expanded further to fit that item's label, now stored in \refCom{propformlabel}, if this is greater than the predicted one.)  
 % 
 % When a list will contain several numbered items, you can use the \refKey{items} key to tell the environment how many |\item|s it contains, so that it can properly anticipate how wide the widest label will be.
 % \end{description}
@@ -1314,24 +1293,24 @@
 % \item[0.92 (unreleased)] [New] The list-geometry keys work in an \cs{item}'s
 %   argument too, where they apply to that item alone: \refKey{leftmargin},
 %   \refKey{rightmargin}, \refKey{parsep}, \refKey{listparindent} and
-%   \refKey{itemsep} join the four that already did.  An item naming four of the
-%   five constrained dimensions has the fifth derived for it.
+%   \refKey{itemsep} join the four that already did. 
 %
 %   [Change] \refCom{propformlabel} follows each item inside a \refEnv{prop};
-%   \refCom{proppredictedlabel} is the environment's prediction as before.
+%   \refCom{proppredictedlabel} is still the environment's prediction.
 %   \cs{propwidestlabel} is retired in favour of \refCom{propwidest}\marg{label}.
 %   \texttt{fitmargin} and \texttt{outerfit} now let an item whose label
 %   outgrows the prediction take more room.
 %
 %   [Bug fix] A dimension given in a \refEnv{prop}'s argument is no longer
-%   defeated by a style named in the same argument; the later of the two wins,
-%   as elsewhere.
-%
+%   defeated by a style named earlier in the same argument.
+%   
+%   [Change] \refKey{counter
+%   format} now allows the argument \texttt{*} for \enquote{as if unset}.
+%   
 %   [Change] Styles meant to settle an item's whole
 %   appearance now start from \texttt{plain}, so that switching style resets the
 %   appearance keys the new style does not mention instead of leaving them as an
-%   earlier layer had them.  See \autoref{sect:stylekinds}.  \refKey{counter
-%   format} takes \texttt{*} for \enquote{as if unset}, and \texttt{nolabel} now
+%   earlier layer had them.  \texttt{nolabel} now
 %   clears an inherited \refKey{shorthand} and \refKey{gloss} as it already
 %   cleared an inherited \refKey{name}.
 %
