@@ -242,13 +242,20 @@ Some text after the bracketed list, to show where the lower rule falls.
 The material is centred between the descenders of the line above and the tops
 of the letters below.  Where something taller intrudes --- an opening
 parenthesis, say, which rises above cap height --- the result can read a
-little low.  The two optional arguments of \verb|\propsetabove| are the space to leave
-above and below the material; either may be negative.  Equal values widen the
-gap and keep the material centred in it; unequal values shift it.
+little low.  The two optional arguments of \verb|\propsetaboveitem| are the space
+to leave above and below the material; either may be negative.  Equal values
+widen the gap and keep the material centred in it; unequal values shift it.
+
+% \SetPropStyle adds to a style rather than replacing it, so a redefinition of
+% conclusion has to say what it is not keeping: re-setting wrapper begin alone
+% would leave the body begin in place and draw two rules.  Here the key that is
+% actually used is the one being varied, so nothing needs clearing.
 
 \newcommand\showraise[3]{%
-  \SetPropStyle{conclusion}{wrapper begin =
-    \propsetabove[#1][#2]{\smash{\rule{\linewidth}{0.4pt}}}}%
+  \SetPropStyle{conclusion}{body begin =
+    \propsetaboveitem[#1][#2]{\smash{%
+      \hspace*{-\labelwidth-\labelsep+\itemindent}%
+      \rule{\linewidth+\labelwidth+\labelsep-\itemindent}{0.4pt}}}}%
   \begin{prop}
     \item Everything that is mental is PREMISEB.
   \end{prop}
@@ -260,7 +267,9 @@ gap and keep the material centred in it; unequal values shift it.
 \showraise{0pt}{0pt}{no space either side}
 \showraise{0.4em}{0.4em}{twice the space}
 \showraise{0.4em}{0pt}{all the space above}
-\SetPropStyle{conclusion}{wrapper begin =
-  \propsetabove[0.2em][0.2em]{\smash{\rule{\linewidth}{0.4pt}}}}
+\SetPropStyle{conclusion}{body begin =
+  \propsetaboveitem[0.2em][0.2em]{\smash{%
+    \hspace*{-\labelwidth-\labelsep+\itemindent}%
+    \rule{\linewidth+\labelwidth+\labelsep-\itemindent}{0.4pt}}}}
 
 \end{document}

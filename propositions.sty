@@ -2048,6 +2048,17 @@
     \group_end:
   }
 
+\NewDocumentCommand \propsetaboveitem { O{0pt} O{0pt} m }
+  {
+    \group_begin:
+      \__props_gap_start:
+      \legacy_if:nTF { @newlist }
+        { \dim_set:Nn \l__props_gap_sep_dim { \topsep + \partopsep } }
+        { \dim_set:Nn \l__props_gap_sep_dim { \itemsep } }
+      \__props_gap_place:nnn {#1} {#2} {#3}
+    \group_end:
+  }
+
 \clist_const:Nn \c__props_env_dims_clist
   {
     leftmargin , rightmargin , topsep , partopsep , itemsep , parsep ,
@@ -3168,10 +3179,27 @@
 %% Smashed, so that the rule costs no vertical space and the first item sits
 %% exactly where it would have without it.  The 0.2em of space on each side
 %% follows bussproofs and ebproof, which both give an inference line 2pt.
+%% An item-level style, so that the premises and their conclusion can be items
+%% of one list.  Applied to an environment it still rules a one-item list, which
+%% is how it was used before; applied to a list of several it rules each of them.
+%% The 0.2em is the padding the wrapper version used, and gives the same gap.
 \SetPropStyle { conclusion }
   {
-    wrapper~begin = \propsetabove [0.2em] [0.2em]
-                      { \smash { \rule { \linewidth } { 0.4pt } } } ,
+    %% The rule reaches back from where the body begins to where the label
+    %% begins, which is \labelwidth + \labelsep - \itemindent, and is that much
+    %% wider to keep its right-hand end.  With the standard dimensions the reach
+    %% back is exactly \leftmargin, so the rule starts at the enclosing text
+    %% margin.  Smashed, because \propsetaboveitem provides the clearance.
+    body~begin = \propsetaboveitem [0.2em] [0.2em]
+                   {
+                     \smash
+                       {
+                         \hspace* { - \labelwidth - \labelsep + \itemindent }
+                         \rule
+                           { \linewidth + \labelwidth + \labelsep - \itemindent }
+                           { 0.4pt }
+                       }
+                   } ,
   }
 
 
