@@ -288,27 +288,31 @@
 % Further commands are described below, especially in \cref{sect:xref} (cross-referencing) and \cref{sect:styles} (defining styles).
 % 
 % \section{Keys}\label{sect:keys}
-% 
-% \subsection{Item-level keys}\label{sect:keys-item}
 %
-% The keys listed in this subsection can be used in the following places: 
+% The package's keys can, in general, be set in the following places.   
 % \begin{itemize}
 %   \item 
-%    In the optional argument of |\item| or \refCom{ptag}: the key applies to that item only.
-%   \item In the optional argument of \refEnv{prop} or \refEnv{inlineprop}: the key applies to every top-level |\item| within
-% that environment, unless overridden by the |\item|'s own optional argument.  (If another \refEnv{prop} or \refEnv{inlineprop} environment is used inside this one, the key will 
-% not apply to its |\item|s.)
-%   \item In the argument of \refCom{propoptions}: the key 
-% will apply to every subsequent |\item| or \refCom{ptag} (in the current group), unless overridden by that |\item|'s optional argument, or that 
-% of its parent environment.
-%   \item In the optional argument of |\usepackage{propositions}|: equivalent to \refCom{propoptions}, except that keys that require the |#| character cannot be set here, (due to a limitation in how \LaTeX\ processes options)  
-%   \item With \refCom{SetPropStyle} or \refCom{DeclareNumberedStyle}, to
-% add the key to a given style.  
+%    In the optional argument of |\item| or \refCom{ptag}: the key applies to that item only.  Keys marked `environment-only' have no effect when set here.   
+%   \item In the optional argument of \refEnv{prop} or \refEnv{inlineprop}.  The key may affect the formatting of the environment, and is also passed down to every top-level |\item| within
+% the environment (though it may be overridden by keys set in the |\item|'s own optional argument).  If another \refEnv{prop} or \refEnv{inlineprop} environment is used inside this one, the key will 
+% not apply to it or its |\item|s.
+%   \item 
+%   In the argument of \refCom{propoptions}: the key will apply to every subsequent \refEnv{prop} or \refEnv{inlineprop} environment, each |\item| within those environments, and each |\ptag|, within the current group, unless overridden by their own keys.   
+%   \item 
+%    In the optional argument of |\usepackage{propositions}|: equivalent to \refCom{propoptions}, except that keys that require the |#| character cannot be set here, due to a limitation in how \LaTeX\ processes options.
+%   \item 
+%   Within \refCom{SetPropStyle} or \refCom{DeclareNumberedStyle}, to add the key to a given style.  
 % \end{itemize}
-%
+% 
+% The following key plays a special role:
 % \begin{docKey}{style}{=\meta{style}}{no default}
-%   A style, equivalent to a preset collection of keys: see \cref{sect:styles} for details.  
+%   A style, equivalent to a preset collection of keys.  
 % \end{docKey}
+% See \cref{sect:styles} for details on how to create and modify styles, and on the package's built-in styles.
+% 
+% \subsection{Keys for creating and formatting labels}\label{sect:keys-item}
+%
+% The keys in this section control the content and formatting of the proposition labels created by |\item| (inside \refEnv{prop} and \refEnv{inlineprop} environments) and by |\ptag|.  
 % 
 % \begin{docKey}{name}{=\meta{text}}{no default}
 %   The proposition's name.  A bare string (without \texttt{=}) is equivalent to \texttt{name=}\meta{text}.  (To be precise: if the optional argument contains no \texttt{=} at all, the whole of it is the name; otherwise, it is read as a key list, and any entry of it without an \texttt{=} is the name, so a bare name can be combined with other keys, as in |\item[No Overlap, align=flush]|.  In that case a name containing a comma must be braced---|\item[{Alpha, Beta}, align=flush]|---and a name containing an \texttt{=} needs the explicit \texttt{name=}|{|\meta{text}|}| form.)
@@ -565,7 +569,7 @@
 %   actual label contents.
 % \end{docCommand}
 %
-% \begin{docKey}{items}{=\meta{n}}{initially \texttt{1}}
+% \begin{docKey}{items}{=\meta{n}}{initially \texttt{1}, \emph{environment-only}}
 %   Indicates that (approximately) \meta{n} items are expected in this environment.
 %   The only effect of this key is in conjunction with \refCom{proppredictedlabel}, to compute a preview label wide enough for the \meta{n}\/th expected item, so that dimension expressions such as
 %   \texttt{leftmargin=\cs{widthof}\{\refCom{propformlabel}\}+0.5em} reserve enough space for the
@@ -582,11 +586,11 @@
 %
 % The keys in this section have effect in both the \refEnv{prop} and \refEnv{inlineprop} environments.  They can also be used with \refCom{propoptions}, |\usepackage|, and \refCom{SetPropStyle}, just like the keys in the previous subsection.  
 % 
-% \begin{docKey}{named style}{=\meta{style}}{initially \texttt{proposition}}
+% \begin{docKey}{named style}{=\meta{style}}{initially \texttt{proposition}, \emph{environment-only}}
 %   The base style when an \cs{item} or \refCom{ptag} has a value for \refKey{name}.  Explicitly given keys, including \refKey{style}, will override whatever is set by this style.  
 % \end{docKey}
 %
-% \begin{docKey}{nameless style}{=\meta{style}}{initially \texttt{numbered}}
+% \begin{docKey}{nameless style}{=\meta{style}}{initially \texttt{numbered}, \emph{environment-only}}
 %   The base style used when an \cs{item} or \refCom{ptag} has no value for \refKey{name}.  
 % 
 % The choice whether to assign an item \refKey{named style} or the \refKey{nameless style} turns on whether its \refKey{name} is set (either by its own optional argument, or by inheritance from its environment or \refCom{propoptions}).  
@@ -1221,7 +1225,7 @@
 % \end{prop}
 % \end{example}
 %
-% \item[\texttt{conclusion}] Draws a rule immediately before the item: intended to be used to display the conclusion of an argument whose premises have just been stated.  Being an item-level style, it can mark the conclusion of an argument whose premises are items of the same list, or---applied to a one-item environment, as it always could be---of the list before it.
+% \item[\texttt{conclusion}] Draws a rule immediately before the item: intended to be used to display the conclusion of an argument whose premises have just been stated.  
 % \begin{codebox}
 % \SetPropStyle{conclusion}{body begin =
 %   \propsetaboveitem[0.2em][0.2em]{\smash{%
@@ -1229,7 +1233,7 @@
 %     \rule{\linewidth+\labelwidth+\labelsep
 %           -\itemindent}{0.4pt}}}}
 % \end{codebox}
-%  (The rule reaches back from where the body begins to where the label begins, and is that much wider to keep its right-hand end; with the standard dimensions that reach is exactly \refKey{leftmargin}, so the rule starts at the enclosing text margin.  Drop the \cs{hspace} and the two adjustments to start it at the body instead.)
+%  (The rule reaches back from where the body begins to where the label begins, and is that much wider to keep its right-hand end at the right margin.)
 %
 % \begin{example}
 % \begin{prop}[counter=enumprop, format=\textbf{P#1}]
@@ -1305,7 +1309,11 @@
 % \section{Release notes}
 %
 % \begin{description}
-% \item[0.92 (unreleased)] [Change] \texttt{conclusion} is now an item-level
+% \item[0.92 (unreleased)] [Bug fix] A space written straight after \texttt{\#1}
+%   in a \refKey{ref format} is no longer lost, so \texttt{ref format\,=\,the \#1
+%   point} gives \enquote{the first point} rather than \enquote{the firstpoint}.
+%
+%   [Change] \texttt{conclusion} is now an item-level
 %   style, so an argument's premises and its conclusion can be items of one
 %   list.  New \refCom{propsetaboveitem}.  A style
 %   that redefined \texttt{conclusion} by re-setting its \refKey{wrapper begin}
@@ -2620,6 +2628,33 @@
       {
         \protected@edef \l__props_ref_tpl_tl
           { \l__props_reffmt:n { \propfmtarg } }
+        %% A space straight after the placeholder is lost on the way back from
+        %% the .aux: the template is written there as "the \propfmtarg  point",
+        %% and TeX skips the whole run of spaces following a control word --- the
+        %% real one along with the name terminator --- so ref format = the #1
+        %% point came back as "the 1point".  A space before #1 was never
+        %% affected, which made it look like a typo rather than a rule.
+        %%
+        %% An empty group ends the control word, so the space that follows is
+        %% its own and survives.
+        %%
+        %% Only where a space does follow.  Ending the placeholder with a group
+        %% everywhere leaves it inside the argument of anything the format wraps
+        %% #1 in: ref format = the \ordinalstringnum{#1} point would hand
+        %% \ordinalstringnum the argument "1{}" rather than "1", and fmtcount
+        %% would report a missing number for every reference.
+        %%
+        %% \space in the group's place does not work either: \label writes the
+        %% aux through an \edef of its own, which expands it back to a bare
+        %% space, and the space is eaten as before.
+        %%
+        %% A regex rather than \tl_replace_all:Nnn, whose pattern cannot hold
+        %% the space: a space after a control word is skipped when the pattern
+        %% itself is read, so { \propfmtarg ~ } is just \propfmtarg and matches
+        %% everywhere.  \x20 says it in a way that survives being written down.
+        \regex_replace_all:nnN
+          { \c{propfmtarg} \x20 } { \c{propfmtarg} \cB\{ \cE\} \x20 }
+          \l__props_ref_tpl_tl
       }
     \protected@edef \l__props_ref_cnt_tl { \l__props_ref_text_tl }
     \protected@edef \l__props_ref_result_tl

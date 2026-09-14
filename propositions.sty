@@ -1040,6 +1040,33 @@
       {
         \protected@edef \l__props_ref_tpl_tl
           { \l__props_reffmt:n { \propfmtarg } }
+        %% A space straight after the placeholder is lost on the way back from
+        %% the .aux: the template is written there as "the \propfmtarg  point",
+        %% and TeX skips the whole run of spaces following a control word --- the
+        %% real one along with the name terminator --- so ref format = the #1
+        %% point came back as "the 1point".  A space before #1 was never
+        %% affected, which made it look like a typo rather than a rule.
+        %%
+        %% An empty group ends the control word, so the space that follows is
+        %% its own and survives.
+        %%
+        %% Only where a space does follow.  Ending the placeholder with a group
+        %% everywhere leaves it inside the argument of anything the format wraps
+        %% #1 in: ref format = the \ordinalstringnum{#1} point would hand
+        %% \ordinalstringnum the argument "1{}" rather than "1", and fmtcount
+        %% would report a missing number for every reference.
+        %%
+        %% \space in the group's place does not work either: \label writes the
+        %% aux through an \edef of its own, which expands it back to a bare
+        %% space, and the space is eaten as before.
+        %%
+        %% A regex rather than \tl_replace_all:Nnn, whose pattern cannot hold
+        %% the space: a space after a control word is skipped when the pattern
+        %% itself is read, so { \propfmtarg ~ } is just \propfmtarg and matches
+        %% everywhere.  \x20 says it in a way that survives being written down.
+        \regex_replace_all:nnN
+          { \c{propfmtarg} \x20 } { \c{propfmtarg} \cB\{ \cE\} \x20 }
+          \l__props_ref_tpl_tl
       }
     \protected@edef \l__props_ref_cnt_tl { \l__props_ref_text_tl }
     \protected@edef \l__props_ref_result_tl

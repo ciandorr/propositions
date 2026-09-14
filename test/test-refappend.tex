@@ -409,4 +409,39 @@ bare \texttt{a}: a fresh run under an unlabelled item has no prefix to offer,
 which is the honest answer and keeps it from colliding with clause one.
 \texttt{[style = nolabel, reset = true]} is the way to ask for exactly this.
 
+\section{Spaces around the placeholder in a ref format}
+
+A reference format is stored in the \texttt{.aux} as a template with
+\verb|\propfmtarg| where the content goes, so a space written straight after
+\verb|#1| meets a control word when the file is read back, and TeX skips the
+whole run of spaces that follows one.  The template therefore ends the name
+with an empty group where a space follows it, and only there: a format that
+wraps \verb|#1| in something else would otherwise hand that command an extra
+empty group along with the content.  All five cases below must come out as they
+were written.
+
+%% Robust, as fmtcount's number-word commands are: it has to survive the
+%% \protected@edef that builds the template and evaluate where the reference
+%% is set, not where it is stored.
+\DeclareRobustCommand\double[1]{\the\numexpr#1*2\relax}
+
+\begin{prop}[counter=enumprop]
+  \item[ref format = alpha beta #1 gamma delta] Both sides. \label{sp:both}
+  \item[ref format = alpha #1] Before only. \label{sp:before}
+  \item[ref format = #1 omega] After only. \label{sp:after}
+  \item[ref format = pre#1post] Neither, which must not gain a space.
+    \label{sp:none}
+  \item[ref format = {item #1, doubled \double{#1}}] Wrapped in another
+    command's argument, which must not gain the group. \label{sp:wrapped}
+\end{prop}
+
+\ref{sp:both} (expected: \texttt{alpha beta 1 gamma delta});
+\ref{sp:before} (expected: \texttt{alpha 2});
+\ref{sp:after} (expected: \texttt{3 omega});
+\ref{sp:none} (expected: \texttt{pre4post});
+\ref{sp:wrapped} (expected: \texttt{item 5, doubled 10}).
+
+\verb|\double| is strict about its argument, so a stray empty group reaching it
+is an error rather than something invisible.
+
 \end{document}
