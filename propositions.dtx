@@ -292,7 +292,7 @@
 % The package's keys can, in general, be set in the following places.   
 % \begin{itemize}
 %   \item 
-%    In the optional argument of |\item| or \refCom{ptag}: the key applies to that item only.  Keys marked `environment-only' have no effect when set here.   
+%    In the optional argument of |\item| or \refCom{ptag}: the key applies to that item only.  Keys marked `environment-level' have no effect when set here.   
 %   \item In the optional argument of \refEnv{prop} or \refEnv{inlineprop}.  The key may affect the formatting of the environment, and is also passed down to every top-level |\item| within
 % the environment (though it may be overridden by keys set in the |\item|'s own optional argument).  If another \refEnv{prop} or \refEnv{inlineprop} environment is used inside this one, the key will 
 % not apply to it or its |\item|s.
@@ -455,7 +455,7 @@
 % The keys in this section can be used in the following places: 
 % \begin{itemize}
 %   \item 
-%   In the optional argument of |\item| (except for \refKey{topsep} and \refKey{partopsep} which only apply to complete lists), where they apply to that item alone.  
+%   In the optional argument of |\item|, where they apply to that item alone.  
 %   \item In the optional argument of \refEnv{prop}: the key applies to that environment only, not to any other \refEnv{prop} or \refEnv{inlineprop} environments that may be nested within it.  
 %   \item In the argument of \refCom{propoptions}: the key 
 % will apply to every subsequent \refEnv{prop} environment (in the current group), unless overridden by that environment's optional argument.
@@ -497,8 +497,10 @@
 %     doc parameter = {=\meta{length}},
 %   ]
 %   {
-%     { doc name = topsep },
-%     { doc name = partopsep },
+%     { doc name = topsep,
+%       doc description = {\emph{environment-level}} },
+%     { doc name = partopsep,
+%       doc description = {\emph{environment-level}} },
 %     { doc name = itemsep },
 %     { doc name = parsep },
 %     { doc name = leftmargin },
@@ -527,15 +529,15 @@
 % (Note that without the \texttt{*}, the last entry 0em would apply at every level below the second.)  
 % \end{docKeys}
 % 
-% \begin{docKey}{tightspacing}{}{no value}
+% \begin{docKey}{tightspacing}{}{no value, \emph{environment-level}}
 %   Sets all vertical spacing to the compact defaults that the standard document classes use for level-three lists (\refKey{topsep} and \refKey{itemsep} to \texttt{2pt} with stretch/shrink, \refKey{parsep} to \texttt{0pt}, \refKey{partopsep} to \texttt{1pt}).
 % \end{docKey}
 %
-% \begin{docKey}{nosep}{}{no value}
+% \begin{docKey}{nosep}{}{no value, \emph{environment-level}}
 %   Sets \cs{topsep}, \cs{itemsep}, and \cs{parsep} all to zero.
 % \end{docKey}
 %
-% \begin{docKey}{continue}{=\meta{boolean}}{initially \texttt{true}}
+% \begin{docKey}{continue}{=\meta{boolean}}{initially \texttt{true}, \emph{environment-level}}
 %   When a \refEnv{prop} environment with \texttt{continue=true} is immediately followed by another such environment (with no intervening
 %   paragraph text), the normal \cs{topsep}-based inter-list
 %   space is replaced with \cs{itemsep}\,+\,\cs{parsep}, giving the visual
@@ -569,7 +571,7 @@
 %   actual label contents.
 % \end{docCommand}
 %
-% \begin{docKey}{items}{=\meta{n}}{initially \texttt{1}, \emph{environment-only}}
+% \begin{docKey}{items}{=\meta{n}}{initially \texttt{1}, \emph{environment-level}}
 %   Indicates that (approximately) \meta{n} items are expected in this environment.
 %   The only effect of this key is in conjunction with \refCom{proppredictedlabel}, to compute a preview label wide enough for the \meta{n}\/th expected item, so that dimension expressions such as
 %   \texttt{leftmargin=\cs{widthof}\{\refCom{propformlabel}\}+0.5em} reserve enough space for the
@@ -582,22 +584,23 @@
 % so that a run of numbered items can keep a steady margin instead of shifting slightly depending on the width of the digits.
 % \end{docCommand}
 %
-% \subsection{Other environment-level keys}\label{sect:keys-env}
+% \subsection{Other keys}\label{sect:keys-env}
 %
 % The keys in this section have effect in both the \refEnv{prop} and \refEnv{inlineprop} environments.  They can also be used with \refCom{propoptions}, |\usepackage|, and \refCom{SetPropStyle}, just like the keys in the previous subsection.  
 % 
-% \begin{docKey}{named style}{=\meta{style}}{initially \texttt{proposition}, \emph{environment-only}}
+% \begin{docKey}{named style}{=\meta{style}}{initially \texttt{proposition}, \emph{environment-level}}
 %   The base style when an \cs{item} or \refCom{ptag} has a value for \refKey{name}.  Explicitly given keys, including \refKey{style}, will override whatever is set by this style.  
 % \end{docKey}
 %
-% \begin{docKey}{nameless style}{=\meta{style}}{initially \texttt{numbered}, \emph{environment-only}}
+% \begin{docKey}{nameless style}{=\meta{style}}{initially \texttt{numbered}, \emph{environment-level}}
 %   The base style used when an \cs{item} or \refCom{ptag} has no value for \refKey{name}.  
 % 
 % The choice whether to assign an item \refKey{named style} or the \refKey{nameless style} turns on whether its \refKey{name} is set (either by its own optional argument, or by inheritance from its environment or \refCom{propoptions}).  
 % \end{docKey}
 %
 % \begin{docKeys}[
-%       doc parameter = {= \meta{style}},
+%       doc parameter   = {= \meta{style}},
+%       doc description = {\emph{environment-level}},
 %   ]
 %   {
 %     { doc name  = named ptag style },
@@ -607,7 +610,8 @@
 % \end{docKeys}
 % 
 % \begin{docKeys}[
-%     doc parameter = {=\meta{code}},
+%     doc parameter   = {=\meta{code}},
+%     doc description = {\emph{environment-level}},
 %   ]
 %   {
 %     { doc name = wrapper begin },
