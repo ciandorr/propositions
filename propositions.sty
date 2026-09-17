@@ -1994,7 +1994,13 @@
 %% #1 = space above, #2 = space below, #3 = material.
 \cs_new_protected:Npn \__props_gap_place:nnn #1#2#3
   {
-    \hbox_set:Nn \l__props_gap_box {#3}
+    %% \ignorespaces, because the material is positioned by this command
+    %% rather than by the text around it, so a space in front of it is never
+    %% wanted --- it shifts the whole thing right by an interword space, and
+    %% a rule that should start at the margin visibly does not.  It is easily
+    %% written by accident, since a value broken across lines after the
+    %% opening brace carries the line end in with it.
+    \hbox_set:Nn \l__props_gap_box { \ignorespaces #3 }
     %% A box contributed in vertical mode has its *top* at the current
     %% position, so its height is space above the material and its depth
     %% space below it: the two arguments are simply added to them.  A rule

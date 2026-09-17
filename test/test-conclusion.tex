@@ -8,8 +8,9 @@
 %%
 %% Two requirements, neither of which a plain \hrule meets:
 %%
-%%   (i)  the rule adds no vertical space -- the first item must sit exactly
-%%        where it would have sat without it;
+%%   (i)  the rule itself adds no vertical space -- the only space it costs
+%%        is the clearance the two optional arguments ask for, 0.2em on each
+%%        side, so the item sits exactly 0.4em lower than it otherwise would;
 %%   (ii) the rule sits midway between the last line above and the first line
 %%        of this list.
 %%
@@ -83,8 +84,9 @@ conclusion must sit exactly where it would have without the rule.
   \item Everything that is mental is \CC.
 \end{prop}
 
-The conclusion's baseline here and in the previous section must be the same
-distance below its premise.
+The conclusion's baseline here must be 0.4em above where it is in the previous
+section: the rule costs nothing itself, but the style asks \verb|\propsetaboveitem|
+for 0.2em of clearance on each side of it.  Any other difference is a fault.
 
 \section{Several premises, and a multi-line conclusion}
 

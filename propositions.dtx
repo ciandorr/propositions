@@ -648,10 +648,10 @@
 %
 % \begin{example}
 % \begin{prop}[
-%   wrapper begin = \propsetabove[0.2em][0.2em]{%
-%     \rule{\linewidth}{0.4pt}},
-%   wrapper end   = \propsetbelow[0.2em][0.2em]{%
-%     \rule{\linewidth}{0.4pt}}]
+%   wrapper begin =
+%     \propsetabove[0.2em][0.2em]{\rule{\linewidth}{0.4pt}},
+%   wrapper end   =
+%     \propsetbelow[0.2em][0.2em]{\rule{\linewidth}{0.4pt}}]
 %   \item A proposition bracketed by rules.
 % \end{prop}
 % \end{example}
@@ -1311,7 +1311,12 @@
 % \section{Release notes}
 %
 % \begin{description}
-% \item[0.92 (unreleased)] [Bug fix] Two consecutive \refEnv{prop} environments
+% \item[0.92 (unreleased)] [Bug fix] \refCom{propsetabove}, \refCom{propsetbelow}
+%   and \refCom{propsetaboveitem} ignore a space in front of their
+%   \meta{material}, so a value broken across lines after the opening brace no
+%   longer shifts the material right by an interword space.
+%
+%   [Bug fix] Two consecutive \refEnv{prop} environments
 %   joined by \refKey{continue} are now separated by exactly the gap between two
 %   items of one environment, whatever \cs{parskip} the document sets.  The join
 %   used to run a \cs{parskip} wider, so that whether a run of propositions was
@@ -3976,7 +3981,13 @@
 %% #1 = space above, #2 = space below, #3 = material.
 \cs_new_protected:Npn \__props_gap_place:nnn #1#2#3
   {
-    \hbox_set:Nn \l__props_gap_box {#3}
+    %% \ignorespaces, because the material is positioned by this command
+    %% rather than by the text around it, so a space in front of it is never
+    %% wanted --- it shifts the whole thing right by an interword space, and
+    %% a rule that should start at the margin visibly does not.  It is easily
+    %% written by accident, since a value broken across lines after the
+    %% opening brace carries the line end in with it.
+    \hbox_set:Nn \l__props_gap_box { \ignorespaces #3 }
     %% A box contributed in vertical mode has its *top* at the current
     %% position, so its height is space above the material and its depth
     %% space below it: the two arguments are simply added to them.  A rule
