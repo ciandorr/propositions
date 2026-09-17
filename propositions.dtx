@@ -621,8 +621,9 @@
 %   wrapper begin = {\begin{tcolorbox}[
 %       colframe = red, colback = white]},
 %   wrapper end   = {\end{tcolorbox}}]
-%   \item[Red] A proposition in a red frame.
-%   \item And a second one, in the same frame.
+%   \item[Important] These claims are so vital that they deserve 
+%     a red frame.
+%   \item[Also important] Did we succeed in grabbing your attention?
 % \end{prop}
 % \end{example}
 % The wrapping environment must be one that can be split into separate begin and end
@@ -652,7 +653,6 @@
 %   wrapper end   = \propsetbelow[0.2em][0.2em]{%
 %     \rule{\linewidth}{0.4pt}}]
 %   \item A proposition bracketed by rules.
-%   \item And a second one.
 % \end{prop}
 % \end{example}
 %
@@ -792,7 +792,9 @@
 %     Some things are not physical.
 %   \end{prop}
 % \end{prop}
-% Of the two parts of \ref{claim}, \ref{positive} is far more controversial than \ref{negative}.  Thus, we will mostly be considering part \nref{negative}.  
+% Of the two parts of \ref{claim}, \ref{positive} is far more 
+% controversial than \ref{negative}.  Thus, we will mostly be 
+% considering part \nref{negative}.  
 % \end{example}
 %
 % Many of the built-in numbered styles use \refCom{parentref} in their \refKey{ref format}, to achieve this sort of composite effect.
@@ -1309,7 +1311,13 @@
 % \section{Release notes}
 %
 % \begin{description}
-% \item[0.92 (unreleased)] [Bug fix] A space written straight after \texttt{\#1}
+% \item[0.92 (unreleased)] [Bug fix] Two consecutive \refEnv{prop} environments
+%   joined by \refKey{continue} are now separated by exactly the gap between two
+%   items of one environment, whatever \cs{parskip} the document sets.  The join
+%   used to run a \cs{parskip} wider, so that whether a run of propositions was
+%   written as one environment or several could show.
+%
+%   [Bug fix] A space written straight after \texttt{\#1}
 %   in a \refKey{ref format} is no longer lost, so \texttt{ref format\,=\,the \#1
 %   point} gives \enquote{the first point} rather than \enquote{the firstpoint}.
 %
@@ -4372,15 +4380,33 @@
         \__props_apply_dim:Nn \l__props_listparindent_tl  \listparindent
         %% Consecutive-list: if signalled, save the natural \@topsepadd
         %% (\topsep+\partopsep, since we are entering from vmode) for
-        %% after-spacing restoration, then set \topsep to TARGET so
-        %% that \@trivlist's \addvspace{TARGET} sees \lastskip=TARGET
-        %% (deposited by the pre-\begin{list} \vskip) and does nothing.
-        %% Net before-spacing = TARGET = \g__props_prev_itemsep_parsep_skip.
+        %% after-spacing restoration, then set \topsep so that the gap before
+        %% the first item comes to exactly TARGET
+        %% (= \g__props_prev_itemsep_parsep_skip, the previous list's
+        %% \itemsep+\parsep), which is the gap an item inside a list gets.
+        %%
+        %% Subtracting \parskip is not a fudge.  \@trivlist sets
+        %% \@topsep = \topsep + \partopsep + \parskip, and the \addvspace{-\parskip}
+        %% in \@item takes back only the IN-LIST \parskip, which \list has by
+        %% then set to \parsep, and which the first paragraph immediately puts
+        %% back.  So an ordinary list's top gap is \topsep + \partopsep + the
+        %% ambient \parskip: beginning a list is beginning a paragraph.  A
+        %% joined list is continuing one, so that \parskip has to come out, or
+        %% the join runs a whole \parskip wider than the item gaps it is
+        %% imitating --- invisible while \parskip is zero, and a visible step
+        %% as soon as it is not.
+        %%
+        %% This is the parameter block, which \list runs before \@trivlist and
+        %% before \parskip\parsep, so \parskip here is still the very value
+        %% \@trivlist is about to add.  A negative result (TARGET below
+        %% \parskip) is harmless: \addvspace then finds \lastskip already the
+        %% larger and leaves the deposited TARGET alone.
         \bool_if:NT \g__props_suppress_topsep_bool
           {
             \skip_gset:Nn \g__props_natural_topsepadd_skip { \topsep }
             \skip_gadd:Nn \g__props_natural_topsepadd_skip { \partopsep }
-            \setlength { \topsep } { \g__props_prev_itemsep_parsep_skip }
+            \skip_set:Nn \topsep
+              { \g__props_prev_itemsep_parsep_skip - \parskip }
             \setlength { \partopsep } { \z@ }
           }
       }

@@ -2350,15 +2350,33 @@
         \__props_apply_dim:Nn \l__props_listparindent_tl  \listparindent
         %% Consecutive-list: if signalled, save the natural \@topsepadd
         %% (\topsep+\partopsep, since we are entering from vmode) for
-        %% after-spacing restoration, then set \topsep to TARGET so
-        %% that \@trivlist's \addvspace{TARGET} sees \lastskip=TARGET
-        %% (deposited by the pre-\begin{list} \vskip) and does nothing.
-        %% Net before-spacing = TARGET = \g__props_prev_itemsep_parsep_skip.
+        %% after-spacing restoration, then set \topsep so that the gap before
+        %% the first item comes to exactly TARGET
+        %% (= \g__props_prev_itemsep_parsep_skip, the previous list's
+        %% \itemsep+\parsep), which is the gap an item inside a list gets.
+        %%
+        %% Subtracting \parskip is not a fudge.  \@trivlist sets
+        %% \@topsep = \topsep + \partopsep + \parskip, and the \addvspace{-\parskip}
+        %% in \@item takes back only the IN-LIST \parskip, which \list has by
+        %% then set to \parsep, and which the first paragraph immediately puts
+        %% back.  So an ordinary list's top gap is \topsep + \partopsep + the
+        %% ambient \parskip: beginning a list is beginning a paragraph.  A
+        %% joined list is continuing one, so that \parskip has to come out, or
+        %% the join runs a whole \parskip wider than the item gaps it is
+        %% imitating --- invisible while \parskip is zero, and a visible step
+        %% as soon as it is not.
+        %%
+        %% This is the parameter block, which \list runs before \@trivlist and
+        %% before \parskip\parsep, so \parskip here is still the very value
+        %% \@trivlist is about to add.  A negative result (TARGET below
+        %% \parskip) is harmless: \addvspace then finds \lastskip already the
+        %% larger and leaves the deposited TARGET alone.
         \bool_if:NT \g__props_suppress_topsep_bool
           {
             \skip_gset:Nn \g__props_natural_topsepadd_skip { \topsep }
             \skip_gadd:Nn \g__props_natural_topsepadd_skip { \partopsep }
-            \setlength { \topsep } { \g__props_prev_itemsep_parsep_skip }
+            \skip_set:Nn \topsep
+              { \g__props_prev_itemsep_parsep_skip - \parskip }
             \setlength { \partopsep } { \z@ }
           }
       }

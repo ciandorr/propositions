@@ -155,4 +155,38 @@ Before text.
 
 After text.
 
+\subsection{A document \texttt{\textbackslash parskip} does not widen the join}
+
+The gap a join imitates is the one between two items of a single environment,
+and it must stay that gap however wide the surrounding paragraph spacing is.
+The three pairs below set \verb|\parskip| to 0pt, 6pt and 24pt.  In each pair
+the gap between B and C, which crosses an environment boundary, must match the
+gap between A and B, which does not --- and the two gaps must look the same in
+all three pairs, since neither is made of \verb|\parskip|.
+
+\begingroup\setlength{\parskip}{0pt}
+\begin{prop}\item Item A, \verb|\parskip=0pt|.\item Item B.\end{prop}
+\begin{prop}\item Item C: level with B as B is with A.\end{prop}
+\endgroup
+
+\begingroup\setlength{\parskip}{6pt}
+\begin{prop}\item Item A, \verb|\parskip=6pt|.\item Item B.\end{prop}
+\begin{prop}\item Item C: level with B as B is with A.\end{prop}
+\endgroup
+
+\begingroup\setlength{\parskip}{24pt}
+\begin{prop}\item Item A, \verb|\parskip=24pt|.\item Item B.\end{prop}
+\begin{prop}\item Item C: level with B as B is with A.\end{prop}
+\endgroup
+
+The same inside an enclosing list, where the \verb|\parskip| the join has to
+keep out is the outer list's \verb|parsep| rather than the document's.
+
+\begin{prop}
+  \item An outer item containing:
+  \begin{prop}\item Item A.\item Item B.\end{prop}
+  \begin{prop}\item Item C: level with B as B is with A.\end{prop}
+  \item A further outer item.
+\end{prop}
+
 \end{document}
